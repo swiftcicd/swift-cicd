@@ -4,6 +4,12 @@ public protocol Step<Output> {
     func run() async throws -> Output
 }
 
-extension Step {
-    public var context: ContextValues { .shared }
+public extension Step {
+    static var name: String {
+        "\(type(of: Self.self))"
+    }
+}
+
+public extension Step {
+    var context: ContextValues { .shared }
 }

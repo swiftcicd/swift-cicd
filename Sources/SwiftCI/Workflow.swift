@@ -7,6 +7,12 @@ public protocol Workflow {
 }
 
 public extension Workflow {
+    static var name: String {
+        "\(type(of: Self.self))"
+    }
+}
+
+public extension Workflow {
 
     static var context: ContextValues { .shared }
     var context: ContextValues { .shared }
