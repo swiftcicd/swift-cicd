@@ -38,7 +38,10 @@ public extension Workflow {
 
             exit(0)
         } catch {
-            print("Caught error: \(error)")
+            print("""
+            Caught error: \(error.localizedDescription)
+            \(error)
+            """)
             exit(1)
         }
     }

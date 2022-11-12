@@ -4,13 +4,14 @@ import PackageDescription
 
 let package = Package(
     name: "cicd",
+    platforms: [.macOS(.v10_15)],
     products: [
-        .executable(name: "cicd", targets: ["CICD"])
+        .executable(name: "cicd", targets: ["cicd"])
     ],
     dependencies: [
-        .package(url: "https://github.com/clayellis/swift-ci", branch: "main")
+        .package(path: "../../../")
     ],
     targets: [
-        .executableTarget(name: "CICD", dependencies: [.product(name: "SwiftCI", package: "swift-ci")], path: ".")
+        .executableTarget(name: "cicd", dependencies: [.product(name: "SwiftCI", package: "swift-ci")], path: ".")
     ]
 )

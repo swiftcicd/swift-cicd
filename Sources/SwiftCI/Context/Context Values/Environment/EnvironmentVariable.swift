@@ -2,8 +2,12 @@ import Foundation
 
 @propertyWrapper
 public struct EnvironmentVariable<T> {
-    public struct RequriedVariableError: Error {
+    public struct RequriedEnvironmentVariableError: LocalizedError {
         let key: String
+
+        public var errorDescription: String? {
+            "Required environment variable missing: \(key)"
+        }
     }
 
     public struct Required {
@@ -12,7 +16,7 @@ public struct EnvironmentVariable<T> {
 
         public func require() throws -> T {
             guard let value else {
-                throw RequriedVariableError(key: key)
+                throw RequriedEnvironmentVariableError(key: key)
             }
 
             return value
