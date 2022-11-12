@@ -18,4 +18,8 @@ public extension Step where Self == SwiftStep.Test {
     static func swift(test arguments: Argument...) -> SwiftStep.Test {
         SwiftStep.Test(arguments: arguments)
     }
+
+    static var swiftTest: SwiftStep.Test {
+        SwiftStep.Test(arguments: [])
+    }
 }

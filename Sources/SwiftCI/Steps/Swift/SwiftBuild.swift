@@ -18,4 +18,8 @@ public extension Step where Self == SwiftStep.Build {
     static func swift(build arguments: Argument...) -> SwiftStep.Build {
         SwiftStep.Build(arguments: arguments)
     }
+
+    static var swiftBuild: SwiftStep.Build {
+        SwiftStep.Build(arguments: [])
+    }
 }
