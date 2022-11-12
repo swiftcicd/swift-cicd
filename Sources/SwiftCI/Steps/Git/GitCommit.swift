@@ -40,17 +40,17 @@ public extension Step where Self == GitStep.Commit {
     }
 }
 
-#if canImport(RegexBuilder)
-import RegexBuilder
-
-@available(macOS 13.0, *)
-public extension Step where Self == GitStep.Commit {
-    static func commit(filesMatching regex: Regex<Substring>, message: String, flags: [String] = []) -> GitStep.Commit {
-        fatalError("Unimplemented")
-    }
-
-    static func commit(message: String, flags: [String] = [], @RegexComponentBuilder filesMatching regex: () -> some RegexComponent) -> GitStep.Commit {
-        fatalError("Unimplemented")
-    }
-}
-#endif
+//#if canImport(RegexBuilder)
+//import RegexBuilder
+//
+//@available(macOS 13.0, *)
+//public extension Step where Self == GitStep.Commit {
+//    static func commit(filesMatching regex: Regex<Substring>, message: String, flags: [String] = []) -> GitStep.Commit {
+//        fatalError("Unimplemented")
+//    }
+//
+//    static func commit(message: String, flags: [String] = [], @RegexComponentBuilder filesMatching regex: () -> some RegexComponent) -> GitStep.Commit {
+//        fatalError("Unimplemented")
+//    }
+//}
+//#endif
