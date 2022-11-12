@@ -39,11 +39,12 @@ public extension Step where Self == GitStep.Commit {
         fatalError("Unimplemented")
     }
 
-
+#if swift(>=5.7)
     @available(macOS 13.0, *)
     static func commit(filesMatching regex: Regex<Substring>, message: String, flags: [String] = []) -> GitStep.Commit {
         fatalError("Unimplemented")
     }
+#endif
 }
 
 #if canImport(RegexBuilder)
