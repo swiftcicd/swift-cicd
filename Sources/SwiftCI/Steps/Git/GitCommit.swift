@@ -40,7 +40,7 @@ public extension Step where Self == GitStep.Commit {
     }
 }
 
-#if canImport(Swift.Regex) && canImport(RegexBuilder)
+#if canImport(RegexBuilder)
 import RegexBuilder
 
 @available(macOS 13.0, *)
