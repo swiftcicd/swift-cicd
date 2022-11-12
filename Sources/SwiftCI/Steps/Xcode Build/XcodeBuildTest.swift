@@ -1,25 +1,25 @@
-extension XcodeBuild {
-    public struct Test: CommandStep {
+extension XcodeBuildStep {
+    public struct Test: Step {
         public let name = "Xcode Build: Test"
 
         let scheme: String
         let destination: String
         let withoutBuilding: Bool
 
-        public var command: Command {
-            Command(command: "xcodebuild", arguments: [withoutBuilding ? "test-without-building" : "test", "--scheme", scheme, "--destination", destination])
-        }
-
         public init(scheme: String, destination: String, withoutBuilding: Bool) {
             self.scheme = scheme
             self.destination = destination
             self.withoutBuilding = withoutBuilding
         }
+
+        public func run() async throws -> String {
+            try context.shell("xcodebuild", withoutBuilding ? "test-without-building" : "test", "--scheme", scheme, "--destination", destination)
+        }
     }
 }
 
-public extension Step where Self == XcodeBuild.Test {
-    static func xcodebuild(testScheme scheme: String, destination: XcodeBuild.Destination, withoutBuilding: Bool) -> XcodeBuild.Test {
+public extension Step where Self == XcodeBuildStep.Test {
+    static func xcodebuild(testScheme scheme: String, destination: XcodeBuildStep.Destination, withoutBuilding: Bool) -> XcodeBuildStep.Test {
         .init(scheme: scheme, destination: destination.argument, withoutBuilding: withoutBuilding)
     }
 }

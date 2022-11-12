@@ -1,5 +1,5 @@
-extension XcodeBuild {
-    public enum Destination: CommandArgument {
+extension XcodeBuildStep {
+    public enum Destination: Argument {
         public enum Platform: String {
             case iOSSimulator = "iOS Simulator"
             case macOS = "OS X"

@@ -1,4 +1,4 @@
-extension XcodeBuild {
+extension XcodeBuildStep {
     struct Archive {
 
     }
