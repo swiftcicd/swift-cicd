@@ -28,6 +28,8 @@ public extension Workflow {
 
     static func main() async {
         do {
+            print("Starting Workflow: \(Self.name)")
+
             let workspace = try context.environment.github.$workspace.require()
             context.fileManager.changeCurrentDirectoryPath(workspace)
 
@@ -36,6 +38,7 @@ public extension Workflow {
 
             exit(0)
         } catch {
+            print("Caught error: \(error)")
             exit(1)
         }
     }
