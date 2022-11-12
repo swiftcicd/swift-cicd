@@ -38,20 +38,17 @@ public extension Step where Self == GitStep.Commit {
     static func commit(message: String, flags: [String] = [], filesMatching predicate: @escaping (String) -> Bool) -> GitStep.Commit {
         fatalError("Unimplemented")
     }
+}
 
-#if swift(>=5.7)
-    @available(macOS 13.0, *)
+#if canImport(Swift.Regex) && canImport(RegexBuilder)
+import RegexBuilder
+
+@available(macOS 13.0, *)
+public extension Step where Self == GitStep.Commit {
     static func commit(filesMatching regex: Regex<Substring>, message: String, flags: [String] = []) -> GitStep.Commit {
         fatalError("Unimplemented")
     }
-#endif
-}
 
-#if canImport(RegexBuilder)
-import RegexBuilder
-
-public extension Step where Self == GitStep.Commit {
-    @available(macOS 13.0, *)
     static func commit(message: String, flags: [String] = [], @RegexComponentBuilder filesMatching regex: () -> some RegexComponent) -> GitStep.Commit {
         fatalError("Unimplemented")
     }
