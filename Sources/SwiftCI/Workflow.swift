@@ -8,7 +8,7 @@ public protocol Workflow {
 
 public extension Workflow {
     static var name: String {
-        "\(type(of: Self.self))"
+        "\(self)"
     }
 }
 
@@ -46,17 +46,3 @@ public extension Workflow {
         }
     }
 }
-
-// Make a Context object that Workflow instances can access
-// context.fileManager
-// context.github
-// context.environment
-// context.git
-// context.secrets
-
-// Or workflows and steps should reach into the context via
-// @Context(\.environment) var environment
-// to grab whatever context they need to do their work
-
-// Steps should be able to extend the context (almost like dependency values)
-// context.swiftPR

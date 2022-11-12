@@ -6,7 +6,7 @@ public protocol Step<Output> {
 
 public extension Step {
     static var name: String {
-        "\(type(of: Self.self))"
+        "\(self)"
     }
 }
 
