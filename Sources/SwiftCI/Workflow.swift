@@ -22,7 +22,7 @@ public extension Workflow {
 
     static func main() async {
         do {
-            let workspace = try context.environment.require(.workspace)
+            let workspace = try context.environment.github.$workspace.require()
             context.fileManager.changeCurrentDirectoryPath(workspace)
 
             let workflow = self.init()

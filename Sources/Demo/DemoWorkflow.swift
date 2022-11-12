@@ -8,7 +8,7 @@ struct CICD: Workflow {
         let destination = XcodeBuildStep.Destination(platform: .iOSSimulator, name: "iPhone 14")
         let localizationPath = "Localizations/hx-ios"
         let packageScheme = "hx-ios-Package"
-        
+
         // ssh
 
         for file in try context.fileManager.contentsOfDirectory(atPath: localizationPath) {

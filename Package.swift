@@ -4,7 +4,7 @@ import PackageDescription
 
 let package = Package(
     name: "swift-ci",
-    platforms: [.macOS(.v12)],
+    platforms: [.macOS(.v10_13)],
     products: [
         .library(name: "SwiftCI", targets: ["SwiftCI"]),
         .executable(name: "Demo", targets: ["Demo"])
