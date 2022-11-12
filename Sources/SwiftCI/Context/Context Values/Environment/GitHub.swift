@@ -1,6 +1,8 @@
 extension ProcessEnvironment {
     public static let github = GitHub.self
     public enum GitHub {}
+
+    // TODO: Is it possible to retrieve secrets without them being passed into the environment in the action yml?
 }
 
 extension ProcessEnvironment.GitHub {

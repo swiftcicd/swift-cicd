@@ -1,29 +1,12 @@
 import ShellOut
 
-public protocol Argument {
-    var argument: String { get }
-}
-
-extension String: Argument {
-    public var argument: String { self }
-}
-
-extension Argument {
-    var escapedArgument: String {
-        // TODO: If the argument has newlines in it, should we esacpe the lines?
-
-        if argument.contains(" ") {
-            return "'\(argument)'"
-        } else {
-            return argument
-        }
-    }
-}
-
 public struct Shell {
+    @Context(\.fileManager) var fileManager
+
     @discardableResult
     func callAsFunction(_ command: String, _ arguments: [Argument]) throws -> String {
-        try shellOut(to: command, arguments: arguments.map(\.escapedArgument))
+        print("Shell (at: \(fileManager.currentDirectoryPath)): \(command) \(arguments.map(\.escapedArgument).joined(separator: " "))")
+        return try shellOut(to: command, arguments: arguments.map(\.escapedArgument), at: fileManager.currentDirectoryPath)
     }
 
     @discardableResult
