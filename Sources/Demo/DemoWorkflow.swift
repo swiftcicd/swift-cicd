@@ -1,32 +1,21 @@
 import SwiftCI
 
 @main
-struct CICD: Workflow {
-    static let name = "CICD"
-
+struct Demo: Workflow {
     func run() async throws {
-        let destination = XcodeBuildStep.Destination(platform: .iOSSimulator, name: "iPhone 14")
-        let localizationPath = "Localizations/hx-ios"
-        let packageScheme = "hx-ios-Package"
+        try await workflow(Build())
+        try await workflow(Test())
+    }
+}
 
-        // ssh
+struct Build: Workflow {
+    func run() async throws {
+        try await step(.swiftBuild)
+    }
+}
 
-        for file in try context.fileManager.contentsOfDirectory(atPath: localizationPath) {
-            try await step(.xcodebuild(importLocalizationsFrom: file))
-        }
-
-        try await step(.xcodebuild(buildScheme: packageScheme, destination: destination))
-
-        try await step(.xcodebuild(testScheme: packageScheme, destination: destination, withoutBuilding: true))
-
-        try await step(.xcodebuild(buildScheme: "HX App", destination: destination))
-
-        try await step(.xcodebuild(exportLocalizationsTo: localizationPath))
-
-        // commit changes
-        try await step(.commitAllChanges(message: "(Automated) Import/export localizations."))
-
-        // run swift-pr
-        try await step(.swift(run: "pr", "--verbose"))
+struct Test: Workflow {
+    func run() async throws {
+        try await step(.swiftTest)
     }
 }
