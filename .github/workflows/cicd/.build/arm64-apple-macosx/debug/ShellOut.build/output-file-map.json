@@ -1,0 +1,11 @@
+{
+  "": {
+    "swift-dependencies": "/Users/clayellis/Documents/Projects/swift-ci/.github/workflows/cicd/.build/arm64-apple-macosx/debug/ShellOut.build/master.swiftdeps"
+  },
+  "/Users/clayellis/Documents/Projects/swift-ci/.github/workflows/cicd/.build/checkouts/ShellOut/Sources/ShellOut.swift": {
+    "dependencies": "/Users/clayellis/Documents/Projects/swift-ci/.github/workflows/cicd/.build/arm64-apple-macosx/debug/ShellOut.build/ShellOut.d",
+    "object": "/Users/clayellis/Documents/Projects/swift-ci/.github/workflows/cicd/.build/arm64-apple-macosx/debug/ShellOut.build/ShellOut.swift.o",
+    "swiftmodule": "/Users/clayellis/Documents/Projects/swift-ci/.github/workflows/cicd/.build/arm64-apple-macosx/debug/ShellOut.build/ShellOut~partial.swiftmodule",
+    "swift-dependencies": "/Users/clayellis/Documents/Projects/swift-ci/.github/workflows/cicd/.build/arm64-apple-macosx/debug/ShellOut.build/ShellOut.swiftdeps"
+  }
+}

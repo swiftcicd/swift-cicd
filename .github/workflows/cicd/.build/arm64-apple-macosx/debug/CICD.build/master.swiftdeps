@@ -1,0 +1,6 @@
+version: "Apple Swift version 5.7.1 (swiftlang-5.7.1.135.3 clang-1400.0.29.51)"
+options: "822ae8f03f93e8537e2b5be11d8c6717e05a76373d67a9edc7f13059c179b453"
+build_start_time: [1668276385, 423943042]
+build_end_time: [1668276385, 563902854]
+inputs:
+  "/Users/clayellis/Documents/Projects/swift-ci/.github/workflows/cicd/CICD.swift": [1668276207, 600469112]

@@ -30,4 +30,27 @@ public extension Step where Self == GitStep.Commit {
     static func commitAllChanges(message: String, flags: [String] = []) -> GitStep.Commit {
         GitStep.Commit(message: message, flags: ["A"] + flags)
     }
+
+    static func commit(files: String..., message: String, flags: [String] = []) -> GitStep.Commit {
+        fatalError("Unimplemented")
+    }
+
+    static func commit(message: String, flags: [String] = [], filesMatching predicate: @escaping (String) -> Bool) -> GitStep.Commit {
+        fatalError("Unimplemented")
+    }
 }
+
+//#if canImport(RegexBuilder)
+//import RegexBuilder
+//
+//@available(macOS 13.0, *)
+//public extension Step where Self == GitStep.Commit {
+//    static func commit(filesMatching regex: Regex<Substring>, message: String, flags: [String] = []) -> GitStep.Commit {
+//        fatalError("Unimplemented")
+//    }
+//
+//    static func commit(message: String, flags: [String] = [], @RegexComponentBuilder filesMatching regex: () -> some RegexComponent) -> GitStep.Commit {
+//        fatalError("Unimplemented")
+//    }
+//}
+//#endif

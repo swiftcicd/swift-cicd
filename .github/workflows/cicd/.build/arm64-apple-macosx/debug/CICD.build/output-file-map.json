@@ -1,0 +1,11 @@
+{
+  "": {
+    "swift-dependencies": "/Users/clayellis/Documents/Projects/swift-ci/.github/workflows/cicd/.build/arm64-apple-macosx/debug/cicd.build/master.swiftdeps"
+  },
+  "/Users/clayellis/Documents/Projects/swift-ci/.github/workflows/cicd/CICD.swift": {
+    "dependencies": "/Users/clayellis/Documents/Projects/swift-ci/.github/workflows/cicd/.build/arm64-apple-macosx/debug/cicd.build/CICD.d",
+    "object": "/Users/clayellis/Documents/Projects/swift-ci/.github/workflows/cicd/.build/arm64-apple-macosx/debug/cicd.build/CICD.swift.o",
+    "swiftmodule": "/Users/clayellis/Documents/Projects/swift-ci/.github/workflows/cicd/.build/arm64-apple-macosx/debug/cicd.build/CICD~partial.swiftmodule",
+    "swift-dependencies": "/Users/clayellis/Documents/Projects/swift-ci/.github/workflows/cicd/.build/arm64-apple-macosx/debug/cicd.build/CICD.swiftdeps"
+  }
+}

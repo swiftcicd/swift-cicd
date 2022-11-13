@@ -1,0 +1,25 @@
+/Users/clayellis/Documents/Projects/swift-ci/.github/workflows/cicd/.build/arm64-apple-macosx/debug/Demo.build/DemoWorkflow.swift.o
+/Users/clayellis/Documents/Projects/swift-ci/.github/workflows/cicd/.build/arm64-apple-macosx/debug/ShellOut.build/ShellOut.swift.o
+'/Users/clayellis/Documents/Projects/swift-ci/.github/workflows/cicd/.build/arm64-apple-macosx/debug/SwiftCI.build/Context Values/Environment/EnvironmentVariable.swift.o'
+'/Users/clayellis/Documents/Projects/swift-ci/.github/workflows/cicd/.build/arm64-apple-macosx/debug/SwiftCI.build/Context Values/Environment/GitHub.swift.o'
+'/Users/clayellis/Documents/Projects/swift-ci/.github/workflows/cicd/.build/arm64-apple-macosx/debug/SwiftCI.build/Context Values/Environment/ProcessEnvironment.swift.o'
+'/Users/clayellis/Documents/Projects/swift-ci/.github/workflows/cicd/.build/arm64-apple-macosx/debug/SwiftCI.build/Context Values/FileManager.swift.o'
+'/Users/clayellis/Documents/Projects/swift-ci/.github/workflows/cicd/.build/arm64-apple-macosx/debug/SwiftCI.build/Context Values/Shell.swift.o'
+/Users/clayellis/Documents/Projects/swift-ci/.github/workflows/cicd/.build/arm64-apple-macosx/debug/SwiftCI.build/Context.swift.o
+/Users/clayellis/Documents/Projects/swift-ci/.github/workflows/cicd/.build/arm64-apple-macosx/debug/SwiftCI.build/Step.swift.o
+/Users/clayellis/Documents/Projects/swift-ci/.github/workflows/cicd/.build/arm64-apple-macosx/debug/SwiftCI.build/Steps/Git/GitCommit.swift.o
+/Users/clayellis/Documents/Projects/swift-ci/.github/workflows/cicd/.build/arm64-apple-macosx/debug/SwiftCI.build/Steps/Git/GitStep.swift.o
+/Users/clayellis/Documents/Projects/swift-ci/.github/workflows/cicd/.build/arm64-apple-macosx/debug/SwiftCI.build/Steps/Pipe.swift.o
+/Users/clayellis/Documents/Projects/swift-ci/.github/workflows/cicd/.build/arm64-apple-macosx/debug/SwiftCI.build/Steps/ShellStep.swift.o
+/Users/clayellis/Documents/Projects/swift-ci/.github/workflows/cicd/.build/arm64-apple-macosx/debug/SwiftCI.build/Steps/Swift/SwiftBuild.swift.o
+/Users/clayellis/Documents/Projects/swift-ci/.github/workflows/cicd/.build/arm64-apple-macosx/debug/SwiftCI.build/Steps/Swift/SwiftRun.swift.o
+/Users/clayellis/Documents/Projects/swift-ci/.github/workflows/cicd/.build/arm64-apple-macosx/debug/SwiftCI.build/Steps/Swift/SwiftStep.swift.o
+/Users/clayellis/Documents/Projects/swift-ci/.github/workflows/cicd/.build/arm64-apple-macosx/debug/SwiftCI.build/Steps/Swift/SwiftTest.swift.o
+'/Users/clayellis/Documents/Projects/swift-ci/.github/workflows/cicd/.build/arm64-apple-macosx/debug/SwiftCI.build/Steps/Xcode Build/XCPretty.swift.o'
+'/Users/clayellis/Documents/Projects/swift-ci/.github/workflows/cicd/.build/arm64-apple-macosx/debug/SwiftCI.build/Steps/Xcode Build/XcodeBuildArchive.swift.o'
+'/Users/clayellis/Documents/Projects/swift-ci/.github/workflows/cicd/.build/arm64-apple-macosx/debug/SwiftCI.build/Steps/Xcode Build/XcodeBuildBuild.swift.o'
+'/Users/clayellis/Documents/Projects/swift-ci/.github/workflows/cicd/.build/arm64-apple-macosx/debug/SwiftCI.build/Steps/Xcode Build/XcodeBuildDestination.swift.o'
+'/Users/clayellis/Documents/Projects/swift-ci/.github/workflows/cicd/.build/arm64-apple-macosx/debug/SwiftCI.build/Steps/Xcode Build/XcodeBuildLocalizations.swift.o'
+'/Users/clayellis/Documents/Projects/swift-ci/.github/workflows/cicd/.build/arm64-apple-macosx/debug/SwiftCI.build/Steps/Xcode Build/XcodeBuildStep.swift.o'
+'/Users/clayellis/Documents/Projects/swift-ci/.github/workflows/cicd/.build/arm64-apple-macosx/debug/SwiftCI.build/Steps/Xcode Build/XcodeBuildTest.swift.o'
+/Users/clayellis/Documents/Projects/swift-ci/.github/workflows/cicd/.build/arm64-apple-macosx/debug/SwiftCI.build/Workflow.swift.o

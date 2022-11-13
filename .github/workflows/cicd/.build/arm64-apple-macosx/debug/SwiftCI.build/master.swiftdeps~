@@ -1,0 +1,47 @@
+version: "Apple Swift version 5.7.1 (swiftlang-5.7.1.135.3 clang-1400.0.29.51)"
+options: "f954a4177d3dddcd140a453dd8104740f5a05103ce3aa0250e8cf865c5750276"
+build_start_time: [1668274695, 689100980]
+build_end_time: [1668274698, 665514945]
+inputs:
+  ? "/Users/clayellis/Documents/Projects/swift-ci/.github/workflows/cicd/.build/checkouts/swift-ci/Sources/SwiftCI/Context Values/Environment/EnvironmentVariable.swift"
+  : [1668274691, 672289371]
+  ? "/Users/clayellis/Documents/Projects/swift-ci/.github/workflows/cicd/.build/checkouts/swift-ci/Sources/SwiftCI/Context Values/Environment/GitHub.swift"
+  : [1668274691, 672703504]
+  ? "/Users/clayellis/Documents/Projects/swift-ci/.github/workflows/cicd/.build/checkouts/swift-ci/Sources/SwiftCI/Context Values/Environment/ProcessEnvironment.swift"
+  : [1668274691, 673013687]
+  ? "/Users/clayellis/Documents/Projects/swift-ci/.github/workflows/cicd/.build/checkouts/swift-ci/Sources/SwiftCI/Context Values/FileManager.swift"
+  : [1668274691, 673112869]
+  ? "/Users/clayellis/Documents/Projects/swift-ci/.github/workflows/cicd/.build/checkouts/swift-ci/Sources/SwiftCI/Context Values/Shell.swift"
+  : [1668274691, 673209190]
+  "/Users/clayellis/Documents/Projects/swift-ci/.github/workflows/cicd/.build/checkouts/swift-ci/Sources/SwiftCI/Context.swift": [1668274691, 673318386]
+  "/Users/clayellis/Documents/Projects/swift-ci/.github/workflows/cicd/.build/checkouts/swift-ci/Sources/SwiftCI/Step.swift": [1668274691, 673605442]
+  ? "/Users/clayellis/Documents/Projects/swift-ci/.github/workflows/cicd/.build/checkouts/swift-ci/Sources/SwiftCI/Steps/Git/GitCommit.swift"
+  : [1668274691, 673834800]
+  ? "/Users/clayellis/Documents/Projects/swift-ci/.github/workflows/cicd/.build/checkouts/swift-ci/Sources/SwiftCI/Steps/Git/GitStep.swift"
+  : [1668274691, 673947334]
+  "/Users/clayellis/Documents/Projects/swift-ci/.github/workflows/cicd/.build/checkouts/swift-ci/Sources/SwiftCI/Steps/Pipe.swift": [1668274691, 674044132]
+  ? "/Users/clayellis/Documents/Projects/swift-ci/.github/workflows/cicd/.build/checkouts/swift-ci/Sources/SwiftCI/Steps/ShellStep.swift"
+  : [1668274691, 674132823]
+  ? "/Users/clayellis/Documents/Projects/swift-ci/.github/workflows/cicd/.build/checkouts/swift-ci/Sources/SwiftCI/Steps/Swift/SwiftBuild.swift"
+  : [1668274691, 674443721]
+  ? "/Users/clayellis/Documents/Projects/swift-ci/.github/workflows/cicd/.build/checkouts/swift-ci/Sources/SwiftCI/Steps/Swift/SwiftRun.swift"
+  : [1668274691, 674662590]
+  ? "/Users/clayellis/Documents/Projects/swift-ci/.github/workflows/cicd/.build/checkouts/swift-ci/Sources/SwiftCI/Steps/Swift/SwiftStep.swift"
+  : [1668274691, 674740314]
+  ? "/Users/clayellis/Documents/Projects/swift-ci/.github/workflows/cicd/.build/checkouts/swift-ci/Sources/SwiftCI/Steps/Swift/SwiftTest.swift"
+  : [1668274691, 674973964]
+  ? "/Users/clayellis/Documents/Projects/swift-ci/.github/workflows/cicd/.build/checkouts/swift-ci/Sources/SwiftCI/Steps/Xcode Build/XCPretty.swift"
+  : [1668274691, 675116539]
+  ? "/Users/clayellis/Documents/Projects/swift-ci/.github/workflows/cicd/.build/checkouts/swift-ci/Sources/SwiftCI/Steps/Xcode Build/XcodeBuildArchive.swift"
+  : [1668274691, 675202131]
+  ? "/Users/clayellis/Documents/Projects/swift-ci/.github/workflows/cicd/.build/checkouts/swift-ci/Sources/SwiftCI/Steps/Xcode Build/XcodeBuildBuild.swift"
+  : [1668274691, 675287961]
+  ? "/Users/clayellis/Documents/Projects/swift-ci/.github/workflows/cicd/.build/checkouts/swift-ci/Sources/SwiftCI/Steps/Xcode Build/XcodeBuildDestination.swift"
+  : [1668274691, 675375461]
+  ? "/Users/clayellis/Documents/Projects/swift-ci/.github/workflows/cicd/.build/checkouts/swift-ci/Sources/SwiftCI/Steps/Xcode Build/XcodeBuildLocalizations.swift"
+  : [1668274691, 675467967]
+  ? "/Users/clayellis/Documents/Projects/swift-ci/.github/workflows/cicd/.build/checkouts/swift-ci/Sources/SwiftCI/Steps/Xcode Build/XcodeBuildStep.swift"
+  : [1668274691, 675567388]
+  ? "/Users/clayellis/Documents/Projects/swift-ci/.github/workflows/cicd/.build/checkouts/swift-ci/Sources/SwiftCI/Steps/Xcode Build/XcodeBuildTest.swift"
+  : [1668274691, 675837516]
+  "/Users/clayellis/Documents/Projects/swift-ci/.github/workflows/cicd/.build/checkouts/swift-ci/Sources/SwiftCI/Workflow.swift": [1668274691, 676246881]

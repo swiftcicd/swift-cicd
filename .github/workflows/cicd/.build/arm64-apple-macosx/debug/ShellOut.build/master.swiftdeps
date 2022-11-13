@@ -1,0 +1,6 @@
+version: "Apple Swift version 5.7.1 (swiftlang-5.7.1.135.3 clang-1400.0.29.51)"
+options: "86c5b46f9e563a408b85b413edf6272ad0b4b8d774aa416986c167623ac8e2c7"
+build_start_time: [1668274692, 380149841]
+build_end_time: [1668274695, 625186920]
+inputs:
+  "/Users/clayellis/Documents/Projects/swift-ci/.github/workflows/cicd/.build/checkouts/ShellOut/Sources/ShellOut.swift": [1668274691, 980250835]

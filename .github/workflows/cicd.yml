@@ -1,0 +1,15 @@
+name: CI/CD
+
+on:
+  pull_request:
+    branches: main
+
+jobs:
+  cicd:
+    name: swift-ci
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: swift-actions/setup-swift@v1
+    - name: swift-ci
+      run: swift run --package-path .github/workflows/cicd

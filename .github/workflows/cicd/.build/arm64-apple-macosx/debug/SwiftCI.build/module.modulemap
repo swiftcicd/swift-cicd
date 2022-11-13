@@ -1,0 +1,4 @@
+module SwiftCI {
+    header "/Users/clayellis/Documents/Projects/swift-ci/.github/workflows/cicd/.build/arm64-apple-macosx/debug/SwiftCI.build/SwiftCI-Swift.h"
+    requires objc
+}
