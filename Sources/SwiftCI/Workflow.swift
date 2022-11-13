@@ -1,3 +1,4 @@
+import Arguments
 import Foundation
 
 public protocol Workflow {
@@ -37,6 +38,21 @@ public extension Workflow {
             exit(0)
         } catch {
             exit(1)
+        }
+    }
+
+    private static func setUpWorkspace() throws {
+        let workspace: String
+        if context.environment.github.isCI {
+            workspace = try context.environment.github.$workspace.require()
+        } else {
+            var arguments = Arguments()
+            workspace = try arguments.consumeOption(named: "--workspace")
+        }
+
+        print("Setting current directory: \(workspace)")
+        guard context.fileManager.changeCurrentDirectoryPath(workspace) else {
+            throw InternalWorkflowError(message: "Failed to set current directory")
         }
     }
 }
