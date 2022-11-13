@@ -8,6 +8,15 @@
         "revision" : "e1577acf2b6e90086d01a6d5e2b8efdaae033568",
         "version" : "2.3.0"
       }
+    },
+    {
+      "identity" : "swift-arguments",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/clayellis/swift-arguments",
+      "state" : {
+        "branch" : "main",
+        "revision" : "014911a3a12f1087f7c0b3e4315ba161e84ceded"
+      }
     }
   ],
   "version" : 2

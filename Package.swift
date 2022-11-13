@@ -10,12 +10,14 @@ let package = Package(
         .executable(name: "Demo", targets: ["Demo"])
     ],
     dependencies: [
+        .package(url: "https://github.com/clayellis/swift-arguments", branch: "main"),
         .package(url: "https://github.com/JohnSundell/ShellOut", from: "2.3.0")
     ],
     targets: [
         .target(
             name: "SwiftCI",
             dependencies: [
+                .product(name: "Arguments", package: "swift-arguments"),
                 .product(name: "ShellOut", package: "ShellOut")
             ]
         ),
