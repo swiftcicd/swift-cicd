@@ -13,7 +13,7 @@ extension XcodeBuildStep {
         }
 
         public func run() async throws -> String {
-            try context.shell("xcodebuild", withoutBuilding ? "test-without-building" : "test", "--scheme", scheme, "--destination", destination)
+            try context.shell("xcodebuild", withoutBuilding ? "test-without-building" : "test", "-scheme", scheme, "-destination", destination)
         }
     }
 }
