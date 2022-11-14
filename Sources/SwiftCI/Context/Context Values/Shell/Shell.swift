@@ -2,11 +2,11 @@ import ShellOut
 
 public struct Shell {
     @Context(\.fileManager) var fileManager
-    @Context(\.logger) var log
+    @Context(\.logger) var logger
 
     @discardableResult
     func callAsFunction(_ command: String, _ arguments: [Argument]) throws -> String {
-        log("Shell (at: \(fileManager.currentDirectoryPath)): \(command) \(arguments.map(\.escapedArgument).joined(separator: " "))")
+        logger.debug("Shell (at: \(fileManager.currentDirectoryPath)): \(command) \(arguments.map(\.escapedArgument).joined(separator: " "))")
         return try shellOut(to: command, arguments: arguments.map(\.escapedArgument), at: fileManager.currentDirectoryPath)
     }
 

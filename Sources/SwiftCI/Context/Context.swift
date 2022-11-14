@@ -1,6 +1,6 @@
 import Foundation
 
-public struct ContextValues {
+public class ContextValues {
     static let shared = ContextValues()
     private let cache = ContextCache()
 

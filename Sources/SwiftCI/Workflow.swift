@@ -1,10 +1,12 @@
 import Arguments
 import Foundation
+import Logging
 
 // TODO: Should a workflow have an Outcome (success, failure, etc.) kind of like how a step has an output?
 
 public protocol Workflow {
     static var name: String { get }
+    static var logLevel: Logger.Level { get }
     init()
     func run() async throws
 }
@@ -13,6 +15,10 @@ public extension Workflow {
     static var name: String {
         "\(self)"
     }
+
+    static var logLevel: Logger.Level {
+        .info
+    }
 }
 
 public extension Workflow {
@@ -20,8 +26,9 @@ public extension Workflow {
     var context: ContextValues { .shared }
 
     func workflow<W: Workflow>(_ workflow: W) async throws {
-        // TODO: Configurable logging
-        log("Workflow: \(W.name)")
+        // TODO: Configurable logging format?
+        // Should the child workflow inherit the logging level of the parent?
+        logger.info("Workflow: \(W.name)")
         try await workflow.run()
     }
 
@@ -31,8 +38,8 @@ public extension Workflow {
 
     @discardableResult
     func step<S: Step>(_ step: S) async throws -> S.Output {
-        // TODO: Configurable logging
-        log("Step: \(step.name)")
+        // TODO: Configurable logging format?
+        logger.info("Step: \(step.name)")
         return try await step.run()
     }
 
@@ -45,13 +52,14 @@ public extension Workflow {
 public extension Workflow {
     static func main() async {
         do {
-            log("Starting Workflow: \(Self.name)")
+            context.logger.logLevel = Self.logLevel
+            logger.info("Starting Workflow: \(Self.name)")
             try setUpWorkspace()
             let workflow = self.init()
             try await workflow.run()
             exit(0)
         } catch {
-            log("""
+            logger.error("""
             Caught error: \(error.localizedDescription)
             \(error)
             """)
@@ -68,7 +76,7 @@ public extension Workflow {
             workspace = try arguments.consumeOption(named: "--workspace")
         }
 
-        print("Setting current directory: \(workspace)")
+        logger.debug("Setting current directory: \(workspace)")
         guard context.fileManager.changeCurrentDirectoryPath(workspace) else {
             throw InternalWorkflowError(message: "Failed to set current directory")
         }
