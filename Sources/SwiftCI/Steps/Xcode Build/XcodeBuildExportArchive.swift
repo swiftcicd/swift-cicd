@@ -51,7 +51,7 @@ public extension Step where Self == XcodeBuildStep.ExportArchive {
     }
 
     static func xcodeBuild(exportArchive archivePath: String, to exportPath: String? = nil, options: XcodeBuildStep.ExportArchive.Options) throws -> XcodeBuildStep.ExportArchive {
-        try XcodeBuildStep.ExportArchive(archivePath: archivePath, exportPath: exportPath, exportOptions: optionsPlist)
+        try XcodeBuildStep.ExportArchive(archivePath: archivePath, exportPath: exportPath, exportOptions: options)
     }
 }
 
