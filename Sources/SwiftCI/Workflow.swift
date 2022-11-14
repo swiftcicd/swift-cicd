@@ -76,7 +76,13 @@ public extension Workflow {
         if context.environment.github.isCI {
             workspace = try context.environment.github.$workspace.require()
         } else {
-            var arguments = Arguments()
+            var arguments = Arguments(usage: Usage(
+                overview: nil,
+                seeAlso: nil,
+                commands: [
+                    "your-swift-ci-command", .option("workspace", required: true, description: "The root directory of the package.")
+                ]
+            ))
             workspace = try arguments.consumeOption(named: "--workspace")
         }
 
