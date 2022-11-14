@@ -17,6 +17,15 @@
         "branch" : "main",
         "revision" : "014911a3a12f1087f7c0b3e4315ba161e84ceded"
       }
+    },
+    {
+      "identity" : "swift-environment",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/clayellis/swift-environment",
+      "state" : {
+        "branch" : "main",
+        "revision" : "e1728df308c4b7deef19946f7b6336fbcf0dcff4"
+      }
     }
   ],
   "version" : 2
