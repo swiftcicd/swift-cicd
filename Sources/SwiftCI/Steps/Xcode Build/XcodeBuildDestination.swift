@@ -18,7 +18,7 @@ extension XcodeBuildStep {
         public var argument: String {
             switch self {
             case let .platformOSName(platform, os, name):
-                return "'platform=\(platform),OS=\(os),name=\(name)'"
+                return "platform=\(platform),OS=\(os),name=\(name)"
             }
         }
     }

@@ -14,8 +14,8 @@ extension XcodeBuildStep {
 
         public func run() async throws -> String {
             var arguments = [
-                "--scheme", scheme,
-                "--destination", destination
+                "-scheme", scheme,
+                "-destination", destination
             ]
 
             if archive {
