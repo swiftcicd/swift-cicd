@@ -21,7 +21,7 @@ public extension Workflow {
 
     func workflow<W: Workflow>(_ workflow: W) async throws {
         // TODO: Configurable logging
-        print("Workflow: \(W.name)")
+        log("Workflow: \(W.name)")
         try await workflow.run()
     }
 
@@ -32,7 +32,7 @@ public extension Workflow {
     @discardableResult
     func step<S: Step>(_ step: S) async throws -> S.Output {
         // TODO: Configurable logging
-        print("Step: \(step.name)")
+        log("Step: \(step.name)")
         return try await step.run()
     }
 
@@ -45,13 +45,13 @@ public extension Workflow {
 public extension Workflow {
     static func main() async {
         do {
-            print("Starting Workflow: \(Self.name)")
+            log("Starting Workflow: \(Self.name)")
             try setUpWorkspace()
             let workflow = self.init()
             try await workflow.run()
             exit(0)
         } catch {
-            print("""
+            log("""
             Caught error: \(error.localizedDescription)
             \(error)
             """)
