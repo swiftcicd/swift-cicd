@@ -2,6 +2,10 @@ import Arguments
 import Foundation
 import Logging
 
+// TODO: Would it be possible to make swift-ci run as a subcommand of swift?
+//  - So instead of: swift run name-of-executable
+//  - It would be: swift ci
+
 // TODO: Should a workflow have an Outcome (success, failure, etc.) kind of like how a step has an output?
 
 public protocol Workflow {

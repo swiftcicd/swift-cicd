@@ -10,3 +10,13 @@ public extension ContextValues {
         set { self[FileManager.self] = newValue }
     }
 }
+
+public extension ContextValues {
+    var temporaryDirectory: String {
+        if let runnerTemp = environment.github.runnerTemp {
+            return runnerTemp
+        } else {
+            return fileManager.temporaryDirectory.path
+        }
+    }
+}

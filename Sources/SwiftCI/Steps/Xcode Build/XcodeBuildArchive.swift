@@ -1,5 +1,0 @@
-extension XcodeBuildStep {
-    struct Archive {
-
-    }
-}

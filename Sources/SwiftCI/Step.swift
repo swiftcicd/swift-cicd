@@ -11,5 +11,6 @@ public extension Step {
 }
 
 public extension Step {
+    static var context: ContextValues { .shared }
     var context: ContextValues { .shared }
 }
