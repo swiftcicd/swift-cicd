@@ -19,7 +19,9 @@ public extension Workflow {
     static var context: ContextValues { .shared }
     var context: ContextValues { .shared }
 
-    func workflow(_ workflow: any Workflow) async throws {
+    func workflow<W: Workflow>(_ workflow: W) async throws {
+        // TODO: Configurable logging
+        print("Workflow: \(W.name)")
         try await workflow.run()
     }
 
@@ -29,7 +31,9 @@ public extension Workflow {
 
     @discardableResult
     func step<S: Step>(_ step: S) async throws -> S.Output {
-        try await step.run()
+        // TODO: Configurable logging
+        print("Step: \(step.name)")
+        return try await step.run()
     }
 
     @discardableResult
