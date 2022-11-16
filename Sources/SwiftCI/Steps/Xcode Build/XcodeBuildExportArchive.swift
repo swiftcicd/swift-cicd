@@ -28,6 +28,10 @@ extension XcodeBuildStep {
             let plistPath = temporaryDirectory + "/exportOptions.plist"
             Self.context.fileManager.createFile(atPath: plistPath, contents: plist)
             self.init(archivePath: archivePath, exportPath: exportPath, exportOptionsPlist: plistPath, allowProvisioningUpdates: allowProvisioningUpdates)
+            logger.debug("""
+            Created export options files from options:
+            \(exportOptions)
+            """)
         }
 
         public func run() async throws -> String {
@@ -46,6 +50,12 @@ extension XcodeBuildStep {
                     "-exportPath", exportPath
                 ])
             }
+
+            var logMessage = "Exporting archive from options file \(exportOptionsPlist)"
+            if logger.logLevel <= .debug, let optionsFileContents = context.fileManager.contents(atPath: exportOptionsPlist) {
+                logMessage += "\n\(String(decoding: optionsFileContents, as: UTF8.self))"
+            }
+            logger.debug("\(logMessage)")
 
             return try context.shell("xcodebuild", arguments)
         }
