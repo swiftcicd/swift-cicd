@@ -15,15 +15,19 @@ public struct AddProfile: Step {
         let provisioningProfiles = context.fileManager.homeDirectoryForCurrentUser
             .appendingPathComponent("Library/MobileDevice/Provisioning Profiles")
 
+        logger.debug("Creating directory: \(provisioningProfiles.path)")
         try context.fileManager.createDirectory(at: provisioningProfiles, withIntermediateDirectories: true)
 
         let addedProfilePath = provisioningProfiles
             .appendingPathComponent("Library/MobileDevice/Provisioning Profiles/\(profile.uuid).mobileprovision")
             .path
 
+        logger.debug("Creating file: \(addedProfilePath)")
         guard context.fileManager.createFile(atPath: addedProfilePath, contents: profileContents) else {
             throw ProfileError(message: "Failed to create \(addedProfilePath)")
         }
+
+        logger.debug("Created: \(addedProfilePath)")
         return profile
     }
 
