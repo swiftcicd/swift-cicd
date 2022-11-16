@@ -7,7 +7,10 @@ public struct Shell {
     @discardableResult
     func callAsFunction(_ command: String, _ arguments: [Argument]) throws -> String {
         logger.debug("Shell (at: \(fileManager.currentDirectoryPath)): \(command) \(arguments.map(\.escapedArgument).joined(separator: " "))")
-        return try shellOut(to: command, arguments: arguments.map(\.escapedArgument), at: fileManager.currentDirectoryPath)
+        let output = try shellOut(to: command, arguments: arguments.map(\.escapedArgument), at: fileManager.currentDirectoryPath)
+        // TODO: We're just going to print the output for now, but eventually it should be streamed out as it comes in and made available for formatting
+        print(output)
+        return output
     }
 
     @discardableResult

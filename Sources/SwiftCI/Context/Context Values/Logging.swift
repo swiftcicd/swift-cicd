@@ -1,6 +1,7 @@
 import Logging
 
 enum LoggerKey: ContextKey {
+    // TODO: Can the default log handler be configured to remove its verbose prefix?
     static let defaultValue: Logger = Logger(label: "swift-ci")
 }
 

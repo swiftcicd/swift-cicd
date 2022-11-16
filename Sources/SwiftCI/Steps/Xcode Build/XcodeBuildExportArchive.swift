@@ -4,6 +4,18 @@ import Foundation
 // TODO: Automatically detect project, schemes, etc.
 
 extension XcodeBuildStep {
+    public struct Authentication {
+        public let key: String
+        public let id: String
+        public let issuerID: String
+
+        public init(key: String, id: String, issuerID: String) {
+            self.key = key
+            self.id = id
+            self.issuerID = issuerID
+        }
+    }
+
     public struct ExportArchive: Step {
         public let name = "Xcode Build: Export Archive"
 
@@ -14,20 +26,22 @@ extension XcodeBuildStep {
         /// Specifies a path to a plist file that configures archive exporting.
         let exportOptionsPlist: String
         let allowProvisioningUpdates: Bool
+        var authentication: Authentication?
 
-        public init(archivePath: String, exportPath: String? = nil, exportOptionsPlist: String, allowProvisioningUpdates: Bool) {
+        public init(archivePath: String, exportPath: String? = nil, exportOptionsPlist: String, allowProvisioningUpdates: Bool, authentication: Authentication? = nil) {
             self.archivePath = archivePath
             self.exportPath = exportPath
             self.exportOptionsPlist = exportOptionsPlist
             self.allowProvisioningUpdates = allowProvisioningUpdates
+            self.authentication = authentication
         }
 
-        public init(archivePath: String, exportPath: String? = nil, exportOptions: Options, allowProvisioningUpdates: Bool) throws {
+        public init(archivePath: String, exportPath: String? = nil, exportOptions: Options, allowProvisioningUpdates: Bool, authentication: Authentication? = nil) throws {
             let plist = try exportOptions.generatePList()
             let temporaryDirectory = Self.context.temporaryDirectory
             let plistPath = temporaryDirectory + "/exportOptions.plist"
             Self.context.fileManager.createFile(atPath: plistPath, contents: plist)
-            self.init(archivePath: archivePath, exportPath: exportPath, exportOptionsPlist: plistPath, allowProvisioningUpdates: allowProvisioningUpdates)
+            self.init(archivePath: archivePath, exportPath: exportPath, exportOptionsPlist: plistPath, allowProvisioningUpdates: allowProvisioningUpdates, authentication: authentication)
             logger.debug("""
             Created export options files from options:
             \(exportOptions)
@@ -50,20 +64,27 @@ extension XcodeBuildStep {
                     "-exportPath", exportPath
                 ])
             }
-            
-            logger.debug("Exporting archive from options file \(exportOptionsPlist)")
+
+            if let authentication {
+                arguments += [
+                    "-authenticationKeyPath", authentication.key,
+                    "-authenticationKeyID", authentication.id,
+                    "-authenticationKeyIssuerID", authentication.issuerID
+                ]
+            }
+
             return try context.shell("xcodebuild", arguments)
         }
     }
 }
 
 public extension Step where Self == XcodeBuildStep.ExportArchive {
-    static func xcodeBuild(exportArchive archivePath: String, to exportPath: String? = nil, allowProvisioningUpdates: Bool, optionsPlist: String) -> XcodeBuildStep.ExportArchive {
-        XcodeBuildStep.ExportArchive(archivePath: archivePath, exportPath: exportPath, exportOptionsPlist: optionsPlist, allowProvisioningUpdates: allowProvisioningUpdates)
+    static func xcodeBuild(exportArchive archivePath: String, to exportPath: String? = nil, allowProvisioningUpdates: Bool, optionsPlist: String, authentication: XcodeBuildStep.Authentication? = nil) -> XcodeBuildStep.ExportArchive {
+        XcodeBuildStep.ExportArchive(archivePath: archivePath, exportPath: exportPath, exportOptionsPlist: optionsPlist, allowProvisioningUpdates: allowProvisioningUpdates, authentication: authentication)
     }
 
-    static func xcodeBuild(exportArchive archivePath: String, to exportPath: String? = nil, allowProvisioningUpdates: Bool, options: XcodeBuildStep.ExportArchive.Options) throws -> XcodeBuildStep.ExportArchive {
-        try XcodeBuildStep.ExportArchive(archivePath: archivePath, exportPath: exportPath, exportOptions: options, allowProvisioningUpdates: allowProvisioningUpdates)
+    static func xcodeBuild(exportArchive archivePath: String, to exportPath: String? = nil, allowProvisioningUpdates: Bool, options: XcodeBuildStep.ExportArchive.Options, authentication: XcodeBuildStep.Authentication? = nil) throws -> XcodeBuildStep.ExportArchive {
+        try XcodeBuildStep.ExportArchive(archivePath: archivePath, exportPath: exportPath, exportOptions: options, allowProvisioningUpdates: allowProvisioningUpdates, authentication: authentication)
     }
 }
 
