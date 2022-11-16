@@ -1,5 +1,8 @@
 import Foundation
 
+// TODO: Make the export available in Xcode Organizer
+// TODO: Automatically detect project, schemes, etc.
+
 extension XcodeBuildStep {
     public struct ExportArchive: Step {
         public let name = "Xcode Build: Export Archive"
@@ -10,21 +13,21 @@ extension XcodeBuildStep {
         var exportPath: String?
         /// Specifies a path to a plist file that configures archive exporting.
         let exportOptionsPlist: String
+        let allowProvisioningUpdates: Bool
 
-        public init(archivePath: String, exportPath: String? = nil, exportOptionsPlist: String) {
+        public init(archivePath: String, exportPath: String? = nil, exportOptionsPlist: String, allowProvisioningUpdates: Bool) {
             self.archivePath = archivePath
             self.exportPath = exportPath
             self.exportOptionsPlist = exportOptionsPlist
+            self.allowProvisioningUpdates = allowProvisioningUpdates
         }
 
-        public init(archivePath: String, exportPath: String? = nil, exportOptions: Options) throws {
-            self.archivePath = archivePath
-            self.exportPath = exportPath
+        public init(archivePath: String, exportPath: String? = nil, exportOptions: Options, allowProvisioningUpdates: Bool) throws {
             let plist = try exportOptions.generatePList()
             let temporaryDirectory = Self.context.temporaryDirectory
             let plistPath = temporaryDirectory + "/exportOptions.plist"
             Self.context.fileManager.createFile(atPath: plistPath, contents: plist)
-            self.exportOptionsPlist = plistPath
+            self.init(archivePath: archivePath, exportPath: exportPath, exportOptionsPlist: plistPath, allowProvisioningUpdates: allowProvisioningUpdates)
         }
 
         public func run() async throws -> String {
@@ -33,6 +36,10 @@ extension XcodeBuildStep {
                 "-archivePath", archivePath,
                 "-exportOptionsPlist", exportOptionsPlist
             ]
+
+            if allowProvisioningUpdates {
+                arguments.append("-allowProvisioningUpdates")
+            }
 
             if let exportPath {
                 arguments.append(contentsOf: [
@@ -46,12 +53,12 @@ extension XcodeBuildStep {
 }
 
 public extension Step where Self == XcodeBuildStep.ExportArchive {
-    static func xcodeBuild(exportArchive archivePath: String, to exportPath: String? = nil, optionsPlist: String) -> XcodeBuildStep.ExportArchive {
-        XcodeBuildStep.ExportArchive(archivePath: archivePath, exportPath: exportPath, exportOptionsPlist: optionsPlist)
+    static func xcodeBuild(exportArchive archivePath: String, to exportPath: String? = nil, allowProvisioningUpdates: Bool, optionsPlist: String) -> XcodeBuildStep.ExportArchive {
+        XcodeBuildStep.ExportArchive(archivePath: archivePath, exportPath: exportPath, exportOptionsPlist: optionsPlist, allowProvisioningUpdates: allowProvisioningUpdates)
     }
 
-    static func xcodeBuild(exportArchive archivePath: String, to exportPath: String? = nil, options: XcodeBuildStep.ExportArchive.Options) throws -> XcodeBuildStep.ExportArchive {
-        try XcodeBuildStep.ExportArchive(archivePath: archivePath, exportPath: exportPath, exportOptions: options)
+    static func xcodeBuild(exportArchive archivePath: String, to exportPath: String? = nil, allowProvisioningUpdates: Bool, options: XcodeBuildStep.ExportArchive.Options) throws -> XcodeBuildStep.ExportArchive {
+        try XcodeBuildStep.ExportArchive(archivePath: archivePath, exportPath: exportPath, exportOptions: options, allowProvisioningUpdates: allowProvisioningUpdates)
     }
 }
 
@@ -112,19 +119,75 @@ extension XcodeBuildStep.ExportArchive {
         }
 
         public enum Thinning: Encodable {
+            case none
             case thinForAllVariants
             case thin(deviceIdentifier: String)
 
             public func encode(to encoder: Encoder) throws {
                 var container = encoder.singleValueContainer()
                 switch self {
+                case .none:
+                    try container.encode("<none>")
                 case .thinForAllVariants:
-                    try container.encode("thin-for-all-variants")
+                    try container.encode("<thin-for-all-variants>")
                 case .thin(let deviceIdentifier):
                     try container.encode(deviceIdentifier)
                 }
             }
         }
+
+        // Dynamic behaviors:
+        // For non-App Store exports:
+        //  - compileBitcode
+        //  - embedOnDemandResourcesAssetPacksInBundle
+        //  - manifest
+        //  - onDemandResourcesAssetPacksBaseURL
+        //  - thinning
+        //
+        // For app Store exports
+        //  - generateAppStoreInformation
+        //  - uploadSymbols
+        //
+        // For manual signing only
+        //  - installerSigningCertificate
+        //  - provisioningProfiles
+        //  - signingCertificate
+        //
+        // When uploading to app store connect:
+        //  - manageAppVersionAndBuildNumber
+
+        // Properties with dependencies:
+        // - compileBitcode:
+        //      - "For non-App Store exports"
+        // - embedOnDemandResourcesAssetPacksInBundle:
+        //      - "For non-App Store exports"
+        //      - "Defaults to true unless onDemandResourcesAssetPacksBaseURL is specified."
+        // - generateAppStoreInformation
+        //      - "For App Store exports"
+        // - iCloudContainerEnvironment:
+        //      - "Available options vary depending on the type of provisioning profile used"
+        // - installerSigningCertificate:
+        //      - "For manual signing only"
+        // - manageAppVersionAndBuildNumber:
+        //      - "when uploading to App Store Connect"
+        // - manifest:
+        //      - "For non-App Store exports"
+        // - method:
+        //      - "The list of options varies based on the type of archive"
+        // - onDemandResourcesAssetPacksBaseURL:
+        //      - "For non-App Store exports"
+        // - provisioningProfiles:
+        //      - "For manual signing only"
+        // - signingCertificate:
+        //      - "For manual signing only."
+        // - signingStyle:
+        //      - "The signing style to use when re-signing the app for distribution."
+        //      - "Apps that were automatically signed when archived can be signed manually or automatically during distribution"
+        //      - "Apps that were manually signed when archived must be manually signed during distribtion, so the value of signingStyle is ignored."
+        // - thinning:
+        //      - "For non-App Store exports"
+        // - uploadSymbols:
+        //      - "For App Store exports"
 
         /// For non-App Store exports, should Xcode re-compile the app from bitcode? Defaults to true.
         var compileBitcode = true
@@ -141,7 +204,7 @@ extension XcodeBuildStep.ExportArchive {
         var embedOnDemandResourcesAssetPacksInBundle = true
 
         /// For App Store exports, should Xcode generate App Store Information for uploading with iTMSTransporter? Defaults to false.
-        var generateApStoreInformation = false
+        var generateAppStoreInformation = false
 
         /// If the app is using CloudKit, this configures the "com.apple.developer.icloud-container-environment" entitlement.
         /// Available options vary depending on the type of provisioning profile used, but may include: Development and Production.
@@ -189,44 +252,40 @@ extension XcodeBuildStep.ExportArchive {
         /// For non-App Store exports, should Xcode thin the package for one or more device variants?
         ///
         /// Available options:
-        /// - nil (Xcode produces a non-thinned universal app),
-        /// - thin-for-all-variants (Xcode produces a universal app and all available thinned variants),
+        /// - <none> (Xcode produces a non-thinned universal app),
+        /// - <thin-for-all-variants> (Xcode produces a universal app and all available thinned variants),
         /// - or a model identifier for a specific device (e.g. "iPhone7,1").
         /// Defaults to nil.
-        var thinning: Thinning? = nil
+        var thinning: Thinning = .none
 
         /// For App Store exports, should the package include symbols? Defaults to true.
         var uploadSymbols = true
-
-        // TODO: Create specific initializers for the semantics of the plist
-        // manual signing (certain keys don't apply, certain ones are necessary)
-        // automatic signing (certain keys don't apply, certain ones are necessary)
 
         public init(
             compileBitcode: Bool = true,
             destination: Destination,
             distributionBundleIdentifier: String? = nil,
             embedOnDemandResourcesAssetPacksInBundle: Bool = true,
-            generateApStoreInformation: Bool = false,
+            generateAppStoreInformation: Bool = false,
             iCloudContainerEnvironment: String? = nil,
             installerSigningCertificate: SigningCertificate<InstallerAutomaticSelector>? = nil,
             manageAppVersionAndBuildNumber: Bool = true,
             manifest: [String : String]? = nil,
-            method: Method,
+            method: Method = .development,
             onDemandResourcesAssetPacksBaseURL: String? = nil,
             provisioningProfiles: [String : String]? = nil,
             signingCertificate: SigningCertificate<AutomaticSelector>? = nil,
             signingStyle: SigningStyle,
             stripSwiftSymbols: Bool = true,
             teamID: String? = nil,
-            thinning: Thinning? = nil,
+            thinning: Thinning = .none,
             uploadSymbols: Bool = true
         ) {
             self.compileBitcode = compileBitcode
             self.destination = destination
             self.distributionBundleIdentifier = distributionBundleIdentifier
             self.embedOnDemandResourcesAssetPacksInBundle = embedOnDemandResourcesAssetPacksInBundle
-            self.generateApStoreInformation = generateApStoreInformation
+            self.generateAppStoreInformation = generateAppStoreInformation
             self.iCloudContainerEnvironment = iCloudContainerEnvironment
             self.installerSigningCertificate = installerSigningCertificate
             self.manageAppVersionAndBuildNumber = manageAppVersionAndBuildNumber
@@ -247,5 +306,137 @@ extension XcodeBuildStep.ExportArchive {
 extension XcodeBuildStep.ExportArchive.Options {
     func generatePList() throws -> Data {
         try PropertyListEncoder().encode(self)
+    }
+}
+
+extension XcodeBuildStep.ExportArchive.Options {
+    public enum OnDemandResources {
+        case embed
+        case remote(baseURL: String)
+
+        var embedOnDemandResourcesAssetPacksInBundle: Bool {
+            switch self {
+            case .embed:
+                return true
+            case .remote:
+                return false
+            }
+        }
+
+        var onDemandResourcesAssetPacksBaseURL: String? {
+            switch self {
+            case .embed:
+                return nil
+            case let .remote(baseURL):
+                return baseURL
+            }
+        }
+    }
+
+    public enum Export {
+        case nonAppStore(
+            manifest: [String: String],
+            compileBitcode: Bool = true,
+            onDemandResources: OnDemandResources? = nil,
+            thinning: Thinning = .none
+        )
+
+        case appStore(
+            uploadToAppStore: Bool,
+            manageAppVersionAndBuildNumber: Bool = true,
+            generateAppStoreInformation: Bool = false,
+            uploadSymbols: Bool = true
+        )
+    }
+
+    public enum Signing {
+        case automatic
+        case manual(
+            provisioningProfiles: [String: String],
+            signingCertificate: SigningCertificate<AutomaticSelector>? = nil,
+            installerSigningCertificate: SigningCertificate<InstallerAutomaticSelector>? = nil
+        )
+    }
+
+    public init(
+        method: Method,
+        export: Export,
+        signing: Signing,
+        distributionBundleIdentifier: String? = nil,
+        iCloudContainerEnvironment: String? = nil,
+        stripSwiftSymbols: Bool = true,
+        teamID: String? = nil
+    ) {
+        let compileBitcode: Bool
+        let destination: Destination
+        let embedOnDemandResourcesAssetPacksInBundle: Bool
+        let generateAppStoreInformation: Bool
+        let manageAppVersionAndBuildNumber: Bool
+        let manifest: Optional<[String: String]>
+        let onDemandResourcesAssetPacksBaseURL: Optional<String>
+        let thinning: Thinning
+        let uploadSymbols: Bool
+
+        switch export {
+        case let .appStore(uploadToAppStore, _manageAppVersionAndBuildNumber, _generateAppStoreInformation, _uploadSymbols):
+            compileBitcode = true
+            destination = uploadToAppStore ? .upload : .export
+            embedOnDemandResourcesAssetPacksInBundle = true
+            generateAppStoreInformation = _generateAppStoreInformation
+            manageAppVersionAndBuildNumber = _manageAppVersionAndBuildNumber
+            manifest = nil
+            onDemandResourcesAssetPacksBaseURL = nil
+            thinning = .none
+            uploadSymbols = _uploadSymbols
+        case let .nonAppStore(_manifest, _compileBitcode, onDemandResources, _thinning):
+            compileBitcode = _compileBitcode
+            destination = .export
+            embedOnDemandResourcesAssetPacksInBundle = onDemandResources?.embedOnDemandResourcesAssetPacksInBundle ?? true
+            generateAppStoreInformation = false
+            manageAppVersionAndBuildNumber = false
+            manifest = _manifest
+            onDemandResourcesAssetPacksBaseURL = onDemandResources?.onDemandResourcesAssetPacksBaseURL
+            thinning = _thinning
+            uploadSymbols = false
+        }
+
+        let installerSigningCertificate: Optional<SigningCertificate<InstallerAutomaticSelector>>
+        let provisioningProfiles: Optional<[String: String]>
+        let signingCertificate: Optional<SigningCertificate<AutomaticSelector>>
+        let signingStyle: SigningStyle
+
+        switch signing {
+        case .automatic:
+            installerSigningCertificate = nil
+            provisioningProfiles = nil
+            signingCertificate = nil
+            signingStyle = .automatic
+        case let .manual(_provisioningProfiles, _signingCertificate, _installerSigningCertificate):
+            installerSigningCertificate = _installerSigningCertificate
+            provisioningProfiles = _provisioningProfiles
+            signingCertificate = _signingCertificate
+            signingStyle = .manual
+        }
+
+        self.init(
+            compileBitcode: compileBitcode,
+            destination: destination,
+            distributionBundleIdentifier: distributionBundleIdentifier,
+            embedOnDemandResourcesAssetPacksInBundle: embedOnDemandResourcesAssetPacksInBundle,
+            generateAppStoreInformation: generateAppStoreInformation,
+            iCloudContainerEnvironment: iCloudContainerEnvironment,
+            installerSigningCertificate: installerSigningCertificate,
+            manageAppVersionAndBuildNumber: manageAppVersionAndBuildNumber,
+            manifest: manifest,
+            method: method,
+            onDemandResourcesAssetPacksBaseURL: onDemandResourcesAssetPacksBaseURL,
+            provisioningProfiles: provisioningProfiles,
+            signingCertificate: signingCertificate,
+            signingStyle: signingStyle,
+            stripSwiftSymbols: stripSwiftSymbols,
+            teamID: teamID,
+            thinning: thinning,
+            uploadSymbols: uploadSymbols
+        )
     }
 }

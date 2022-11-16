@@ -5,20 +5,28 @@ extension XcodeBuildStep {
             case macOS = "OS X"
         }
 
-        case platformOSName(platform: String, os: String, name: String)
-
-        public init(platform: String, os: String = "latest", name: String) {
-            self = .platformOSName(platform: platform, os: os, name: name)
+        public enum GenericPlatform: String {
+            case iOS
+            case macOS = "OS X"
         }
 
-        public init(platform: Platform, os: String = "latest", name: String) {
-            self.init(platform: platform.rawValue, os: os, name: name)
+        case platform(String, os: String, name: String)
+        case generic(platform: String)
+
+        public static func platform(_ platform: Platform, os: String = "latest", name: String) -> Destination {
+            .platform(platform.rawValue, os: os, name: name)
+        }
+
+        public static func generic(platform: GenericPlatform) -> Destination {
+            .generic(platform: platform.rawValue)
         }
 
         public var argument: String {
             switch self {
-            case let .platformOSName(platform, os, name):
+            case let .platform(platform, os, name):
                 return "platform=\(platform),OS=\(os),name=\(name)"
+            case .generic(let platform):
+                return "generic/platform=\(platform)"
             }
         }
     }

@@ -10,7 +10,7 @@ extension Argument {
     var escapedArgument: String {
         // TODO: If the argument has newlines in it, should we esacpe the lines?
 
-        if argument.contains(" ") {
+        if argument.contains(" ") && !(argument.hasPrefix("'") && argument.hasSuffix("'")) {
             return "'\(argument)'"
         } else {
             return argument

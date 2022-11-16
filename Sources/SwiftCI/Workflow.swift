@@ -30,6 +30,10 @@ public extension Workflow {
     var context: ContextValues { .shared }
 
     func workflow<W: Workflow>(_ workflow: W) async throws {
+        // Parents are restored to their current directory after a child workflow runs
+        let currentDirectory = context.fileManager.currentDirectoryPath
+        defer { try? context.fileManager.changeCurrentDirectory(currentDirectory) }
+
         // TODO: Configurable logging format?
         // Should the child workflow inherit the logging level of the parent?
         logger.info("Workflow: \(W.name)")
@@ -55,14 +59,20 @@ public extension Workflow {
 
 public extension Workflow {
     static func main() async {
+        context.logger.logLevel = Self.logLevel
+        logger.info("Starting Workflow: \(Self.name)")
+
+        let workflow = self.init()
+
         do {
-            context.logger.logLevel = Self.logLevel
-            logger.info("Starting Workflow: \(Self.name)")
             try setUpWorkspace()
-            let workflow = self.init()
             try await workflow.run()
             exit(0)
         } catch {
+
+            // TODO: We could call a method on workflow to clean up after the error (send messages, notifications, etc.)
+            // workflow.tearDown(after: error)
+
             logger.error("""
             Caught error: \(error.localizedDescription)
             \(error)

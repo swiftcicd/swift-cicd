@@ -5,7 +5,7 @@ public protocol Step<Output> {
 }
 
 public extension Step {
-    static var name: String {
+    var name: String {
         "\(self)"
     }
 }

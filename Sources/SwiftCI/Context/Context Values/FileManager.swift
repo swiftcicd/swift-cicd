@@ -20,3 +20,15 @@ public extension ContextValues {
         }
     }
 }
+
+public extension FileManager {
+    enum FileManagerError: Error {
+        case changeCurrentDirectoryFailed(path: String)
+    }
+
+    func changeCurrentDirectory(_ path: String) throws {
+        guard changeCurrentDirectoryPath(path) else {
+            throw FileManagerError.changeCurrentDirectoryFailed(path: path)
+        }
+    }
+}
