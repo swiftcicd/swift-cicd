@@ -19,7 +19,7 @@ public struct AddProfile: Step {
         try context.fileManager.createDirectory(at: provisioningProfiles, withIntermediateDirectories: true)
 
         let addedProfilePath = provisioningProfiles
-            .appendingPathComponent("Library/MobileDevice/Provisioning Profiles/\(profile.uuid).mobileprovision")
+            .appendingPathComponent("\(profile.uuid).mobileprovision")
             .path
 
         logger.debug("Creating file: \(addedProfilePath)")
