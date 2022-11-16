@@ -12,7 +12,12 @@ public struct AddProfile: Step {
         }
         let profile = try openProfile(contents: profileContents)
 
-        let addedProfilePath = context.fileManager.homeDirectoryForCurrentUser
+        let provisioningProfiles = context.fileManager.homeDirectoryForCurrentUser
+            .appendingPathComponent("Library/MobileDevice/Provisioning Profiles")
+
+        try context.fileManager.createDirectory(at: provisioningProfiles, withIntermediateDirectories: true)
+
+        let addedProfilePath = provisioningProfiles
             .appendingPathComponent("Library/MobileDevice/Provisioning Profiles/\(profile.uuid).mobileprovision")
             .path
 
