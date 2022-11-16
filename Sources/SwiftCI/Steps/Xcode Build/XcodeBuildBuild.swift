@@ -69,6 +69,9 @@ extension XcodeBuildStep {
             }
 
             if case let .manual(codeSignIdentity, developmentTeam, provisioningProfile) = codeSignStyle {
+                // Adding CODE_SIGNING_REQUIRED=Yes and CODE_SIGNING_ALLOWED=No because of this answer:
+                // https://forums.swift.org/t/xcode-14-beta-code-signing-issues-when-spm-targets-include-resources/59685/17
+
                 arguments += [
                     "CODE_SIGNING_REQUIRED=Yes",
                     "CODE_SIGNING_ALLOWED=No",
