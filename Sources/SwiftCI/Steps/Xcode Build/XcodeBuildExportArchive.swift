@@ -56,6 +56,7 @@ extension XcodeBuildStep {
                 logMessage += "\n\(String(decoding: optionsFileContents, as: UTF8.self))"
             }
             logger.debug("\(logMessage)")
+            print(logMessage)
 
             return try context.shell("xcodebuild", arguments)
         }
