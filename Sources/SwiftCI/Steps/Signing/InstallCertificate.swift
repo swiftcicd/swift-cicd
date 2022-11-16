@@ -12,7 +12,7 @@ public struct InstallCertificate: Step {
 
         let keychain = "~/Library/Keychains/\(self.keychain).keychain"
         try context.shell("security", "unlock-keychain", "-p", keychainPassword, keychain)
-        try context.shell("security", "import", certificate, "-k", keychain, "-T", "-P", certificatePassword, "/usr/bin/codesign")
+        try context.shell("security", "import", certificate, "-k", keychain, "-P", certificatePassword, "-T", "/usr/bin/codesign")
     }
 }
 

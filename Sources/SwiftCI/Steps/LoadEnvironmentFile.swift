@@ -17,7 +17,8 @@ public struct LoadEnvironmentFile: Step {
             throw StepError(message: "Missing environment file: \(environmentKey)")
         }
 
-        guard let fileData = Data(base64Encoded: fileBase64Encoded.normalizedBase64Encoding, options: .ignoreUnknownCharacters) else {
+//        guard let fileData = Data(base64Encoded: fileBase64Encoded.normalizedBase64Encoding, options: .ignoreUnknownCharacters) else {
+        guard let fileData = Data(base64Encoded: fileBase64Encoded, options: .ignoreUnknownCharacters) else {
             throw StepError(message: "Failed to base64 decode file")
         }
 

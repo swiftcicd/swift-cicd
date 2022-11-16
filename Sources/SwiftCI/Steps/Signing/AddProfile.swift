@@ -2,12 +2,23 @@ import Foundation
 
 public struct AddProfile: Step {
     /// Path to .mobileprovision file.
-    let profile: String
+    let profilePath: String
 
     public func run() async throws -> Profile {
         // https://stackoverflow.com/a/46095880/4283188
-        let profile = try openProfile()
-        try context.shell("cp", "-R", self.profile, "~/Library/MobileDevices/Provisioning Profiles/\(profile.uuid).mobileprovision")
+
+        guard let profileContents = context.fileManager.contents(atPath: profilePath) else {
+            throw ProfileError(message: "Failed to get contents at \(profilePath)")
+        }
+        let profile = try openProfile(contents: profileContents)
+
+        let addedProfilePath = context.fileManager.homeDirectoryForCurrentUser
+            .appendingPathComponent("Library/MobileDevice/Provisioning Profiles/\(profile.uuid).mobileprovision")
+            .path
+
+        guard context.fileManager.createFile(atPath: addedProfilePath, contents: profileContents) else {
+            throw ProfileError(message: "Failed to create \(addedProfilePath)")
+        }
         return profile
     }
 
@@ -15,11 +26,7 @@ public struct AddProfile: Step {
         let message: String
     }
 
-    func openProfile() throws -> Profile {
-        guard let contents = context.fileManager.contents(atPath: profile) else {
-            throw ProfileError(message: "Failed to get contents at \(profile)")
-        }
-
+    func openProfile(contents: Data) throws -> Profile {
         let stringContents = String(decoding: contents, as: UTF8.self)
 
         guard
@@ -52,6 +59,6 @@ public struct AddProfile: Step {
 
 public extension Step where Self == AddProfile {
     static func addProfile(_ pathToProfile: String) -> AddProfile {
-        AddProfile(profile: pathToProfile)
+        AddProfile(profilePath: pathToProfile)
     }
 }
