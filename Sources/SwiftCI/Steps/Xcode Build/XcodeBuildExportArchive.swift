@@ -50,14 +50,8 @@ extension XcodeBuildStep {
                     "-exportPath", exportPath
                 ])
             }
-
-            var logMessage = "Exporting archive from options file \(exportOptionsPlist)"
-            if logger.logLevel <= .debug, let optionsFileContents = context.fileManager.contents(atPath: exportOptionsPlist) {
-                logMessage += "\n\(String(decoding: optionsFileContents, as: UTF8.self))"
-            }
-            logger.debug("\(logMessage)")
-            print(logMessage)
-
+            
+            logger.debug("Exporting archive from options file \(exportOptionsPlist)")
             return try context.shell("xcodebuild", arguments)
         }
     }

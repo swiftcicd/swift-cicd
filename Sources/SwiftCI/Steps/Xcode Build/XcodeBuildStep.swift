@@ -3,18 +3,51 @@ public struct XcodeBuildStep: Step {
 
 //    struct Command {
 //        enum Command {
+//            case clean
 //            case build
 //            case test(withoutBuilding: Bool)
-//            case importLocalizations
-//            case exportLocalizations
+//            case importLocalizations(localizationPath: String)
+//            case exportLocalizations(localizationPath: String)
 //            case archive(platform: XcodeBuildStep.Destination.GenericPlatform, archivePath: String)
-//            case exportArchive(archivePath: String, exportPath: String?, exportOptionsPath: String, allowProvisioningUpdates: Bool)
+//            case exportArchive(archivePath: String, exportPath: String?, exportOptionsPath: String)
+//        }
+//
+//        public enum Configuration: ExpressibleByStringLiteral {
+//            case debug
+//            case release
+//            case custom(String)
+//
+//            var string: String {
+//                switch self {
+//                case .debug:
+//                    return "Debug"
+//                case .release:
+//                    return "Release"
+//                case .custom(let value):
+//                    return value
+//                }
+//            }
+//
+//            public init(stringLiteral value: String) {
+//                self = .custom(value)
+//            }
+//        }
+//
+//        public enum CodeSignStyle {
+//            case manual(provisioningProfile: String, codeSignIdentity: String)
+//            case automatic
+//
+//            public static func manual(profile: ProvisioningProfile) throws -> CodeSignStyle {
+//                let certificate = try profile.openDeveloperCertificate()
+//                return .manual(provisioningProfile: profile.uuid, codeSignIdentity: certificate.commonName)
+//            }
 //        }
 //
 //        let scheme: String
-//        let destination: XcodeBuildStep.Destination
-//        let configuration: XcodeBuildStep.Build.Configuration
-//        let command: Command
+//        var destination: XcodeBuildStep.Destination?
+//        var configuration: Configuration?
+//        var commands: [Command]?
+//        var codeSignStyle: CodeSignStyle?
 //    }
 
     public let name = "Xcode Build"

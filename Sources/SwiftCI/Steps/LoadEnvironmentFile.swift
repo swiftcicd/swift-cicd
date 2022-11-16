@@ -8,23 +8,21 @@ public struct LoadEnvironmentFile: Step {
     let environmentKey: String
     let loadedFileName: String
 
-    struct StepError: Error {
-        let message: String
-    }
-
     public func run() async throws -> Output {
         guard let fileBase64Encoded = context.environment[environmentKey] else {
-            throw StepError(message: "Missing environment file: \(environmentKey)")
+            throw StepError("Missing environment file: \(environmentKey)")
         }
 
+        // TODO: Cascade over regular data and then normalizedBase64Encoding
+        // TODO: Extract this logic to a method on Step: extractAndSaveBase64EncodedEnvironmentFile(_ key: String) throws -> (filePath: String)
 //        guard let fileData = Data(base64Encoded: fileBase64Encoded.normalizedBase64Encoding, options: .ignoreUnknownCharacters) else {
         guard let fileData = Data(base64Encoded: fileBase64Encoded, options: .ignoreUnknownCharacters) else {
-            throw StepError(message: "Failed to base64 decode file")
+            throw StepError("Failed to base64 decode file")
         }
 
         let loadedFile = context.temporaryDirectory + "/\(loadedFileName)"
         guard context.fileManager.createFile(atPath: loadedFile, contents: fileData) else {
-            throw StepError(message: "Failed to create file \(loadedFile)")
+            throw StepError("Failed to create file \(loadedFile)")
         }
 
         return Output(loadedFile: loadedFile)

@@ -45,15 +45,17 @@ public extension Workflow {
     }
 
     @discardableResult
-    func step<S: Step>(_ step: S) async throws -> S.Output {
-        // TODO: Configurable logging format?
-        logger.info("Step: \(step.name)")
+    func step<S: Step>(name: String? = nil, _ step: S) async throws -> S.Output {
+        context.currentStep = step
+        defer { context.currentStep = nil }
+        // TODO: Configurable format?
+        logger.info("Step: \(name ?? step.name)")
         return try await step.run()
     }
 
     @discardableResult
-    func step<S: Step>(_ step: () -> S) async throws -> S.Output {
-        try await self.step(step())
+    func step<S: Step>(name: String? = nil, _ step: () -> S) async throws -> S.Output {
+        try await self.step(name: name, step())
     }
 }
 
@@ -73,10 +75,19 @@ public extension Workflow {
             // TODO: We could call a method on workflow to clean up after the error (send messages, notifications, etc.)
             // workflow.tearDown(after: error)
 
-            logger.error("""
-            Caught error: \(error.localizedDescription)
-            \(error)
-            """)
+            let errorLocalizedDescription = error.localizedDescription
+            let interpolatedError = "\(error)"
+            var errorMessage = "Exiting on error:\n"
+            if errorLocalizedDescription != interpolatedError {
+                errorMessage += """
+                \(errorLocalizedDescription)
+                \(interpolatedError)
+                """
+            } else {
+                errorMessage += errorLocalizedDescription
+            }
+
+            logger.error("\(errorMessage)")
             exit(1)
         }
     }
