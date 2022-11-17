@@ -65,6 +65,10 @@ extension XcodeBuildStep {
                 ])
             }
 
+            // Maybe uploading via xcodebuild -exportArchive isn't supported on CI because it may require a user to be logged in?
+            // It might mean we need to look at using the itunes transporter tool
+            // But I'm not convinced quite yet. I think there may yet be some work to do to determine that these authentication parameters are working correctly.
+
             if let authentication {
                 arguments += [
                     "-authenticationKeyPath", authentication.key,

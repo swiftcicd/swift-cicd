@@ -4,6 +4,12 @@ extension XcodeBuildStep {
 
         let localizationPath: String
 
+        // TODO: Investigate using this argument:
+//        -exportLanguage                                          specifies multiple optional ISO 639-1 languages included in a localization export
+        // Maybe we should use that instead of looping over files
+        // We may be able to detect support languages from the project file and then pass those supported languages
+
+
         public func run() async throws -> String {
             try context.shell("xcodebuild", "-importLocalizations", "-localizationPath", localizationPath)
         }
