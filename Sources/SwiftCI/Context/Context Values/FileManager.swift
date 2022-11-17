@@ -13,10 +13,18 @@ public extension ContextValues {
 
 public extension ContextValues {
     var temporaryDirectory: String {
+        let directory: String
+
         if let runnerTemp = environment.github.runnerTemp {
-            return runnerTemp
+            directory = runnerTemp
         } else {
-            return fileManager.temporaryDirectory.path
+            directory = fileManager.temporaryDirectory.path
+        }
+
+        if directory.hasSuffix("/") {
+            return directory
+        } else {
+            return directory + "/"
         }
     }
 }
