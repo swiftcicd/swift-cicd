@@ -6,8 +6,8 @@ public struct Shell {
 
     @discardableResult
     func callAsFunction(_ command: String, _ arguments: [Argument]) throws -> String {
-        logger.debug("Shell (at: \(fileManager.currentDirectoryPath)): \(command) \(arguments.map(\.escapedArgument).joined(separator: " "))")
-        let output = try shellOut(to: command, arguments: arguments.map(\.escapedArgument), at: fileManager.currentDirectoryPath)
+        logger.debug("Shell (at: \(fileManager.currentDirectoryPath)): \(command) \(arguments.map(\.escaped).joined(separator: " "))")
+        let output = try shellOut(to: command, arguments: arguments.map(\.escaped), at: fileManager.currentDirectoryPath)
         // TODO: We're just going to print the output for now, but eventually it should be streamed out as it comes in and made available for formatting
         print(output)
         return output
@@ -16,6 +16,11 @@ public struct Shell {
     @discardableResult
     func callAsFunction(_ command: String, _ arguments: Argument...) throws -> String {
         try callAsFunction(command, arguments)
+    }
+
+    @discardableResult
+    func callAsFunction(_ command: ShellCommand) throws -> String {
+        try callAsFunction(command.command, command.arguments)
     }
 }
 
@@ -28,4 +33,9 @@ public extension ContextValues {
         get { self[Shell.self] }
         set { self[Shell.self] = newValue }
     }
+}
+
+protocol ShellCommand {
+    var command: String { get }
+    var arguments: [Argument] { get }
 }
