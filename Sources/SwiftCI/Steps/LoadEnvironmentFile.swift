@@ -20,7 +20,7 @@ public struct LoadEnvironmentFile: Step {
             throw StepError("Failed to base64 decode file")
         }
 
-        let loadedFile = context.temporaryDirectory + "/\(loadedFileName)"
+        let loadedFile = context.temporaryDirectory + "\(loadedFileName)"
         guard context.fileManager.createFile(atPath: loadedFile, contents: fileData) else {
             throw StepError("Failed to create file \(loadedFile)")
         }
