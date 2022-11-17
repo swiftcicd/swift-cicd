@@ -1,3 +1,8 @@
+public protocol Option {
+    var name: String { get }
+    var argument: Argument { get }
+}
+
 public protocol Argument {
     var argument: String { get }
 }
@@ -7,7 +12,7 @@ extension String: Argument {
 }
 
 extension Argument {
-    var escapedArgument: String {
+    var escaped: String {
         // TODO: If the argument has newlines in it, should we esacpe the lines?
 
         if argument.contains(" ") && !(argument.hasPrefix("'") && argument.hasSuffix("'")) {
