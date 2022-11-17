@@ -25,6 +25,17 @@ public extension Workflow {
     }
 }
 
+enum CurrentWorkflowKey: ContextKey {
+    static let defaultValue: (any Workflow)? = nil
+}
+
+public extension ContextValues {
+    internal(set) var currentWorkflow: (any Workflow)? {
+        get { self[CurrentWorkflowKey.self] }
+        set { self[CurrentWorkflowKey.self] = newValue }
+    }
+}
+
 public extension Workflow {
     static var context: ContextValues { .shared }
     var context: ContextValues { .shared }
@@ -32,7 +43,13 @@ public extension Workflow {
     func workflow<W: Workflow>(_ workflow: W) async throws {
         // Parents are restored to their current directory after a child workflow runs
         let currentDirectory = context.fileManager.currentDirectoryPath
-        defer { try? context.fileManager.changeCurrentDirectory(currentDirectory) }
+        defer {
+            do {
+                try context.fileManager.changeCurrentDirectory(currentDirectory)
+            } catch {
+                logger.error("Failed to restore current directory to \(currentDirectory) after running workflow \(W.name).")
+            }
+        }
 
         // TODO: Configurable logging format?
         // Should the child workflow inherit the logging level of the parent?
@@ -65,6 +82,8 @@ public extension Workflow {
         logger.info("Starting Workflow: \(Self.name)")
 
         let workflow = self.init()
+        context.currentWorkflow = workflow
+        defer { context.currentWorkflow = nil }
 
         do {
             try setUpWorkspace()
