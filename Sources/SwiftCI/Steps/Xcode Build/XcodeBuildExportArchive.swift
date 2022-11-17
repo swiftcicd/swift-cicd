@@ -53,6 +53,12 @@ extension XcodeBuildStep {
                 ])
             }
 
+            // FIXME: Uploading to App Store Connect via -exportArchive with authentication key parameters isn't working.
+            // It appears that lots of people have seen this issue:
+            // - https://developer.apple.com/forums/thread/690676
+            // - https://developer.apple.com/forums/thread/107976
+            // - https://stackoverflow.com/questions/70657042/ipa-upload-to-testflight-fails-via-jenkins-but-passes-via-terminal
+
             // Maybe uploading via xcodebuild -exportArchive isn't supported on CI because it may require a user to be logged in?
             // It might mean we need to look at using the itunes transporter tool
             // But I'm not convinced quite yet. I think there may yet be some work to do to determine that these authentication parameters are working correctly.
@@ -63,7 +69,11 @@ extension XcodeBuildStep {
                     "-authenticationKeyID", authentication.id,
                     "-authenticationKeyIssuerID", authentication.issuerID
                 ]
+
+                try context.shell("defaults", "write", "com.apple.dt.Xcode", "DVTDeveloperAccountUseKeychainService_2", "-bool", "NO")
             }
+
+            defer { _ = try? context.shell("defaults", "delete", "com.apple.dt.Xcode", "DVTDeveloperAccountUseKeychainService_2") }
 
             return try context.shell("xcodebuild", arguments)
         }
