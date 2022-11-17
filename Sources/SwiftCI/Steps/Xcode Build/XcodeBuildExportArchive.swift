@@ -4,18 +4,6 @@ import Foundation
 // TODO: Automatically detect project, schemes, etc.
 
 extension XcodeBuildStep {
-    public struct Authentication {
-        public let key: String
-        public let id: String
-        public let issuerID: String
-
-        public init(key: String, id: String, issuerID: String) {
-            self.key = key
-            self.id = id
-            self.issuerID = issuerID
-        }
-    }
-
     public struct ExportArchive: Step {
         public let name = "Xcode Build: Export Archive"
 
@@ -26,9 +14,9 @@ extension XcodeBuildStep {
         /// Specifies a path to a plist file that configures archive exporting.
         let exportOptionsPlist: String
         let allowProvisioningUpdates: Bool
-        var authentication: Authentication?
+        var authentication: XcodeBuild.Authentication?
 
-        public init(archivePath: String, exportPath: String? = nil, exportOptionsPlist: String, allowProvisioningUpdates: Bool, authentication: Authentication? = nil) {
+        public init(archivePath: String, exportPath: String? = nil, exportOptionsPlist: String, allowProvisioningUpdates: Bool, authentication: XcodeBuild.Authentication? = nil) {
             self.archivePath = archivePath
             self.exportPath = exportPath
             self.exportOptionsPlist = exportOptionsPlist
@@ -36,10 +24,10 @@ extension XcodeBuildStep {
             self.authentication = authentication
         }
 
-        public init(archivePath: String, exportPath: String? = nil, exportOptions: Options, allowProvisioningUpdates: Bool, authentication: Authentication? = nil) throws {
+        public init(archivePath: String, exportPath: String? = nil, exportOptions: Options, allowProvisioningUpdates: Bool, authentication: XcodeBuild.Authentication? = nil) throws {
             let plist = try exportOptions.generatePList()
             let temporaryDirectory = Self.context.temporaryDirectory
-            let plistPath = temporaryDirectory + "/exportOptions.plist"
+            let plistPath = temporaryDirectory + "exportOptions.plist"
             Self.context.fileManager.createFile(atPath: plistPath, contents: plist)
             self.init(archivePath: archivePath, exportPath: exportPath, exportOptionsPlist: plistPath, allowProvisioningUpdates: allowProvisioningUpdates, authentication: authentication)
             logger.debug("""
@@ -83,11 +71,11 @@ extension XcodeBuildStep {
 }
 
 public extension Step where Self == XcodeBuildStep.ExportArchive {
-    static func xcodeBuild(exportArchive archivePath: String, to exportPath: String? = nil, allowProvisioningUpdates: Bool, optionsPlist: String, authentication: XcodeBuildStep.Authentication? = nil) -> XcodeBuildStep.ExportArchive {
+    static func xcodeBuild(exportArchive archivePath: String, to exportPath: String? = nil, allowProvisioningUpdates: Bool, optionsPlist: String, authentication: XcodeBuild.Authentication? = nil) -> XcodeBuildStep.ExportArchive {
         XcodeBuildStep.ExportArchive(archivePath: archivePath, exportPath: exportPath, exportOptionsPlist: optionsPlist, allowProvisioningUpdates: allowProvisioningUpdates, authentication: authentication)
     }
 
-    static func xcodeBuild(exportArchive archivePath: String, to exportPath: String? = nil, allowProvisioningUpdates: Bool, options: XcodeBuildStep.ExportArchive.Options, authentication: XcodeBuildStep.Authentication? = nil) throws -> XcodeBuildStep.ExportArchive {
+    static func xcodeBuild(exportArchive archivePath: String, to exportPath: String? = nil, allowProvisioningUpdates: Bool, options: XcodeBuildStep.ExportArchive.Options, authentication: XcodeBuild.Authentication? = nil) throws -> XcodeBuildStep.ExportArchive {
         try XcodeBuildStep.ExportArchive(archivePath: archivePath, exportPath: exportPath, exportOptions: options, allowProvisioningUpdates: allowProvisioningUpdates, authentication: authentication)
     }
 }
