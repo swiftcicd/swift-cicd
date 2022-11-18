@@ -28,6 +28,10 @@ SwiftCI has two main types: `Workflow` and `Step`. Workflows run steps or other 
 
 _// TODO: `Context`_
 
+## First-Party Steps
+
+_// TODO: Table of steps with a brief description_
+
 ## Developing Steps
 
 You can create your own steps by making a type that conforms to the `Step` protocol.
@@ -43,7 +47,7 @@ struct CreateFile: Step {
 }
 ```
 
-If your step makes any changes to the filesystem, it's good practice to implement the `cleanUp` method to revert those changes. SwiftCI will call your step's `cleanUp` method before it exits and after the workflow finishes, either because of a successful run or an error. Steps will be be cleaned up in first-in-last-out order.
+If your step makes any changes to the system, it's good practice to implement the `cleanUp` method to revert those changes. SwiftCI will call your step's `cleanUp` method before it exits and after the workflow finishes, either because of a successful run or an error. Steps will be be cleaned up in first-in-last-out order. The `cleanUp` method is optional, but again, it's good practice to clean up after your step if it makes any changes to the system.
 
 ```swift
 struct CreateFile: Step {
