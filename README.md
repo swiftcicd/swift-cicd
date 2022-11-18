@@ -18,21 +18,21 @@ struct CICD: Workflow {
 }
 ```
 
+## Getting Started
+
+_// TODO: Package.swift, directory structure, GitHub Action, etc._
+
 ## Overview
 
 SwiftCI has two main types: `Workflow` and `Step`. Workflows run steps or other workflows. Steps can run other steps, but not workflows. Steps return `Output`.
 
 _// TODO: `Context`_
 
-## Getting Started
-
-_// TODO: _
-
 ## Developing Steps
 
 There are three main methods to make your custom steps discoverable. It is recommended to support all three when vending steps so that users can discover your step in any context.
 
-### 1. Add a `typealias` to the `Steps` namespace:
+**1. Add a `typealias` to the `Steps` namespace:**
 
 ```swift
 extension Steps {
@@ -52,7 +52,7 @@ This method enables users to discover your step using autocompletion when choosi
 try await step(Steps.MyStep(input: "hello"))
 ```
 
-### 2. Add your step using static member lookup:
+**2. Add your step using static member lookup:**
 
 ```swift
 extension Step where Self == MyStep {
@@ -70,7 +70,7 @@ func run() async throws {
 }
 ```
 
-### 3. Add a method to `Workflow`:
+**3. Add a method to `Workflow`:**
 
 ```swift
 extension Workflow {
