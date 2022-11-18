@@ -5,18 +5,19 @@ SwiftCI is a CI/CD scheme written in Swift that leverages the Swift ecosystem.
 A basic SwiftCI setup looks like this:
 
 > CICD.swift
-```swift
-import SwiftCI
+> ```swift
+> import SwiftCI
+> 
+> @main
+> struct CICD: Workflow {
+>     func run() async throws {
+>         let project = "MyProject.xcodeproj"
+>         try await buildAndTest(project: project)
+>         try await archiveAndUploadToAppStore(project: project)
+>     }
+> }
+> ```
 
-@main
-struct CICD: Workflow {
-    func run() async throws {
-        let project = "MyProject.xcodeproj"
-        try await buildAndTest(project: project)
-        try await archiveAndUploadToAppStore(project: project)
-    }
-}
-```
 
 ## Getting Started
 
