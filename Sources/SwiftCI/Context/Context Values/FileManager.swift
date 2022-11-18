@@ -57,6 +57,7 @@ public extension FileManager {
     }
 
     func changeCurrentDirectory(_ path: String) throws {
+        guard currentDirectoryPath != path else { return }
         guard changeCurrentDirectoryPath(path) else {
             throw FileManagerError.changeCurrentDirectoryFailed(path: path)
         }

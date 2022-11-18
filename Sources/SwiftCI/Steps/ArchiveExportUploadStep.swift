@@ -19,16 +19,34 @@ public struct ArchiveExportUpload: Step {
     }
 
     public func run() async throws -> Output {
-        guard let bundleID = try getBuildSetting("PRODUCT_BUNDLE_IDENTIFIER", fromXcodeProject: xcodeProject) else {
+        let buildSettings = try getBuildSettings(fromXcodeProject: xcodeProject)
+
+        guard let bundleID = buildSettings.bundleIdentifier else {
             throw StepError("Failed to get bundle id from \(xcodeProject)")
         }
 
-        guard let productName = try getBuildSetting("PRODUCT_NAME", fromXcodeProject: xcodeProject) else {
+        guard let productName = buildSettings.productName else {
             throw StepError("Failed to get product name from \(xcodeProject)")
         }
 
-        let archivePath = context.temporaryDirectory/"Archive"
+        let archivePath = context.temporaryDirectory/"Archive/\(productName).xcarchive"
         let exportPath = context.temporaryDirectory/"Export"
+
+        // Restore the current directory
+        let currentDirectory = context.fileManager.currentDirectoryPath
+        defer {
+            do {
+                try context.fileManager.changeCurrentDirectory(currentDirectory)
+            } catch {
+                logger.error("Failed to change back to the previous current directory \(currentDirectory)")
+            }
+        }
+
+        // Call xcodebuild from the project's parent directory
+        let sourceRoot = xcodeProject.removingLastPathComponent
+        if currentDirectory != sourceRoot {
+            try context.fileManager.changeCurrentDirectory(sourceRoot)
+        }
 
         try await step(.xcodebuild(
             buildScheme: scheme,
@@ -73,32 +91,56 @@ public struct ArchiveExportUpload: Step {
     }
 }
 
-extension Step {
-    func getBuildSetting(_ buildSetting: String, fromXcodeProject xcodeProject: String, quiet: Bool = false) throws -> String? {
-        try context.shell("xcodebuild", "-project", xcodeProject, "-showBuildSettings", quiet: quiet)
+public struct XcodeProjectBuildSettings {
+    let settings: [String: String]
+
+    var productName: String? {
+        settings["PRODUCT_NAME"]
+    }
+
+    var bundleIdentifier: String? {
+        settings["PRODUCT_BUNDLE_IDENTIFIER"]
+    }
+
+    /// The version string found in an Xcode target's Identity section under the General tab (in the Version field.)
+    /// Also known as CFBundleVersionShortString.
+    var version: String? {
+        settings["MARKETING_VERSION"]
+    }
+
+    /// The build string found in an Xcode target's Identity section under the General tab (in the Build field.)
+    /// Also known as CFBundleVersion.
+    var build: String? {
+        settings["CURRENT_PROJECT_VERSION"]
+    }
+
+    init(showBuildSettingsOutput output: String) {
+        let keyValuePairs = output
             .components(separatedBy: "\n")
-            .first(where: { $0.trimmingCharacters(in: .whitespaces).hasPrefix("\(buildSetting) = ") })?
-            .components(separatedBy: " = ")
-            .last
+            .map { $0.trimmingCharacters(in: .whitespaces) }
+            .compactMap { line -> (key: String, value: String)? in
+                guard let delimeterRange = line.range(of: " = ") else {
+                    return nil
+                }
+
+                let key = String(line[line.startIndex..<delimeterRange.lowerBound])
+                let value = String(line[delimeterRange.upperBound...])
+                return (key, value)
+            }
+
+        settings = Dictionary(keyValuePairs, uniquingKeysWith: { first, second in first })
+    }
+
+    init(xcodeProject: String) throws {
+        @Context(\.shell) var shell;
+        let output = try shell("xcodebuild", "-project", xcodeProject, "-showBuildSettings", quiet: true)
+        self.init(showBuildSettingsOutput: output)
     }
 }
 
-//public extension Step where Self == ArchiveExportUploadStep {
-//    static func archiveExportUpload(
-//        appBundleID: String,
-//        scheme: String,
-//        profile: ProvisioningProfile,
-//        authentication: XcodeBuild.Authentication,
-//        archivePath: String? = nil,
-//        exportPath: String? = nil
-//    ) -> ArchiveExportUploadStep {
-//        ArchiveExportUploadStep(
-//            appBundleID: appBundleID,
-//            scheme: scheme,
-//            profile: profile,
-//            authentication: authentication,
-//            archivePath: archivePath ?? context.temporaryDirectory + "Archive",
-//            exportPath: exportPath ?? context.temporaryDirectory + "Export"
-//        )
-//    }
-//}
+public extension Step {
+    func getBuildSettings(fromXcodeProject xcodeProject: String) throws -> XcodeProjectBuildSettings {
+        let output = try context.shell("xcodebuild", "-project", xcodeProject, "-showBuildSettings", quiet: true)
+        return XcodeProjectBuildSettings(showBuildSettingsOutput: output)
+    }
+}
