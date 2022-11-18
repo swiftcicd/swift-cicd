@@ -2,11 +2,10 @@ import Arguments
 import Foundation
 import Logging
 
+// TODO: Should a workflow have an Outcome (success, failure, etc.) kind of like how a step has an output?
 // TODO: Would it be possible to make swift-ci run as a subcommand of swift?
 //  - So instead of: swift run name-of-executable
 //  - It would be: swift ci
-
-// TODO: Should a workflow have an Outcome (success, failure, etc.) kind of like how a step has an output?
 
 public protocol Workflow {
     static var name: String { get }
@@ -33,6 +32,33 @@ public extension ContextValues {
     internal(set) var currentWorkflow: (any Workflow)? {
         get { self[CurrentWorkflowKey.self] }
         set { self[CurrentWorkflowKey.self] = newValue }
+    }
+}
+
+struct WorkflowStack {
+    private var steps = [any Step]()
+
+    mutating func push(_ step: any Step) {
+        steps.append(step)
+    }
+
+    mutating func pop() -> (any Step)? {
+        guard !steps.isEmpty else {
+            return nil
+        }
+
+        return steps.removeLast()
+    }
+}
+
+extension WorkflowStack: ContextKey {
+    static let defaultValue = WorkflowStack()
+}
+
+private extension ContextValues {
+    var stack: WorkflowStack {
+        get { self[WorkflowStack.self] }
+        set { self[WorkflowStack.self] = newValue }
     }
 }
 
@@ -63,6 +89,7 @@ public extension Workflow {
 
     @discardableResult
     func step<S: Step>(name: String? = nil, _ step: S) async throws -> S.Output {
+        context.stack.push(step)
         context.currentStep = step
         defer { context.currentStep = nil }
         // TODO: Configurable format?
@@ -88,11 +115,10 @@ public extension Workflow {
         do {
             try setUpWorkspace()
             try await workflow.run()
+            await cleanUp(error: nil)
             exit(0)
         } catch {
-
-            // TODO: We could call a method on workflow to clean up after the error (send messages, notifications, etc.)
-            // workflow.tearDown(after: error)
+            await cleanUp(error: error)
 
             let errorLocalizedDescription = error.localizedDescription
             let interpolatedError = "\(error)"
@@ -129,6 +155,17 @@ public extension Workflow {
         logger.debug("Setting current directory: \(workspace)")
         guard context.fileManager.changeCurrentDirectoryPath(workspace) else {
             throw InternalWorkflowError(message: "Failed to set current directory")
+        }
+    }
+
+    private static func cleanUp(error: Error?) async {
+        while let step = context.stack.pop() {
+            logger.info("Cleaning up after step: \(step.name)")
+            do {
+                try await step.cleanUp(error: error)
+            } catch {
+                logger.error("Failed to clean up after \(step.name): \(error)")
+            }
         }
     }
 }

@@ -8,6 +8,8 @@ public struct LoadEnvironmentFile: Step {
     let environmentKey: String
     let loadedFileName: String
 
+    @StepState var loadedFilePath: String?
+
     public func run() async throws -> Output {
         guard let fileBase64Encoded = context.environment[environmentKey] else {
             throw StepError("Missing environment file: \(environmentKey)")
@@ -21,11 +23,18 @@ public struct LoadEnvironmentFile: Step {
         }
 
         let loadedFile = context.temporaryDirectory + "\(loadedFileName)"
+        loadedFilePath = loadedFile
         guard context.fileManager.createFile(atPath: loadedFile, contents: fileData) else {
             throw StepError("Failed to create file \(loadedFile)")
         }
 
         return Output(loadedFile: loadedFile)
+    }
+
+    public func cleanUp(error: Error?) async throws {
+        if let loadedFilePath {
+            try context.fileManager.removeItem(atPath: loadedFilePath)
+        }
     }
 }
 

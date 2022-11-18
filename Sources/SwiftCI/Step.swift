@@ -2,7 +2,7 @@ public protocol Step<Output> {
     associatedtype Output
     var name: String { get }
     func run() async throws -> Output
-    func cleanUp(error: Error?) async
+    func cleanUp(error: Error?) async throws
 }
 
 public extension Step {
@@ -10,7 +10,7 @@ public extension Step {
         "\(self)"
     }
 
-    func cleanUp(error: Error?) async {}
+    func cleanUp(error: Error?) async throws {}
 }
 
 public extension Step {
@@ -26,6 +26,24 @@ public extension ContextValues {
     internal(set) var currentStep: (any Step)? {
         get { self[CurrentStepKey.self] }
         set { self[CurrentStepKey.self] = newValue }
+    }
+}
+
+@propertyWrapper
+public struct StepState<T> {
+    private class Storage {
+        var state: T?
+    }
+
+    private let storage = Storage()
+
+    public init(wrappedValue: T? = nil) {
+        self.storage.state = wrappedValue
+    }
+
+    public var wrappedValue: T? {
+        get { storage.state }
+        nonmutating set { storage.state = newValue }
     }
 }
 

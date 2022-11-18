@@ -4,6 +4,8 @@ public struct AddProfile: Step {
     /// Path to .mobileprovision file.
     let profilePath: String
 
+    @StepState var addedProfilePath: String?
+
     public func run() async throws -> ProvisioningProfile {
         // https://stackoverflow.com/a/46095880/4283188
 
@@ -24,12 +26,20 @@ public struct AddProfile: Step {
             .appendingPathComponent("\(profile.uuid).mobileprovision")
             .path
 
+        self.addedProfilePath = addedProfilePath
+
         guard context.fileManager.createFile(atPath: addedProfilePath, contents: profileContents) else {
             throw StepError("Failed to create profile at \(addedProfilePath)")
         }
 
         logger.info("Added profile \(addedProfilePath)")
         return profile
+    }
+
+    public func cleanUp(error: Error?) async throws {
+        if let addedProfilePath {
+            try context.fileManager.removeItem(atPath: addedProfilePath)
+        }
     }
 }
 

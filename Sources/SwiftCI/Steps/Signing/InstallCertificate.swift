@@ -7,6 +7,20 @@ public struct InstallCertificate: Step {
     let certificate: String
     let certificatePassword: String
 
+    @StepState var certificateCommonName: String?
+
+    func listUserKeychains() throws -> [String] {
+        try context.shell("security", "list-keychain", "-d", "user")
+            .components(separatedBy: .newlines)
+            .map { $0.trimmingCharacters(in: .whitespaces.union(.init(charactersIn: "\""))) }
+    }
+
+    func keychainExists(_ keychain: String, in keychains: [String]) throws -> Bool {
+        // The keychain we created may show up at different path so only check for common suffix
+        // example: /var/temp/temp.keychain may show up at /private/var/temp/temp.keychain after it's added to the search list.
+        return keychains.contains(where: { $0.hasSuffix(keychain) })
+    }
+
     public func run() async throws {
         // References:
         // https://stackoverflow.com/a/46095880/4283188
@@ -39,6 +53,7 @@ public struct InstallCertificate: Step {
             }
 
             let certificate = try Certificate(data: certificateData)
+            certificateCommonName = certificate.commonName
             // This command doesn't exist until macOS 10.12
             try context.shell("security", "set-key-partition-list", "-S", "apple-tool:,apple:", "-s", "-l", certificate.commonName, "-k", keychainPassword, keychain)
         }
@@ -47,7 +62,7 @@ public struct InstallCertificate: Step {
         // If the keychain we're using doesn't show up in the user's list, add it to the search list.
         if try !keychainExists(keychain, in: keychains) {
             // Add the keychain to the front of the list so it will be used first
-            var arguments = ["list-keychain", "-d", "user", "-s"] + [keychain] + keychains
+            let arguments = ["list-keychain", "-d", "user", "-s"] + [keychain] + keychains
             try context.shell("security", arguments)
         }
 
@@ -60,16 +75,14 @@ public struct InstallCertificate: Step {
         logger.debug("Successfully imported certificate")
     }
 
-    func listUserKeychains() throws -> [String] {
-        try context.shell("security", "list-keychain", "-d", "user")
-            .components(separatedBy: .newlines)
-            .map { $0.trimmingCharacters(in: .whitespaces.union(.init(charactersIn: "\""))) }
-    }
+    public func cleanUp(error: Error?) async throws {
+        if let certificateCommonName {
+            try context.shell("security", "delete-certificate", "-c", certificateCommonName, keychain)
+        }
 
-    func keychainExists(_ keychain: String, in keychains: [String]) throws -> Bool {
-        // The keychain we created may show up at different path so only check for common suffix
-        // example: /var/temp/temp.keychain may show up at /private/var/temp/temp.keychain after it's added to the search list.
-        return keychains.contains(where: { $0.hasSuffix(keychain) })
+        if shouldCreateKeychain {
+            try context.shell("security", "delete-keychain", keychain)
+        }
     }
 }
 

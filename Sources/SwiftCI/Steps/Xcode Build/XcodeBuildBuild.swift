@@ -95,14 +95,20 @@ extension XcodeBuildStep {
                     "CODE_SIGNING_REQUIRED=Yes",
                     "CODE_SIGNING_ALLOWED=No",
                     "CODE_SIGN_STYLE=Manual",
-//                    "CODE_SIGN_IDENTITY=\(codeSignIdentity)",
+                    "CODE_SIGN_IDENTITY=\(codeSignIdentity)",
                     "DEVELOPMENT_TEAM=\(developmentTeam)",
-//                    "PROVISIONING_PROFILE=\(provisioningProfile)",
+                    "PROVISIONING_PROFILE=\(provisioningProfile)",
                     "PROVISIONING_PROFILE_SPECIFIER=\(provisioningProfile)"
                 ]
             }
 
             return try context.shell("xcodebuild", arguments)
+        }
+
+        public func cleanUp(error: Error?) async throws {
+            if let archivePath {
+                try context.fileManager.removeItem(atPath: archivePath)
+            }
         }
     }
 }

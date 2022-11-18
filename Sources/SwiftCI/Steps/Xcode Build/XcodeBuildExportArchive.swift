@@ -15,6 +15,7 @@ extension XcodeBuildStep {
         let exportOptionsPlist: String
         let allowProvisioningUpdates: Bool
         var authentication: XcodeBuild.Authentication?
+        var isExportOptionsSynthesized: Bool
 
         public init(archivePath: String, exportPath: String? = nil, exportOptionsPlist: String, allowProvisioningUpdates: Bool, authentication: XcodeBuild.Authentication? = nil) {
             self.archivePath = archivePath
@@ -22,6 +23,7 @@ extension XcodeBuildStep {
             self.exportOptionsPlist = exportOptionsPlist
             self.allowProvisioningUpdates = allowProvisioningUpdates
             self.authentication = authentication
+            self.isExportOptionsSynthesized = false
         }
 
         public init(archivePath: String, exportPath: String? = nil, exportOptions: Options, allowProvisioningUpdates: Bool, authentication: XcodeBuild.Authentication? = nil) throws {
@@ -30,6 +32,8 @@ extension XcodeBuildStep {
             let plistPath = temporaryDirectory + "exportOptions.plist"
             Self.context.fileManager.createFile(atPath: plistPath, contents: plist)
             self.init(archivePath: archivePath, exportPath: exportPath, exportOptionsPlist: plistPath, allowProvisioningUpdates: allowProvisioningUpdates, authentication: authentication)
+            self.isExportOptionsSynthesized = true
+
             logger.debug("""
             Created export options files from options:
             \(exportOptions)
@@ -59,9 +63,8 @@ extension XcodeBuildStep {
             // - https://developer.apple.com/forums/thread/107976
             // - https://stackoverflow.com/questions/70657042/ipa-upload-to-testflight-fails-via-jenkins-but-passes-via-terminal
 
-            // Maybe uploading via xcodebuild -exportArchive isn't supported on CI because it may require a user to be logged in?
-            // It might mean we need to look at using the itunes transporter tool
-            // But I'm not convinced quite yet. I think there may yet be some work to do to determine that these authentication parameters are working correctly.
+            // For now, upload to App Store Connect isn't going to be supported via xcodebuild. We'll have to use one of the other methods.
+            // altools or iTunes Transporter.
 
             if let authentication {
                 arguments += [
@@ -76,6 +79,14 @@ extension XcodeBuildStep {
             defer { _ = try? context.shell("defaults", "delete", "com.apple.dt.Xcode", "DVTDeveloperAccountUseKeychainService_2") }
 
             return try context.shell("xcodebuild", arguments)
+        }
+
+        public func cleanUp(error: Error?) async throws {
+            if isExportOptionsSynthesized {
+                try context.fileManager.removeItem(atPath: exportOptionsPlist)
+            }
+
+            try context.fileManager.removeItem(atPath: archivePath)
         }
     }
 }
