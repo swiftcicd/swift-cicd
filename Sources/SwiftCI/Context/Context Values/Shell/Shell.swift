@@ -5,22 +5,24 @@ public struct Shell {
     @Context(\.logger) var logger
 
     @discardableResult
-    func callAsFunction(_ command: String, _ arguments: [Argument]) throws -> String {
+    func callAsFunction(_ command: String, _ arguments: [Argument], quiet: Bool = false) throws -> String {
         logger.debug("Shell (at: \(fileManager.currentDirectoryPath)): \(command) \(arguments.map(\.escaped).joined(separator: " "))")
         let output = try shellOut(to: command, arguments: arguments.map(\.escaped), at: fileManager.currentDirectoryPath)
         // TODO: We're just going to print the output for now, but eventually it should be streamed out as it comes in and made available for formatting
-        print(output)
+        if !quiet {
+            print(output)
+        }
         return output
     }
 
     @discardableResult
-    func callAsFunction(_ command: String, _ arguments: Argument...) throws -> String {
-        try callAsFunction(command, arguments)
+    func callAsFunction(_ command: String, _ arguments: Argument..., quiet: Bool = false) throws -> String {
+        try callAsFunction(command, arguments, quiet: quiet)
     }
 
     @discardableResult
-    func callAsFunction(_ command: ShellCommand) throws -> String {
-        try callAsFunction(command.command, command.arguments)
+    func callAsFunction(_ command: ShellCommand, quiet: Bool = false) throws -> String {
+        try callAsFunction(command.command, command.arguments, quiet: quiet)
     }
 }
 
@@ -40,9 +42,13 @@ protocol ShellCommand {
     var arguments: [Argument] { get }
 }
 
-public struct Command: ShellCommand {
+public struct Command: ShellCommand, CustomStringConvertible {
     public let command: String
     public var arguments: [Argument]
+
+    public var description: String {
+        "\(command) \(arguments.map(\.escaped).joined(separator: " "))"
+    }
 
     public init(_ command: String, _ arguments: [Argument] = []) {
         self.command = command
@@ -55,6 +61,16 @@ public struct Command: ShellCommand {
 
     public mutating func add(_ arguments: Argument...) {
         self.arguments.append(contentsOf: arguments)
+    }
+
+    public mutating func add(_ option: String? = nil, ifLet argument: Argument?) {
+        if let argument {
+            if let option {
+                self.add(option, argument)
+            } else {
+                self.add(argument)
+            }
+        }
     }
 
     public static func += (lhs: inout Command, rhs: Argument) {
