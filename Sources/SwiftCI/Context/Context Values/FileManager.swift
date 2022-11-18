@@ -29,6 +29,28 @@ public extension ContextValues {
     }
 }
 
+public extension String {
+    static func / (lhs: String, rhs: String) -> String {
+        if lhs.hasSuffix("/") {
+            return lhs + rhs
+        } else {
+            return "\(lhs)/\(rhs)"
+        }
+    }
+
+    var pathComponents: [String] {
+        self.components(separatedBy: "/")
+    }
+
+    var removingLastPathComponent: String {
+        pathComponents.dropLast().joined(separator: "/") + "/"
+    }
+
+    var lastPathComponent: String? {
+        pathComponents.last
+    }
+}
+
 public extension FileManager {
     enum FileManagerError: Error {
         case changeCurrentDirectoryFailed(path: String)
