@@ -103,6 +103,24 @@ public extension Workflow {
     }
 }
 
+// Should a step be able to run another step?
+public extension Step {
+    @discardableResult
+    func step<S: Step>(name: String? = nil, _ step: S) async throws -> S.Output {
+        context.stack.push(step)
+        context.currentStep = step
+        defer { context.currentStep = self }
+        // TODO: Configurable format?
+        logger.info("Step: \(name ?? step.name)")
+        return try await step.run()
+    }
+
+    @discardableResult
+    func step<S: Step>(name: String? = nil, _ step: () -> S) async throws -> S.Output {
+        try await self.step(name: name, step())
+    }
+}
+
 public extension Workflow {
     static func main() async {
         context.logger.logLevel = Self.logLevel
@@ -156,6 +174,8 @@ public extension Workflow {
         guard context.fileManager.changeCurrentDirectoryPath(workspace) else {
             throw InternalWorkflowError(message: "Failed to set current directory")
         }
+
+        context.workspace = workspace
     }
 
     private static func cleanUp(error: Error?) async {
@@ -167,6 +187,18 @@ public extension Workflow {
                 logger.error("Failed to clean up after \(step.name): \(error)")
             }
         }
+    }
+}
+
+enum WorkflowWorkspaceKey: ContextKey {
+    // We need a safe default, and the safest place I can think of is the temp directory.
+    static let defaultValue = FileManager.default.temporaryDirectory.path
+}
+
+public extension ContextValues {
+    var workspace: String {
+        get { self[WorkflowWorkspaceKey.self] }
+        set { self[WorkflowWorkspaceKey.self] = newValue }
     }
 }
 
