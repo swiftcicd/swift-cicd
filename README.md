@@ -30,6 +30,34 @@ _// TODO: `Context`_
 
 ## Developing Steps
 
+You can create your own steps by making a type that conforms to the `Step` protocol.
+
+```swift
+struct CreateFile: Step {
+    let path: String
+    let contents: String
+    
+    func run() async throws {
+        try context.fileManager.createFile(atPath: path, contents: Data(contents.utf8))
+    }
+}
+```
+
+If your step makes any changes to the filesystem, it's good practice to implement the `cleanUp` method to revert those changes. SwiftCI will call your step's `cleanUp` method before it exits and after the workflow finishes, either because of a successful run or an error. Steps will be be cleaned up in first-in-last-out order.
+
+```swift
+struct CreateFile: Step {
+    ...
+    
+    func cleanUp(error: Error?) async throws {
+        // CreateFile created a file, so we should clean up by deleting that file.
+        try context.fileManager.removeItem(atPath: path)
+    }
+}
+```
+
+### Discoverability
+
 There are three main methods to make your custom steps discoverable. It is recommended to support all three when vending steps so that users can discover your step in any context.
 
 **1. Add a `typealias` to the `Steps` namespace:**
