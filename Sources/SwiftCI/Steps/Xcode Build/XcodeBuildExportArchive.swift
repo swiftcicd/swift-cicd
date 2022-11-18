@@ -68,7 +68,7 @@ extension XcodeBuildStep {
 
             if let authentication {
                 arguments += [
-                    "-authenticationKeyPath", authentication.key,
+                    "-authenticationKeyPath", authentication.key.components(separatedBy: "/").last!,
                     "-authenticationKeyID", authentication.id,
                     "-authenticationKeyIssuerID", authentication.issuerID
                 ]
