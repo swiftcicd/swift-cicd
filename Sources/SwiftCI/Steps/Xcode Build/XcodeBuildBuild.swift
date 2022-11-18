@@ -34,13 +34,13 @@ extension XcodeBuildStep {
             }
         }
 
-        let scheme: String
+        var scheme: String?
         var configuration: Configuration?
         let destination: String
         var archivePath: String?
         var codeSignStyle: CodeSignStyle?
 
-        public init(scheme: String, configuration: Configuration? = nil, destination: String, archivePath: String? = nil, codeSignStyle: CodeSignStyle? = nil) {
+        public init(scheme: String? = nil, configuration: Configuration? = nil, destination: String, archivePath: String? = nil, codeSignStyle: CodeSignStyle? = nil) {
             self.scheme = scheme
             self.configuration = configuration
             self.destination = destination
@@ -49,23 +49,13 @@ extension XcodeBuildStep {
         }
 
         public func run() async throws -> String {
-            var arguments = [
-                "-scheme", scheme,
-                "-destination", destination
-            ]
-
-            if let configuration {
-                arguments.append(contentsOf: [
-                    "-configuration",
-                    configuration.string
-                ])
-            }
+            var xcodebuild = Command("xcodebuild")
+            xcodebuild.add("-scheme", ifLet: scheme)
+            xcodebuild.add("-destination", destination)
+            xcodebuild.add("-configuration", ifLet: configuration?.string)
 
             if let archivePath {
-                arguments.append(contentsOf: [
-                    "archive",
-                    "-archivePath", archivePath
-                ])
+                xcodebuild.add("archive", "-archivePath", archivePath)
             }
 
             if case let .manual(codeSignIdentity, developmentTeam, provisioningProfile) = codeSignStyle {
@@ -91,7 +81,7 @@ extension XcodeBuildStep {
                 // Does that mean we shouldn't use the build setting? Maybe just the specifier?
                 // Only using the specifier setting seems to work.
 
-                arguments += [
+                xcodebuild.add(
                     "CODE_SIGNING_REQUIRED=Yes",
                     "CODE_SIGNING_ALLOWED=No",
                     "CODE_SIGN_STYLE=Manual",
@@ -99,10 +89,10 @@ extension XcodeBuildStep {
                     "DEVELOPMENT_TEAM=\(developmentTeam)",
                     "PROVISIONING_PROFILE=\(provisioningProfile)",
                     "PROVISIONING_PROFILE_SPECIFIER=\(provisioningProfile)"
-                ]
+                )
             }
 
-            return try context.shell("xcodebuild", arguments)
+            return try context.shell(xcodebuild)
         }
 
         public func cleanUp(error: Error?) async throws {
@@ -115,7 +105,7 @@ extension XcodeBuildStep {
 
 public extension Step where Self == XcodeBuildStep.Build {
     static func xcodebuild(
-        buildScheme scheme: String,
+        buildScheme scheme: String? = nil,
         configuration: XcodeBuildStep.Build.Configuration? = nil,
         destination: XcodeBuildStep.Destination,
         archiveTo archivePath: String? = nil,
