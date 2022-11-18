@@ -7,7 +7,7 @@ public protocol Step<Output> {
 
 public extension Step {
     var name: String {
-        "\(self)"
+        "\(Self.self)"
     }
 
     func cleanUp(error: Error?) async throws {}
