@@ -72,11 +72,7 @@ extension XcodeBuildStep {
                     "-authenticationKeyID", authentication.id,
                     "-authenticationKeyIssuerID", authentication.issuerID
                 ]
-
-                try context.shell("defaults", "write", "com.apple.dt.Xcode", "DVTDeveloperAccountUseKeychainService_2", "-bool", "NO")
             }
-
-            defer { _ = try? context.shell("defaults", "delete", "com.apple.dt.Xcode", "DVTDeveloperAccountUseKeychainService_2") }
 
             return try context.shell("xcodebuild", arguments)
         }
