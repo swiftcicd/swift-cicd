@@ -72,6 +72,10 @@ extension XcodeBuildStep {
                     "-authenticationKeyID", authentication.id,
                     "-authenticationKeyIssuerID", authentication.issuerID
                 ]
+
+                arguments += [
+                    "-API_PRIVATE_KEYS_DIR=\(context.temporaryDirectory)"
+                ]
             }
 
             return try context.shell("xcodebuild", arguments)
