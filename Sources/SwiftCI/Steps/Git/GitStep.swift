@@ -1,5 +1,5 @@
 public struct GitStep: Step {
-    public let name = "Git"
+    public let name = "git"
 
     let arguments: [Argument]
 
