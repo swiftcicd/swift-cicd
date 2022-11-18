@@ -60,7 +60,7 @@ struct CreateFile: Step {
 }
 ```
 
-### Discoverability
+### Making Your Steps Discoverable
 
 There are three main methods to make your custom steps discoverable. It is recommended to support all three when vending steps so that users can discover your step in any context.
 
