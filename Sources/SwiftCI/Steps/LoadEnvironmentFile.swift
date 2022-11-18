@@ -2,7 +2,7 @@ import Foundation
 
 public struct LoadEnvironmentFile: Step {
     public struct Output {
-        public let loadedFile: String
+        public let filePath: String
     }
 
     let environmentKey: String
@@ -22,13 +22,13 @@ public struct LoadEnvironmentFile: Step {
             throw StepError("Failed to base64 decode file")
         }
 
-        let loadedFile = context.temporaryDirectory + "\(loadedFileName)"
-        loadedFilePath = loadedFile
-        guard context.fileManager.createFile(atPath: loadedFile, contents: fileData) else {
-            throw StepError("Failed to create file \(loadedFile)")
+        let filePath = context.temporaryDirectory + "\(loadedFileName)"
+        loadedFilePath = filePath
+        guard context.fileManager.createFile(atPath: filePath, contents: fileData) else {
+            throw StepError("Failed to create file \(filePath)")
         }
 
-        return Output(loadedFile: loadedFile)
+        return Output(filePath: filePath)
     }
 
     public func cleanUp(error: Error?) async throws {
