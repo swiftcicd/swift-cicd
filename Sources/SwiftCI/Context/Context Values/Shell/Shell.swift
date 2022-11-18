@@ -39,3 +39,31 @@ protocol ShellCommand {
     var command: String { get }
     var arguments: [Argument] { get }
 }
+
+public struct Command: ShellCommand {
+    public let command: String
+    public var arguments: [Argument]
+
+    public init(_ command: String, _ arguments: [Argument] = []) {
+        self.command = command
+        self.arguments = arguments
+    }
+
+    public init(_ command: String, _ arguments: Argument...) {
+        self.init(command, arguments)
+    }
+
+    public mutating func add(_ arguments: Argument...) {
+        self.arguments.append(contentsOf: arguments)
+    }
+
+    public static func += (lhs: inout Command, rhs: Argument) {
+        lhs.add(rhs)
+    }
+
+    @_disfavoredOverload
+    public static func += (lhs: inout Command, rhs: Argument) -> Command {
+        lhs.add(rhs)
+        return lhs
+    }
+}
