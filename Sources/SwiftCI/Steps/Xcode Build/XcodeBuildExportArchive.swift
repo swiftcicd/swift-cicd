@@ -68,13 +68,9 @@ extension XcodeBuildStep {
 
             if let authentication {
                 arguments += [
-                    "-authenticationKeyPath", authentication.key.components(separatedBy: "/").last!,
+                    "-authenticationKeyPath", authentication.key,
                     "-authenticationKeyID", authentication.id,
                     "-authenticationKeyIssuerID", authentication.issuerID
-                ]
-
-                arguments += [
-                    "-API_PRIVATE_KEYS_DIR=\(context.temporaryDirectory)"
                 ]
             }
 
