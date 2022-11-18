@@ -2,6 +2,7 @@ import Foundation
 
 public struct LoadEnvironmentFile: Step {
     public struct Output {
+        public let contents: String
         public let filePath: String
     }
 
@@ -28,7 +29,10 @@ public struct LoadEnvironmentFile: Step {
             throw StepError("Failed to create file \(filePath)")
         }
 
-        return Output(filePath: filePath)
+        return Output(
+            contents: String(decoding: fileData, as: UTF8.self),
+            filePath: filePath
+        )
     }
 
     public func cleanUp(error: Error?) async throws {
