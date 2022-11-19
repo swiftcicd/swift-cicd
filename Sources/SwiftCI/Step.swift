@@ -1,5 +1,7 @@
-public protocol Step<Output> {
+public protocol Step<Output>: StepRunner {
     associatedtype Output
+    // TODO: Rename this stepName to avoid collision (name is a super common variable name and Step shouldn't steal/squat on it.)
+    // (Same goes for workflow name)
     var name: String { get }
     func run() async throws -> Output
     func cleanUp(error: Error?) async throws
@@ -16,17 +18,6 @@ public extension Step {
 public extension Step {
     static var context: ContextValues { .shared }
     var context: ContextValues { .shared }
-}
-
-enum CurrentStepKey: ContextKey {
-    static var defaultValue: (any Step)?
-}
-
-public extension ContextValues {
-    internal(set) var currentStep: (any Step)? {
-        get { self[CurrentStepKey.self] }
-        set { self[CurrentStepKey.self] = newValue }
-    }
 }
 
 @propertyWrapper

@@ -7,7 +7,7 @@ import Logging
 //  - So instead of: swift run name-of-executable
 //  - It would be: swift ci
 
-public protocol Workflow {
+public protocol Workflow: StepRunner, WorkflowRunner {
     static var name: String { get }
     static var logLevel: Logger.Level { get }
     init()
@@ -24,54 +24,16 @@ public extension Workflow {
     }
 }
 
-enum CurrentWorkflowKey: ContextKey {
-    static let defaultValue: (any Workflow)? = nil
-}
-
-public extension ContextValues {
-    internal(set) var currentWorkflow: (any Workflow)? {
-        get { self[CurrentWorkflowKey.self] }
-        set { self[CurrentWorkflowKey.self] = newValue }
-    }
-}
-
-struct WorkflowStack {
-    private var steps = [any Step]()
-
-    mutating func push(_ step: any Step) {
-        steps.append(step)
-    }
-
-    mutating func pop() -> (any Step)? {
-        guard !steps.isEmpty else {
-            return nil
-        }
-
-        return steps.removeLast()
-    }
-}
-
-extension WorkflowStack: ContextKey {
-    static let defaultValue = WorkflowStack()
-}
-
-private extension ContextValues {
-    var stack: WorkflowStack {
-        get { self[WorkflowStack.self] }
-        set { self[WorkflowStack.self] = newValue }
-    }
-}
-
 public extension Workflow {
     static var context: ContextValues { .shared }
     var context: ContextValues { .shared }
 
-    func workflow<W: Workflow>(_ workflow: W) async throws {
+    func workflow<W: Workflow>(name: String? = nil, _ workflow: W) async throws {
         // Parents are restored to their current directory after a child workflow runs
         let currentDirectory = context.fileManager.currentDirectoryPath
         defer {
             do {
-                try context.fileManager.changeCurrentDirectory(currentDirectory)
+                try context.fileManager.changeCurrentDirectory(to: currentDirectory)
             } catch {
                 logger.error("Failed to restore current directory to \(currentDirectory) after running workflow \(W.name).")
             }
@@ -79,12 +41,8 @@ public extension Workflow {
 
         // TODO: Configurable logging format?
         // Should the child workflow inherit the logging level of the parent?
-        logger.info("Workflow: \(W.name)")
+        logger.info("Workflow: \(name ?? W.name)")
         try await workflow.run()
-    }
-
-    func workflow(_ workflow: () -> some Workflow) async throws {
-        try await self.workflow(workflow())
     }
 
     @discardableResult
@@ -96,14 +54,8 @@ public extension Workflow {
         logger.info("Step: \(name ?? step.name)")
         return try await step.run()
     }
-
-    @discardableResult
-    func step<S: Step>(name: String? = nil, _ step: () -> S) async throws -> S.Output {
-        try await self.step(name: name, step())
-    }
 }
 
-// Should a step be able to run another step?
 public extension Step {
     @discardableResult
     func step<S: Step>(name: String? = nil, _ step: S) async throws -> S.Output {
@@ -113,11 +65,6 @@ public extension Step {
         // TODO: Configurable format?
         logger.info("Step: \(name ?? step.name)")
         return try await step.run()
-    }
-
-    @discardableResult
-    func step<S: Step>(name: String? = nil, _ step: () -> S) async throws -> S.Output {
-        try await self.step(name: name, step())
     }
 }
 
@@ -157,6 +104,33 @@ public extension Workflow {
         }
     }
 
+    private static func cleanUp(error: Error?) async {
+        while let step = context.stack.pop() {
+            logger.info("Cleaning up after step: \(step.name)")
+            do {
+                try await step.cleanUp(error: error)
+            } catch {
+                logger.error("Failed to clean up after \(step.name): \(error)")
+            }
+        }
+    }
+}
+
+// MARK: - Workspace
+
+enum WorkflowWorkspaceKey: ContextKey {
+    // We need a safe default, and the safest place I can think of is the temp directory.
+    static let defaultValue = FileManager.default.temporaryDirectory.path
+}
+
+public extension ContextValues {
+    var workspace: String {
+        get { self[WorkflowWorkspaceKey.self] }
+        set { self[WorkflowWorkspaceKey.self] = newValue }
+    }
+}
+
+extension Workflow {
     private static func setUpWorkspace() throws {
         let workspace: String
         if context.environment.github.isCI {
@@ -173,36 +147,12 @@ public extension Workflow {
         }
 
         logger.debug("Setting current directory: \(workspace)")
-        guard context.fileManager.changeCurrentDirectoryPath(workspace) else {
-            throw InternalWorkflowError(message: "Failed to set current directory")
-        }
-
+        try context.fileManager.changeCurrentDirectory(to: workspace)
         context.workspace = workspace
     }
-
-    private static func cleanUp(error: Error?) async {
-        while let step = context.stack.pop() {
-            logger.info("Cleaning up after step: \(step.name)")
-            do {
-                try await step.cleanUp(error: error)
-            } catch {
-                logger.error("Failed to clean up after \(step.name): \(error)")
-            }
-        }
-    }
 }
 
-enum WorkflowWorkspaceKey: ContextKey {
-    // We need a safe default, and the safest place I can think of is the temp directory.
-    static let defaultValue = FileManager.default.temporaryDirectory.path
-}
-
-public extension ContextValues {
-    var workspace: String {
-        get { self[WorkflowWorkspaceKey.self] }
-        set { self[WorkflowWorkspaceKey.self] = newValue }
-    }
-}
+// MARK: - Workflow Error
 
 struct InternalWorkflowError: LocalizedError {
     let message: String
@@ -222,5 +172,58 @@ struct InternalWorkflowError: LocalizedError {
         self.file = file
         self.line = line
         self.function = function
+    }
+}
+
+// MARK: - Current Workflow/Step
+
+enum CurrentWorkflowKey: ContextKey {
+    static let defaultValue: (any Workflow)? = nil
+}
+
+public extension ContextValues {
+    internal(set) var currentWorkflow: (any Workflow)? {
+        get { self[CurrentWorkflowKey.self] }
+        set { self[CurrentWorkflowKey.self] = newValue }
+    }
+}
+
+enum CurrentStepKey: ContextKey {
+    static var defaultValue: (any Step)?
+}
+
+public extension ContextValues {
+    internal(set) var currentStep: (any Step)? {
+        get { self[CurrentStepKey.self] }
+        set { self[CurrentStepKey.self] = newValue }
+    }
+}
+
+// MARK: - Workflow Stack
+
+struct WorkflowStack {
+    private var steps = [any Step]()
+
+    mutating func push(_ step: any Step) {
+        steps.append(step)
+    }
+
+    mutating func pop() -> (any Step)? {
+        guard !steps.isEmpty else {
+            return nil
+        }
+
+        return steps.removeLast()
+    }
+}
+
+extension WorkflowStack: ContextKey {
+    static let defaultValue = WorkflowStack()
+}
+
+private extension ContextValues {
+    var stack: WorkflowStack {
+        get { self[WorkflowStack.self] }
+        set { self[WorkflowStack.self] = newValue }
     }
 }
