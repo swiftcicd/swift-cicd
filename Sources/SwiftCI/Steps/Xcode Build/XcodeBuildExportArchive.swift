@@ -14,24 +14,24 @@ extension XcodeBuildStep {
         /// Specifies a path to a plist file that configures archive exporting.
         let exportOptionsPlist: String
         let allowProvisioningUpdates: Bool
-        var authentication: XcodeBuild.Authentication?
+        var appStoreConnectKey: AppStoreConnect.Key?
         var isExportOptionsSynthesized: Bool
 
-        public init(archivePath: String, exportPath: String? = nil, exportOptionsPlist: String, allowProvisioningUpdates: Bool, authentication: XcodeBuild.Authentication? = nil) {
+        public init(archivePath: String, exportPath: String? = nil, exportOptionsPlist: String, allowProvisioningUpdates: Bool, appStoreConnectKey: AppStoreConnect.Key? = nil) {
             self.archivePath = archivePath
             self.exportPath = exportPath
             self.exportOptionsPlist = exportOptionsPlist
             self.allowProvisioningUpdates = allowProvisioningUpdates
-            self.authentication = authentication
+            self.appStoreConnectKey = appStoreConnectKey
             self.isExportOptionsSynthesized = false
         }
 
-        public init(archivePath: String, exportPath: String? = nil, exportOptions: Options, allowProvisioningUpdates: Bool, authentication: XcodeBuild.Authentication? = nil) throws {
+        public init(archivePath: String, exportPath: String? = nil, exportOptions: Options, allowProvisioningUpdates: Bool, appStoreConnectKey: AppStoreConnect.Key? = nil) throws {
             let plist = try exportOptions.generatePList()
             let temporaryDirectory = Self.context.temporaryDirectory
             let plistPath = temporaryDirectory + "exportOptions.plist"
             Self.context.fileManager.createFile(atPath: plistPath, contents: plist)
-            self.init(archivePath: archivePath, exportPath: exportPath, exportOptionsPlist: plistPath, allowProvisioningUpdates: allowProvisioningUpdates, authentication: authentication)
+            self.init(archivePath: archivePath, exportPath: exportPath, exportOptionsPlist: plistPath, allowProvisioningUpdates: allowProvisioningUpdates, appStoreConnectKey: appStoreConnectKey)
             self.isExportOptionsSynthesized = true
 
             logger.debug("""
@@ -66,11 +66,11 @@ extension XcodeBuildStep {
             // For now, upload to App Store Connect isn't going to be supported via xcodebuild. We'll have to use one of the other methods.
             // altools or iTunes Transporter.
 
-            if let authentication {
+            if let appStoreConnectKey {
                 arguments += [
-                    "-authenticationKeyPath", authentication.key,
-                    "-authenticationKeyID", authentication.id,
-                    "-authenticationKeyIssuerID", authentication.issuerID
+                    "-authenticationKeyPath", appStoreConnectKey.path,
+                    "-authenticationKeyID", appStoreConnectKey.id,
+                    "-authenticationKeyIssuerID", appStoreConnectKey.issuerID
                 ]
             }
 
@@ -88,12 +88,12 @@ extension XcodeBuildStep {
 }
 
 public extension Step where Self == XcodeBuildStep.ExportArchive {
-    static func xcodeBuild(exportArchive archivePath: String, to exportPath: String? = nil, allowProvisioningUpdates: Bool, optionsPlist: String, authentication: XcodeBuild.Authentication? = nil) -> XcodeBuildStep.ExportArchive {
-        XcodeBuildStep.ExportArchive(archivePath: archivePath, exportPath: exportPath, exportOptionsPlist: optionsPlist, allowProvisioningUpdates: allowProvisioningUpdates, authentication: authentication)
+    static func xcodeBuild(exportArchive archivePath: String, to exportPath: String? = nil, allowProvisioningUpdates: Bool, optionsPlist: String, appStoreConnectKey: AppStoreConnect.Key? = nil) -> XcodeBuildStep.ExportArchive {
+        XcodeBuildStep.ExportArchive(archivePath: archivePath, exportPath: exportPath, exportOptionsPlist: optionsPlist, allowProvisioningUpdates: allowProvisioningUpdates, appStoreConnectKey: appStoreConnectKey)
     }
 
-    static func xcodeBuild(exportArchive archivePath: String, to exportPath: String? = nil, allowProvisioningUpdates: Bool, options: XcodeBuildStep.ExportArchive.Options, authentication: XcodeBuild.Authentication? = nil) throws -> XcodeBuildStep.ExportArchive {
-        try XcodeBuildStep.ExportArchive(archivePath: archivePath, exportPath: exportPath, exportOptions: options, allowProvisioningUpdates: allowProvisioningUpdates, authentication: authentication)
+    static func xcodeBuild(exportArchive archivePath: String, to exportPath: String? = nil, allowProvisioningUpdates: Bool, options: XcodeBuildStep.ExportArchive.Options, appStoreConnectKey: AppStoreConnect.Key? = nil) throws -> XcodeBuildStep.ExportArchive {
+        try XcodeBuildStep.ExportArchive(archivePath: archivePath, exportPath: exportPath, exportOptions: options, allowProvisioningUpdates: allowProvisioningUpdates, appStoreConnectKey: appStoreConnectKey)
     }
 }
 

@@ -111,7 +111,7 @@ public struct XcodeBuild: ShellCommand {
     var allowProvisioningDeviceRegistration: Bool?
 
     /// See ``Authentication``.
-    var authentication: Authentication?
+    var appStoreConnectKey: AppStoreConnect.Key?
 
     /// Specifies that an archive should be distributed. Requires -archivePath and -exportOptionsPlist.
     /// For exporting, -exportPath is also required. Cannot be passed along with an action.

@@ -3,13 +3,13 @@ public struct ArchiveExportUpload: Step {
     let xcodeProject: String
     var scheme: String?
     let profile: ProvisioningProfile
-    let authentication: XcodeBuild.Authentication
+    let appStoreConnectKey: AppStoreConnect.Key
 
-    public init(xcodeProject: String, scheme: String? = nil, profile: ProvisioningProfile, authentication: XcodeBuild.Authentication) {
+    public init(xcodeProject: String, scheme: String? = nil, profile: ProvisioningProfile, appStoreConnectKey: AppStoreConnect.Key) {
         self.xcodeProject = xcodeProject
         self.scheme = scheme
         self.profile = profile
-        self.authentication = authentication
+        self.appStoreConnectKey = appStoreConnectKey
     }
 
     public struct Output {
@@ -70,12 +70,8 @@ public struct ArchiveExportUpload: Step {
                 ),
                 teamID: profile.requireTeamIdentifier()
             ),
-            authentication: authentication
+            appStoreConnectKey: appStoreConnectKey
         ))
-
-        guard let appStoreConnectKey = AppStoreConnect.Key(id: authentication.id, issuerID: authentication.issuerID, path: authentication.key) else {
-            throw StepError("Failed to create App Store Connect Key")
-        }
 
         let uploadOutput = try await step(UploadToAppStoreConnect(
             ipa: exportPath/"\(productName).ipa",
