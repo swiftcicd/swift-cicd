@@ -1,6 +1,15 @@
 {
   "pins" : [
     {
+      "identity" : "jwt-kit",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/vapor/jwt-kit",
+      "state" : {
+        "revision" : "87ce13a1df913ba4d51cf00606df7ef24d455571",
+        "version" : "4.7.0"
+      }
+    },
+    {
       "identity" : "shellout",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/JohnSundell/ShellOut",
@@ -16,6 +25,15 @@
       "state" : {
         "branch" : "main",
         "revision" : "9f402f7ba4f743639ad816c7a14ca99e09422204"
+      }
+    },
+    {
+      "identity" : "swift-crypto",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/apple/swift-crypto.git",
+      "state" : {
+        "revision" : "f652300628eb2003449e627f1f394a27ea2af9a8",
+        "version" : "2.2.0"
       }
     },
     {
