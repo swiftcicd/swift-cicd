@@ -16,6 +16,14 @@ public struct Secret {
     public enum Encoding {
         case base64
     }
+
+    public static func environmentValue(_ key: String) -> Secret {
+        .init(source: .environment(key), encoding: nil)
+    }
+
+    public static func base64EncodedEnvironmentValue(_ key: String) -> Secret {
+        .init(source: .environment(key), encoding: .base64)
+    }
 }
 
 public protocol LoadedSecret {
