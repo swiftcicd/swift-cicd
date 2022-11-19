@@ -1,11 +1,9 @@
 import Foundation
 
 public struct ImportSigningAssets: Step {
-    public struct Output {
-        public let appStoreConnectKey: XcodeBuild.Authentication
-        public let certificatePath: String
-        public let profile: ProvisioningProfile
-    }
+    let appStoreConnectKeySecret: AppStoreConnectKeySecret
+    let certificateSecret: CertificateSecret
+    let profileSecret: Secret
 
     public struct AppStoreConnectKeySecret {
         public let p8: Secret
@@ -29,9 +27,11 @@ public struct ImportSigningAssets: Step {
         }
     }
 
-    let appStoreConnectKeySecret: AppStoreConnectKeySecret
-    let certificateSecret: CertificateSecret
-    let profileSecret: Secret
+    public struct Output {
+        public let appStoreConnectKey: AppStoreConnect.Key
+        public let certificatePath: String
+        public let profile: ProvisioningProfile
+    }
 
     public init(appStoreConnectKeySecret: AppStoreConnectKeySecret, certificateSecret: CertificateSecret, profileSecret: Secret) {
         self.appStoreConnectKeySecret = appStoreConnectKeySecret
@@ -39,40 +39,28 @@ public struct ImportSigningAssets: Step {
         self.profileSecret = profileSecret
     }
 
-    func saveSecret(_ secret: Secret, name: String) async throws -> (filePath: String, contents: Data) {
-        switch secret {
-        case .environmentFile(let key):
-            let output = try await step(.loadFile(fromEnvironmentKey: key, as: name))
-            return (filePath: output.filePath, contents: output.contents)
-
-        case .environmentValue(let value):
-            let contents = try context.environment.require(value)
-            let filePath = context.temporaryDirectory/name
-            let fileData = Data(contents.utf8)
-            guard context.fileManager.createFile(atPath: filePath, contents: fileData) else {
-                throw StepError("Failed to save secret file \(filePath)")
-            }
-            return (filePath: filePath, contents: fileData)
-        }
-    }
-
     public func run() async throws -> Output {
-        let appStoreConnectKeyPath = try await saveSecret(appStoreConnectKeySecret.p8, name: "AuthKey_\(appStoreConnectKeySecret.keyID).p8").filePath
-        let certificateOutput = try await saveSecret(certificateSecret.p12, name: "Certificate.p12")
-        let certificatePasswordData = try await saveSecret(certificateSecret.password, name: "Certificate_Password.txt").contents
-        let certificatePassword = String(decoding: certificatePasswordData, as: UTF8.self)
-        let provisioningProfilePath = try await saveSecret(profileSecret, name: "Profile.mobileprovision").filePath
+        let appStoreConnectKeyContents: String = try loadSecret(appStoreConnectKeySecret.p8)
+        let saveAppStoreConnectP8 = try await saveFile(name: "AuthKey_\(appStoreConnectKeySecret.keyID).p8", contents: appStoreConnectKeyContents)
+        let appStoreConnectKey = AppStoreConnect.Key(
+            id: appStoreConnectKeySecret.keyID,
+            issuerID: appStoreConnectKeySecret.keyIssuerID,
+            key: appStoreConnectKeyContents,
+            path: saveAppStoreConnectP8.filePath
+        )
 
-        try await step(.installCertificate(certificateOutput.filePath, password: certificatePassword))
-        let profile = try await step(.addProfile(provisioningProfilePath))
+        let certificateContents: Data = try loadSecret(certificateSecret.p12)
+        let savedCertificate = try await saveFile(name: "Certificate.p12", contents: certificateContents)
+        let certificatePassword: String = try loadSecret(certificateSecret.password)
+        try await step(.installCertificate(savedCertificate.filePath, password: certificatePassword))
+
+        let profileContents: Data = try loadSecret(profileSecret)
+        let savedProfile = try await saveFile(name: "Profile.mobileprovision", contents: profileContents)
+        let profile = try await step(.addProfile(savedProfile.filePath))
 
         return Output(
-            appStoreConnectKey: .init(
-                key: appStoreConnectKeyPath,
-                id: appStoreConnectKeySecret.keyID,
-                issuerID: appStoreConnectKeySecret.keyIssuerID
-            ),
-            certificatePath: certificateOutput.filePath,
+            appStoreConnectKey: appStoreConnectKey,
+            certificatePath: savedCertificate.filePath,
             profile: profile
         )
     }
