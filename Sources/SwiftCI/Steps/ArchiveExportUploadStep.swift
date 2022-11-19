@@ -36,7 +36,7 @@ public struct ArchiveExportUpload: Step {
         let currentDirectory = context.fileManager.currentDirectoryPath
         defer {
             do {
-                try context.fileManager.changeCurrentDirectory(currentDirectory)
+                try context.fileManager.changeCurrentDirectory(to: currentDirectory)
             } catch {
                 logger.error("Failed to change back to the previous current directory \(currentDirectory)")
             }
@@ -45,7 +45,7 @@ public struct ArchiveExportUpload: Step {
         // Call xcodebuild from the project's parent directory
         let sourceRoot = xcodeProject.removingLastPathComponent
         if currentDirectory != sourceRoot {
-            try context.fileManager.changeCurrentDirectory(sourceRoot)
+            try context.fileManager.changeCurrentDirectory(to: sourceRoot)
         }
 
         try await step(.xcodebuild(

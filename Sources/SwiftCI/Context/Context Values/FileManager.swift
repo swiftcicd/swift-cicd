@@ -52,14 +52,10 @@ public extension String {
 }
 
 public extension FileManager {
-    enum FileManagerError: Error {
-        case changeCurrentDirectoryFailed(path: String)
-    }
-
-    func changeCurrentDirectory(_ path: String) throws {
+    func changeCurrentDirectory(to path: String) throws {
         guard currentDirectoryPath != path else { return }
         guard changeCurrentDirectoryPath(path) else {
-            throw FileManagerError.changeCurrentDirectoryFailed(path: path)
+            throw StepError("Failed to change current directory to \(path)")
         }
     }
 }
