@@ -6,7 +6,9 @@ struct Demo: Workflow {
     static let logLevel: Logger.Level = .debug
 
     func run() async throws {
-        let file = try await step(.loadFile(fromEnvironmentKey: "FILE", as: "file.txt")).filePath
-        print(file)
+        let fileSecret: String = try loadSecret(.init(source: .environment("FILE"), encoding: .base64))
+        let file = try await saveFile(name: "file.txt", contents: fileSecret)
+        print(fileSecret)
+        print(file.filePath)
     }
 }
