@@ -73,14 +73,14 @@ public struct ArchiveExportUpload: Step {
             authentication: authentication
         ))
 
+        guard let appStoreConnectKey = AppStoreConnect.Key(id: authentication.id, issuerID: authentication.issuerID, path: authentication.key) else {
+            throw StepError("Failed to create App Store Connect Key")
+        }
+
         let uploadOutput = try await step(UploadToAppStoreConnect(
             ipa: exportPath/"\(productName).ipa",
             bundleID: bundleID,
-            authentication: .apiKey(
-                authentication.id,
-                issuerID: authentication.issuerID,
-                keyDirectory: authentication.key.removingLastPathComponent
-            )
+            appStoreConnectKey: appStoreConnectKey
         ))
 
         return Output(
