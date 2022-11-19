@@ -103,17 +103,17 @@ func run() async throws {
 }
 ```
 
-**3. Add a method to `Workflow`:**
+**3. Add a method to `StepRunner`:**
 
 ```swift
-extension Workflow {
+extension StepRunner {
     public func myStep(input: String) async throws -> MyStep.Output {
         try await step(MyStep(input: input))
     }
 }
 ```
 
-This method enables users to run your step directly, without invoking the `step(_:)` methods:
+This method enables users to run your step directly from either another step or a workflow, without invoking their `step(_:)` methods:
 
 ```swift
 func run() async throws {
