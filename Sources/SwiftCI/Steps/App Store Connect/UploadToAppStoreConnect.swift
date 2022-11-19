@@ -27,26 +27,10 @@ public struct UploadToAppStoreConnect: Step {
     var bundleID: String?
 
     /// The type of authentication to use.
-    let authentication: Authentication
-
-    var showProgress: Bool
-    var verbose: Bool
+    let appStoreConnectKey: AppStoreConnect.Key
 
     public struct Output {
         public let buildNumber: String
-    }
-
-    public enum Authentication {
-        // TODO: Username/Password authentication
-
-        /// apiKey. Required for JWT authentication (in lieu of username/password).
-        ///
-        /// This option will search the following directories in sequence for a private key file with the name of 'AuthKey_<api_key>.p8': './private_keys', '~/private_keys', '~/.private_keys', and '~/.appstoreconnect/private_keys'.
-        ///
-        /// Additionally, you can set the environment variable $API_PRIVATE_KEYS_DIR or a user default API_PRIVATE_KEYS_DIR to specify the directory where your AuthKey file is located.
-        ///
-        /// Issuer ID. Required if --apiKey is specified.
-        case apiKey(String, issuerID: String, keyDirectory: String)
     }
 
     public enum PackageType: Argument {
@@ -72,9 +56,7 @@ public struct UploadToAppStoreConnect: Step {
         bundleVersion: String? = nil,
         bundleShortVersion: String? = nil,
         bundleID: String? = nil,
-        authentication: Authentication,
-        showProgress: Bool = false,
-        verbose: Bool = false
+        appStoreConnectKey: AppStoreConnect.Key
     ) {
         self.ipa = ipa
         self.xcodeProject = xcodeProject
@@ -84,21 +66,43 @@ public struct UploadToAppStoreConnect: Step {
         self.bundleVersion = bundleVersion
         self.bundleShortVersion = bundleShortVersion
         self.bundleID = bundleID
-        self.authentication = authentication
-        self.showProgress = showProgress
-        self.verbose = verbose
+        self.appStoreConnectKey = appStoreConnectKey
     }
 
     private func newALToolCommand() -> Command {
-        if case .apiKey(let apiKey, let issuerID, let keyDirectory) = authentication {
-            return Command("env", "API_PRIVATE_KEYS_DIR=\(keyDirectory)", "xcrun", "altool", "--apiKey", apiKey, "--apiIssuer", issuerID)
-        } else {
-            return Command("xcrun", "altool")
-        }
+        let keysDirectory = appStoreConnectKey.path.removingLastPathComponent
+        return Command("env", "API_PRIVATE_KEYS_DIR=\(keysDirectory)", "xcrun", "altool", "--apiKey", appStoreConnectKey.id, "--apiIssuer", appStoreConnectKey.issuerID)
+    }
+
+    private func upload(ipa: String, type: PackageType, appAppleID: String, bundleVersion: String, bundleShortVersion: String, bundleID: String) async throws {
+        var uploadPackage = newALToolCommand()
+        uploadPackage.add(
+            "--upload-package", ipa,
+            "--type", type,
+            "--apple-id", appAppleID,
+            "--bundle-version", bundleVersion,
+            "--bundle-short-version-string", bundleShortVersion,
+            "--bundle-id", bundleID
+        )
+
+        logger.info("""
+            Uploading \(ipa.lastPathComponent ?? ipa) to App Store Connect:
+             - App ID: \(appAppleID)
+             - Bundle ID: \(bundleID)
+             - Version: \(bundleShortVersion)
+             - Build: \(bundleVersion)
+            """
+        )
+
+        try context.shell(uploadPackage)
     }
 
     public func run() async throws -> Output {
-        guard ipa.hasSuffix(".ipa"), let ipaName = ipa.lastPathComponent else {
+
+        // TODO: Allow for the build version to be specified by an environment variable. (This could be useful on a system like Bitrise that has its own build numbers.)
+        // Then a build number could be specified from the outside. It would always win out over what's detected internally.
+
+        guard ipa.hasSuffix(".ipa") else {
             throw StepError("Expected ipa to be the path to an .ipa, but got \(ipa) instead.")
         }
 
@@ -106,33 +110,6 @@ public struct UploadToAppStoreConnect: Step {
         var bundleVersion = self.bundleVersion
         var bundleShortVersion = self.bundleShortVersion
         var bundleID = self.bundleID
-
-        distributionSummary: if bundleVersion == nil || bundleShortVersion == nil || bundleID == nil {
-            guard let distributionSummary = getDistributionSummary() else {
-                logger.debug("Couldn't detect bundleVersion, bundleShortVersion, or bundleID because distribution summary couldn't be found.")
-                break distributionSummary
-            }
-
-            guard let summary = distributionSummary.summaries[ipaName]?.first else {
-                logger.debug("Couldn't detect bundleVersion, bundleShortVersion, or bundleID because distribution summary for \(ipaName) couldn't be found.")
-                break distributionSummary
-            }
-
-            if bundleVersion == nil {
-                bundleVersion = summary.buildNumber
-                logger.debug("Detected bundle version (build number) from distribution summary.")
-            }
-
-            if bundleShortVersion == nil {
-                bundleShortVersion = summary.versionNumber
-                logger.debug("Detected bundle short version from distribution summary.")
-            }
-
-            if bundleID == nil {
-                bundleID = summary.entitlements.bundleID
-                logger.debug("Detected bundle id from distribution summary.")
-            }
-        }
 
         versions: if bundleShortVersion == nil || bundleVersion == nil {
             guard let project = xcodeProject ?? context.xcodeProject else {
@@ -150,7 +127,7 @@ public struct UploadToAppStoreConnect: Step {
                     bundleShortVersion = projectBundleShortVersion
                     logger.debug("Detected bundle short version from xcode project")
                 } else {
-                    logger.debug("Couldn't detect bundle short version because the xcode project is missing the MARKETING_VERSION build setting.")
+                    logger.debug("Couldn't detect bundle short version from Xcode project build settings.")
                 }
             }
 
@@ -159,148 +136,58 @@ public struct UploadToAppStoreConnect: Step {
                     bundleVersion = projectBundleVersion
                     logger.debug("Detected bundle version from xcode project")
                 } else {
-                    logger.debug("Couldn't detect bundle version because the xcode project is missing the MARKETING_VERSION build setting.")
+                    logger.debug("Couldn't detect bundle version from Xcode project build settings.")
+                }
+            }
+
+            if bundleID == nil {
+                if let projectBundleID = buildSettings.bundleIdentifier {
+                    bundleID = projectBundleID
+                    logger.debug("Detected bundle id from xcode project")
+                } else {
+                    logger.debug("Couldn't detect bundle version from Xcode project build settings.")
                 }
             }
         }
 
-        guard let bundleVersion else { throw StepError("Missing bundleVersion") }
+        guard var bundleVersion else { throw StepError("Missing bundleVersion") }
         guard let bundleShortVersion else { throw StepError("Missing bundleShortVersion") }
         guard let bundleID else { throw StepError("Missing bundleID") }
 
+        let apps = try await context.appStoreConnect.getApps(key: appStoreConnectKey)
+        guard let app = apps.first(where: { $0.attributes.bundleId == bundleID }) else {
+            throw StepError("No app with bundle id \(bundleID) found on App Store Connect. Either the bundle id isn't correct or the app hasn't been created on App Store Connect yet.")
+        }
+
         if appAppleID == nil {
-            let apps = try await listApps()
-            if let matchingApp = apps.applications.first(where: { $0.bundleID == bundleID }) {
-                appAppleID = matchingApp.appleID
-                logger.debug("Detected app Apple ID from listing apps.")
-            } else {
-                logger.debug("Couldn't detect app Apple ID from listing apps.")
-            }
+            appAppleID = app.id
+            logger.debug("Detected app Apple ID from App Store Connect.")
         }
 
         guard let appAppleID else { throw StepError("Missing appAppleID") }
 
-        logger.info("Uploading \(ipaName) version \(bundleShortVersion) build \(bundleVersion)")
+        if let latestBuild = try await context.appStoreConnect.getLatestBuild(appID: appAppleID, key: appStoreConnectKey) {
+            if let bundleVersionNumber = Int(bundleVersion), let latestBuildNumber = Int(latestBuild.attributes.version) {
+                if bundleVersionNumber <= latestBuildNumber {
+                    bundleVersion = String(latestBuildNumber + 1)
+                    logger.info("Automatically incremented bundle version from (project version: \(bundleVersionNumber), latest version: \(latestBuildNumber)) to \(bundleVersion)")
+                }
+            } else {
+                logger.debug("Latest build version is not a number, cannot automatically check for build number greater than previous build.")
+            }
+        } else {
+            logger.debug("Couldn't get latest build from App Store Connect. Continuing with given values.")
+        }
 
-        // TODO: Allow for the build version to be specified by an environment variable. (This could be useful on a system like Bitrise that has its own build numbers.)
-        // Then a build number could be specified from the outside. It would always win out over what's detected internally.
-
-        // TODO: Should we use --validate-package before --upload-package and have a chance at resolving the build number error?
-
-        var altool = newALToolCommand()
-        altool.add(
-            "--upload-package", ipa,
-            "--type", type,
-            "--apple-id", appAppleID,
-            "--bundle-version", bundleVersion,
-            "--bundle-short-version-string", bundleShortVersion,
-            "--bundle-id", bundleID
+        try await upload(
+            ipa: ipa,
+            type: type,
+            appAppleID: appAppleID,
+            bundleVersion: bundleVersion,
+            bundleShortVersion: bundleShortVersion,
+            bundleID: bundleID
         )
 
-        if let ascPublicID {
-            altool.add("--asc-public-id", ascPublicID)
-        }
-
-        if showProgress {
-            altool.add("--show-progress")
-        }
-
-        if verbose {
-            altool.add("--verbose")
-        }
-
-        try context.shell(altool)
-
         return Output(buildNumber: bundleVersion)
-    }
-}
-
-extension UploadToAppStoreConnect {
-    struct ListAppsReponse: Decodable {
-        let applications: [App]
-
-        struct App: Decodable {
-            let appleID: String
-            let bundleID: String
-
-            enum CodingKeys: String, CodingKey {
-                case appleID = "AppleID"
-                case bundleID = "ReservedBundleIdentifier"
-            }
-        }
-    }
-
-    func listApps() async throws -> ListAppsReponse {
-        var listApps = newALToolCommand()
-        listApps.add("--list-apps", "--output-format", "json")
-        let responseString = try context.shell(listApps, quiet: true)
-        let responseData = Data(responseString.utf8)
-        let response = try JSONDecoder().decode(ListAppsReponse.self, from: responseData)
-        return response
-    }
-}
-
-extension UploadToAppStoreConnect {
-    struct DistributionSummary: Decodable {
-        let summaries: [String: [ProductSummary]]
-
-        struct ProductSummary: Decodable {
-            let buildNumber: String
-            let versionNumber: String
-            let entitlements: Entitlements
-
-            struct Entitlements: Decodable {
-                let applicationIdentifier: String
-                let teamIdentifier: String
-
-                enum CodingKeys: String, CodingKey {
-                    case applicationIdentifier = "application-identifier"
-                    case teamIdentifier = "com.apple.developer.team-identifier"
-                }
-
-                var bundleID: String? {
-                    let prefix = teamIdentifier + "."
-
-                    guard applicationIdentifier.hasPrefix(prefix) else {
-                        return nil
-                    }
-
-                    return String(applicationIdentifier.dropFirst(prefix.count))
-                }
-            }
-        }
-
-        init(from decoder: Decoder) throws {
-            let container = try decoder.singleValueContainer()
-            summaries = try container.decode([String: [ProductSummary]].self)
-        }
-    }
-
-    func getDistributionSummary() -> DistributionSummary? {
-        var distributionSummaryPath: String
-
-        if ipa.hasSuffix(".ipa") {
-            distributionSummaryPath = ipa
-                .components(separatedBy: "/")
-                .dropLast()
-                .joined(separator: "/")
-                + "/"
-        } else {
-            distributionSummaryPath = ipa
-        }
-
-        distributionSummaryPath += "DistributionSummary.plist"
-
-        guard let contents = context.fileManager.contents(atPath: distributionSummaryPath) else {
-            return nil
-        }
-
-        do {
-            let distributionSummary = try PropertyListDecoder().decode(DistributionSummary.self, from: contents)
-            return distributionSummary
-        } catch {
-            logger.error("Failed to decode distribution summary: \(error)")
-            return nil
-        }
     }
 }
