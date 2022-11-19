@@ -119,13 +119,8 @@ public struct UploadToAppStoreConnect: Step {
             }
 
             if bundleVersion == nil {
-                if let buildNumber = Int(summary.buildNumber) {
-                    // Incremement the build number so that App Store Connect will accept it.
-                    bundleVersion = "\(buildNumber + 1)"
-                    logger.debug("Detected bundle version (build number) from distribution summary and automatically incremented it.")
-                } else {
-                    logger.debug("Couldn't automatically increment build number because project bundle version is not a number.")
-                }
+                bundleVersion = summary.buildNumber
+                logger.debug("Detected bundle version (build number) from distribution summary.")
             }
 
             if bundleShortVersion == nil {
@@ -177,13 +172,15 @@ public struct UploadToAppStoreConnect: Step {
             let apps = try await listApps()
             if let matchingApp = apps.applications.first(where: { $0.bundleID == bundleID }) {
                 appAppleID = matchingApp.appleID
-                logger.debug("Detected app Appple ID from listing apps.")
+                logger.debug("Detected app Apple ID from listing apps.")
             } else {
                 logger.debug("Couldn't detect app Apple ID from listing apps.")
             }
         }
 
         guard let appAppleID else { throw StepError("Missing appAppleID") }
+
+        logger.info("Uploading \(ipaName) version \(bundleShortVersion) build \(bundleVersion)")
 
         // TODO: Allow for the build version to be specified by an environment variable. (This could be useful on a system like Bitrise that has its own build numbers.)
         // Then a build number could be specified from the outside. It would always win out over what's detected internally.
