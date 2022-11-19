@@ -43,7 +43,7 @@ extension Data: LoadedSecret {
     }
 }
 
-public extension Step {
+public extension StepRunner {
     func loadSecret<Loaded: LoadedSecret>(_ secret: Secret) throws -> Loaded {
         switch secret.source {
         case .environment(let key):

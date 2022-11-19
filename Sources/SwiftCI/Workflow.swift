@@ -25,9 +25,6 @@ public extension Workflow {
 }
 
 public extension Workflow {
-    static var context: ContextValues { .shared }
-    var context: ContextValues { .shared }
-
     func workflow<W: Workflow>(name: String? = nil, _ workflow: W) async throws {
         // Parents are restored to their current directory after a child workflow runs
         let currentDirectory = context.fileManager.currentDirectoryPath

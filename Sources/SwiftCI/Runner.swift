@@ -1,4 +1,4 @@
-public protocol StepRunner {
+public protocol StepRunner: ContextAware {
     @discardableResult
     func step<S: Step>(name: String?, _ step: S) async throws -> S.Output
 }
@@ -15,7 +15,7 @@ public extension StepRunner {
     }
 }
 
-public protocol WorkflowRunner {
+public protocol WorkflowRunner: ContextAware {
     func workflow<W: Workflow>(name: String?, _ workflow: W) async throws
 }
 

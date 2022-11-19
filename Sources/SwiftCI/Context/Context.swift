@@ -43,3 +43,13 @@ public struct Context<Value> {
         self.keyPath = keyPath
     }
 }
+
+public protocol ContextAware {
+    static var context: ContextValues { get }
+    var context: ContextValues { get }
+}
+
+public extension ContextAware {
+    static var context: ContextValues { .shared }
+    var context: ContextValues { .shared }
+}

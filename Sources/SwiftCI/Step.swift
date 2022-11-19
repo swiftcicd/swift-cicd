@@ -15,11 +15,6 @@ public extension Step {
     func cleanUp(error: Error?) async throws {}
 }
 
-public extension Step {
-    static var context: ContextValues { .shared }
-    var context: ContextValues { .shared }
-}
-
 @propertyWrapper
 public struct StepState<T> {
     private class Storage {
