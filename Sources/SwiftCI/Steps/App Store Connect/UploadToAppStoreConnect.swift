@@ -10,12 +10,11 @@ public struct UploadToAppStoreConnect: Step {
     /// The package type,
     var type: PackageType
 
-    /// Required with --notarize-app and --notarization-history when a user account is associated with multiple providers and using username/password authentication.
-    /// You can use the --list-providers command to retrieve the providers associated with your accounts. You may instead use --asc-provider or --asc-public-id.
-    var ascPublicID: String?
-
     /// The Apple ID of the app to be uploaded.
     var appAppleID: String?
+
+    /// The CFBundleIdentifier of the app to be uploaded.
+    var bundleID: String?
 
     /// The CFBundleVersion of the app to be uploaded.
     var bundleVersion: String?
@@ -23,8 +22,9 @@ public struct UploadToAppStoreConnect: Step {
     /// The CFBundleShortVersionString of the app to be uploaded.
     var bundleShortVersion: String?
 
-    /// The CFBundleIdentifier of the app to be uploaded.
-    var bundleID: String?
+    /// Required with --notarize-app and --notarization-history when a user account is associated with multiple providers and using username/password authentication.
+    /// You can use the --list-providers command to retrieve the providers associated with your accounts. You may instead use --asc-provider or --asc-public-id.
+    var ascPublicID: String?
 
     /// The type of authentication to use.
     let appStoreConnectKey: AppStoreConnect.Key
@@ -51,54 +51,25 @@ public struct UploadToAppStoreConnect: Step {
         ipa: String,
         xcodeProject: String? = nil,
         type: PackageType = .iOS,
-        ascPublicID: String? = nil,
         appAppleID: String? = nil,
+        bundleID: String? = nil,
         bundleVersion: String? = nil,
         bundleShortVersion: String? = nil,
-        bundleID: String? = nil,
+        ascPublicID: String? = nil,
         appStoreConnectKey: AppStoreConnect.Key
     ) {
         self.ipa = ipa
         self.xcodeProject = xcodeProject
         self.type = type
-        self.ascPublicID = ascPublicID
         self.appAppleID = appAppleID
+        self.bundleID = bundleID
         self.bundleVersion = bundleVersion
         self.bundleShortVersion = bundleShortVersion
-        self.bundleID = bundleID
+        self.ascPublicID = ascPublicID
         self.appStoreConnectKey = appStoreConnectKey
     }
 
-    private func newALToolCommand() -> Command {
-        let keysDirectory = appStoreConnectKey.path.removingLastPathComponent
-        return Command("env", "API_PRIVATE_KEYS_DIR=\(keysDirectory)", "xcrun", "altool", "--apiKey", appStoreConnectKey.id, "--apiIssuer", appStoreConnectKey.issuerID)
-    }
-
-    private func upload(ipa: String, type: PackageType, appAppleID: String, bundleVersion: String, bundleShortVersion: String, bundleID: String) async throws {
-        var uploadPackage = newALToolCommand()
-        uploadPackage.add(
-            "--upload-package", ipa,
-            "--type", type,
-            "--apple-id", appAppleID,
-            "--bundle-version", bundleVersion,
-            "--bundle-short-version-string", bundleShortVersion,
-            "--bundle-id", bundleID
-        )
-
-        logger.info("""
-            Uploading \(ipa.lastPathComponent ?? ipa) to App Store Connect:
-             - App ID: \(appAppleID)
-             - Bundle ID: \(bundleID)
-             - Version: \(bundleShortVersion)
-             - Build: \(bundleVersion)
-            """
-        )
-
-        try context.shell(uploadPackage)
-    }
-
     public func run() async throws -> Output {
-
         // TODO: Allow for the build version to be specified by an environment variable. (This could be useful on a system like Bitrise that has its own build numbers.)
         // Then a build number could be specified from the outside. It would always win out over what's detected internally.
 
@@ -111,7 +82,7 @@ public struct UploadToAppStoreConnect: Step {
         var bundleShortVersion = self.bundleShortVersion
         var bundleID = self.bundleID
 
-        versions: if bundleShortVersion == nil || bundleVersion == nil {
+        versions: if bundleShortVersion == nil || bundleVersion == nil || bundleID == nil {
             guard let project = xcodeProject ?? context.xcodeProject else {
                 logger.debug("Couldn't detect bundle short version or bundle version because xcode project wasn't specified explicitly or contextually.")
                 break versions
@@ -123,7 +94,7 @@ public struct UploadToAppStoreConnect: Step {
             }
 
             if bundleShortVersion == nil {
-                if let projectBundleShortVersion = buildSettings.version {
+                if let projectBundleShortVersion = buildSettings[.version] {
                     bundleShortVersion = projectBundleShortVersion
                     logger.debug("Detected bundle short version from xcode project")
                 } else {
@@ -132,7 +103,7 @@ public struct UploadToAppStoreConnect: Step {
             }
 
             if bundleVersion == nil {
-                if let projectBundleVersion = buildSettings.build {
+                if let projectBundleVersion = buildSettings[.build] {
                     bundleVersion = projectBundleVersion
                     logger.debug("Detected bundle version from xcode project")
                 } else {
@@ -141,7 +112,7 @@ public struct UploadToAppStoreConnect: Step {
             }
 
             if bundleID == nil {
-                if let projectBundleID = buildSettings.bundleIdentifier {
+                if let projectBundleID = buildSettings[.bundleIdentifier] {
                     bundleID = projectBundleID
                     logger.debug("Detected bundle id from xcode project")
                 } else {
@@ -150,7 +121,7 @@ public struct UploadToAppStoreConnect: Step {
             }
         }
 
-        guard var bundleVersion else { throw StepError("Missing bundleVersion") }
+        guard let bundleVersion else { throw StepError("Missing bundleVersion") }
         guard let bundleShortVersion else { throw StepError("Missing bundleShortVersion") }
         guard let bundleID else { throw StepError("Missing bundleID") }
 
@@ -166,26 +137,26 @@ public struct UploadToAppStoreConnect: Step {
 
         guard let appAppleID else { throw StepError("Missing appAppleID") }
 
-        if let latestBuild = try await context.appStoreConnect.getLatestBuild(appID: appAppleID, key: appStoreConnectKey) {
-            if let bundleVersionNumber = Int(bundleVersion), let latestBuildNumber = Int(latestBuild.attributes.version) {
-                if bundleVersionNumber <= latestBuildNumber {
-                    bundleVersion = String(latestBuildNumber + 1)
-                    logger.info("Automatically incremented bundle version from (project version: \(bundleVersionNumber), latest version: \(latestBuildNumber)) to \(bundleVersion)")
-                }
-            } else {
-                logger.debug("Latest build version is not a number, cannot automatically check for build number greater than previous build.")
-            }
-        } else {
-            logger.debug("Couldn't get latest build from App Store Connect. Continuing with given values.")
-        }
+        logger.info("""
+            Uploading \(ipa.lastPathComponent ?? ipa) to App Store Connect:
+             - App ID: \(appAppleID)
+             - Bundle ID: \(bundleID)
+             - Version: \(bundleShortVersion)
+             - Build: \(bundleVersion)
+            """
+        )
 
-        try await upload(
-            ipa: ipa,
-            type: type,
-            appAppleID: appAppleID,
-            bundleVersion: bundleVersion,
-            bundleShortVersion: bundleShortVersion,
-            bundleID: bundleID
+        try context.shell(
+            "env", "API_PRIVATE_KEYS_DIR=\(appStoreConnectKey.path.removingLastPathComponent)",
+            "xcrun", "altool",
+            "--apiKey", appStoreConnectKey.id,
+            "--apiIssuer", appStoreConnectKey.issuerID,
+            "--upload-package", ipa,
+            "--type", type,
+            "--apple-id", appAppleID,
+            "--bundle-version", bundleVersion,
+            "--bundle-short-version-string", bundleShortVersion,
+            "--bundle-id", bundleID
         )
 
         return Output(buildNumber: bundleVersion)
