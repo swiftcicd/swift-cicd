@@ -1,4 +1,6 @@
 public protocol StepRunner: ContextAware {
+    // TODO: Add a retry parameter? It could be useful to retry a step a number of times. For instance, when uploading to App Store Connect.
+
     @discardableResult
     func step<S: Step>(name: String?, _ step: S) async throws -> S.Output
 }
