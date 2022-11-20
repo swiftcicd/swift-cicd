@@ -39,13 +39,22 @@ extension XcodeBuildStep {
         let destination: String
         var archivePath: String?
         var codeSignStyle: CodeSignStyle?
+        var projectVersion: String?
 
-        public init(scheme: String? = nil, configuration: Configuration? = nil, destination: String, archivePath: String? = nil, codeSignStyle: CodeSignStyle? = nil) {
+        public init(
+            scheme: String? = nil,
+            configuration: Configuration? = nil,
+            destination: String,
+            archivePath: String? = nil,
+            codeSignStyle: CodeSignStyle? = nil,
+            projectVersion: String? = nil
+        ) {
             self.scheme = scheme
             self.configuration = configuration
             self.destination = destination
             self.archivePath = archivePath
             self.codeSignStyle = codeSignStyle
+            self.projectVersion = projectVersion
         }
 
         public func run() async throws -> String {
@@ -92,6 +101,10 @@ extension XcodeBuildStep {
                 )
             }
 
+            if let projectVersion {
+                xcodebuild.add("CURRENT_PROJECT_VERSION=\(projectVersion)")
+            }
+
             return try context.shell(xcodebuild)
         }
 
@@ -109,14 +122,16 @@ public extension Step where Self == XcodeBuildStep.Build {
         configuration: XcodeBuildStep.Build.Configuration? = nil,
         destination: XcodeBuildStep.Destination,
         archiveTo archivePath: String? = nil,
-        codeSignStyle: XcodeBuildStep.Build.CodeSignStyle? = nil
+        codeSignStyle: XcodeBuildStep.Build.CodeSignStyle? = nil,
+        projectVersion: String? = nil
     ) -> XcodeBuildStep.Build {
         .init(
             scheme: scheme,
             configuration: configuration,
             destination: destination.argument,
             archivePath: archivePath,
-            codeSignStyle: codeSignStyle
+            codeSignStyle: codeSignStyle,
+            projectVersion: projectVersion
         )
     }
 }
