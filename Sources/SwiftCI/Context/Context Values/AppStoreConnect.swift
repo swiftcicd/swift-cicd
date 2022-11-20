@@ -25,6 +25,8 @@ public struct AppStoreConnect {
     }
 
     public func getLatestBuild(appID: String, key: Key) async throws -> Build? {
+        // FIXME: Processing builds don't show up in this list right away. They do at some point, but not as fast as they appear on the App Store Connect website.
+        // Is there some mix of query parameters that would start returning processing builds right away?
         let data = try await request("/v1/builds?filter[app]=\(appID)&limit=1", key: key, as: DataResponse<[Build]>.self)
         return data.data.first
     }
