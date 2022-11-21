@@ -44,7 +44,7 @@ public struct PullRequestEvent: Decodable {
     }
 
     public struct PullRequest: Decodable {
-        public let id: String
+        public let id: Int
         public let number: Int
         public let title: String
         public let body: String?
