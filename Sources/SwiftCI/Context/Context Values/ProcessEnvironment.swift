@@ -12,6 +12,16 @@ public extension ContextValues {
     }
 }
 
+public extension ContextValues {
+    var isPullRequestIntoMain: Bool {
+        isPullRequest(into: "main")
+    }
+
+    func isPullRequest(into branch: String) -> Bool {
+        environment.github.pullRequestEvent?.pullRequest.base.ref == branch
+    }
+}
+
 public extension ProcessEnvironment.GitHub {
     static var pullRequestEvent: PullRequestEvent? {
         guard eventName == "pull_request", let eventPath else {
