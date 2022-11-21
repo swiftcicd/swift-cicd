@@ -10,7 +10,7 @@ public struct ArchiveExportUpload: Step {
     public enum BuildNumberStrategy {
         // TODO: Add a semantic version strategy
         case autoIncrementingInteger
-        case date(format: String)
+        case date(format: String = "yy.MM.dd.HH.mm")
         case random(length: Int)
         case project
     }

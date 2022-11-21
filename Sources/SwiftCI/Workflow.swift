@@ -66,8 +66,22 @@ public extension Step {
 }
 
 public extension Workflow {
+    // TODO: Track which steps were explicitly run by the workflow (current step will be nil when these steps are called.)
+    // Output a summary of the workflow run at the end.
+    //  - ✅ Step 1
+    //  - ✅ Step 2
+    //      - ✅ Substep A
+    //      - ✅ Substep B
+    //  - ✅ Step 3
+    //  - ✅ Workflow A
+    //      - ✅ Step A.1
+    //          - ✅ Substep A.1.A
+    //      - ✅ Step A.2
+    //  - ❌ Step 4 (Failed)
+    //  - ⤵️ Step 4 (Skipped)
+
     static func main() async {
-        // TODO: Allow for log level to specified on the command line (either as an argument or an environment variable.)
+        // TODO: Allow for log level to be specified on the command line (either as an argument or an environment variable.)
         // If it's password from the outside, use it instead of the workflow's value.
         context.logger.logLevel = Self.logLevel
         logger.info("Starting Workflow: \(Self.name)")
