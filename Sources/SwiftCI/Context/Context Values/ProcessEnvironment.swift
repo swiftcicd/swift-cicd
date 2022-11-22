@@ -12,20 +12,20 @@ public extension ContextValues {
     }
 }
 
-public extension ContextValues {
-    var isPullRequestIntoMain: Bool {
-        isPullRequest(into: "main")
-    }
-
-    func isPullRequest(into branch: String) -> Bool {
-        switch environment.github.event {
-        case .pullRequest(let pullRequest):
-            return pullRequest.base.ref == branch
-        default:
-            return false
-        }
-    }
-}
+//public extension ContextValues {
+//    var isPullRequestIntoMain: Bool {
+//        isPullRequest(into: "main")
+//    }
+//
+//    func isPullRequest(into branch: String) -> Bool {
+//        switch environment.github.event {
+//        case .pullRequest(let pullRequest):
+//            return pullRequest.base.ref == branch
+//        default:
+//            return false
+//        }
+//    }
+//}
 
 public extension ProcessEnvironment.GitHub {
     enum Event {
@@ -36,40 +36,61 @@ public extension ProcessEnvironment.GitHub {
     static var event: Event? {
         let context = ContextValues.shared
 
-        guard
-            let eventName,
-            let eventPath,
-            let eventContents = context.fileManager.contents(atPath: eventPath)
-        else {
-            return nil
-        }
+        do {
+            let name = try context.environment.github.$eventName.require()
+            let contents: Data
 
-        func decodeEvent<E: Decodable>(_ event: (E) -> Event) -> Event? {
-            do {
-                let payload = try JSONDecoder().decode(E.self, from: eventContents)
-                return event(payload)
-            } catch {
-                context.logger.error("""
-                    Failed to decode GitHub event \(Event.self). Please submit an issue to swift-ci and attach the error body that follows. \
-                    In the meantime, you can manually inspect the event by using the eventName and eventPath properties. \
-                    Error:
-                    \(error)
-                    Contents:
-                    \(String(decoding: eventContents, as: UTF8.self))
-                    (End of error)
-
-
-                    """
-                )
-                return nil
+            if context.environment.github.isCI {
+                let eventPath = try context.environment.github.$eventPath.require()
+                guard let eventContents = context.fileManager.contents(atPath: eventPath) else {
+                    return nil
+                }
+                contents = eventContents
+            } else {
+                let stringContents = try context.environment.require("GITHUB_EVENT_CONTENTS")
+                contents = Data(stringContents.utf8)
             }
-        }
+            
+            func decodeEvent<E: Decodable>(_ event: (E) -> Event) -> Event? {
+                do {
+                    let payload = try JSONDecoder().decode(E.self, from: contents)
+                    return event(payload)
+                } catch {
+                    if context.environment.github.isCI {
+                        context.logger.error("""
+                            Failed to decode GitHub event \(Event.self). Please submit an issue to swift-ci and attach the error body that follows. \
+                            In the meantime, you can manually inspect the event by using the eventName and eventPath properties. \
+                            Error:
+                            \(error)
+                            Contents:
+                            \(String(decoding: contents, as: UTF8.self))
+                            (End of error)
 
-        switch eventName {
-        case "pull_request":
-            return decodeEvent(Event.pullRequest)
-        default:
-            return .other(name: eventName, contents: eventContents)
+
+                            """
+                        )
+                    } else {
+                        context.logger.error("""
+                            Failed to decode simulated GitHub event \(Event.self). Error:
+                            \(error)
+
+
+                            """
+                        )
+                    }
+                    return nil
+                }
+            }
+            
+            switch eventName {
+            case "pull_request":
+                return decodeEvent(Event.pullRequest)
+            default:
+                return .other(name: name, contents: contents)
+            }
+        } catch {
+            context.logger.error("Error while getting GitHub event details: \(error)")
+            return nil
         }
     }
 }
