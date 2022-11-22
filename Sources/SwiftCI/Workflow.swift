@@ -24,14 +24,14 @@ public extension Workflow {
     }
 }
 
-public extension Workflow {
+public extension WorkflowRunner {
     func workflow<W: Workflow>(name: String? = nil, _ workflow: W) async throws {
         // Parents are restored to their current directory after a child workflow runs
         let currentDirectory = context.fileManager.currentDirectoryPath
 
         // TODO: Configurable logging format?
         // Should the child workflow inherit the logging level of the parent?
-        logger.info("Workflow: \(name ?? W.name)")
+        context.logger.info("Running workflow: \(name ?? W.name)")
 
         context.stack.pushWorkflow(workflow)
         context.currentWorkflow = workflow
@@ -43,32 +43,25 @@ public extension Workflow {
             do {
                 try context.fileManager.changeCurrentDirectory(to: currentDirectory)
             } catch {
-                logger.error("Failed to restore current directory to \(currentDirectory) after running workflow \(W.name).")
+                context.logger.error("Failed to restore current directory to \(currentDirectory) after running workflow \(W.name).")
             }
         }
 
         try await workflow.run()
     }
-
-    @discardableResult
-    func step<S: Step>(name: String? = nil, _ step: S) async throws -> S.Output {
-        context.stack.pushStep(step)
-        context.currentStep = step
-        defer { context.currentStep = nil }
-        // TODO: Configurable format?
-        logger.info("Step: \(name ?? step.name)")
-        return try await step.run()
-    }
 }
 
-public extension Step {
+public extension StepRunner {
     @discardableResult
     func step<S: Step>(name: String? = nil, _ step: S) async throws -> S.Output {
+        let currentStep = context.currentStep
         context.stack.pushStep(step)
         context.currentStep = step
-        defer { context.currentStep = self }
+        defer {
+            context.currentStep = currentStep
+        }
         // TODO: Configurable format?
-        logger.info("Step: \(name ?? step.name)")
+        context.logger.info("Running step: \(name ?? step.name)")
         return try await step.run()
     }
 }
