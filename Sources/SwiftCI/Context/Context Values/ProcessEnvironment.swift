@@ -18,38 +18,73 @@ public extension ContextValues {
     }
 
     func isPullRequest(into branch: String) -> Bool {
-        environment.github.pullRequestEvent?.pullRequest.base.ref == branch
+        switch environment.github.event {
+        case .pullRequest(let pullRequest):
+            return pullRequest.base.ref == branch
+        default:
+            return false
+        }
     }
 }
 
 public extension ProcessEnvironment.GitHub {
-    static var pullRequestEvent: PullRequestEvent? {
-        guard eventName == "pull_request", let eventPath else {
+    enum Event {
+        case pullRequest(PullRequestEvent)
+        case other(name: String, contents: Data)
+    }
+
+    static var event: Event? {
+        let context = ContextValues.shared
+
+        guard
+            let eventName,
+            let eventPath,
+            let eventContents = context.fileManager.contents(atPath: eventPath)
+        else {
             return nil
         }
 
-        guard let eventPathContents = FileManager.default.contents(atPath: eventPath) else {
-            return nil
+        func decodeEvent<E: Decodable>(_ event: (E) -> Event) -> Event? {
+            do {
+                let payload = try JSONDecoder().decode(E.self, from: eventContents)
+                return event(payload)
+            } catch {
+                context.logger.error("""
+                    Failed to decode GitHub event \(Event.self). Please submit an issue to swift-ci and attach the error body that follows. \
+                    In the meantime, you can manually inspect the event by using the eventName and eventPath properties. \
+                    Error:
+                    \(error)
+                    Contents:
+                    \(String(decoding: eventContents, as: UTF8.self))
+                    (End of error)
+
+
+                    """
+                )
+                return nil
+            }
         }
 
-        do {
-            let pullRequestEvent = try JSONDecoder().decode(PullRequestEvent.self, from: eventPathContents)
-            return pullRequestEvent
-        } catch {
-            print(error)
-            return nil
+        switch eventName {
+        case "pull_request":
+            return decodeEvent(Event.pullRequest)
+        default:
+            return .other(name: eventName, contents: eventContents)
         }
     }
 }
 
+@dynamicMemberLookup
 public struct PullRequestEvent: Decodable {
-    public let action: String
-    public let number: Int
-    public let pullRequest: PullRequest
+    public let action: Action
+    private let pullRequest: PullRequest
+
+    public subscript<T>(dynamicMember keyPath: KeyPath<PullRequest, T>) -> T {
+        pullRequest[keyPath: keyPath]
+    }
 
     enum CodingKeys: String, CodingKey {
         case action
-        case number
         case pullRequest = "pull_request"
     }
 
@@ -58,14 +93,46 @@ public struct PullRequestEvent: Decodable {
         public let number: Int
         public let title: String
         public let body: String?
-        public let draft: Bool
-        public let merged: Bool
+        public let isDraft: Bool
+        public let isMerged: Bool
         public let base: Ref
         public let head: Ref
+
+        enum CodingKeys: String, CodingKey {
+            case id
+            case number
+            case title
+            case body
+            case isDraft = "draft"
+            case isMerged = "merged"
+            case base
+            case head
+        }
     }
 
     public struct Ref: Decodable {
         public let ref: String
         public let sha: String
+    }
+
+    // https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#pull_request
+    public enum Action: String, Decodable {
+        case assigned
+        case unassigned
+        case labeled
+        case unlabeled
+        case opened
+        case edited
+        case closed
+        case reopened
+        case synchronize
+        case converted_to_draft = "converted_to_draft"
+        case readyForReview = "ready_for_review"
+        case locked
+        case unlocked
+        case reviewRequested = "review_requested"
+        case reviewRequestRemoved = "review_request_removed"
+        case autoMergeEnabled = "auto_merge_enabled"
+        case autoMergeDisabled = "auto_merge_disabled"
     }
 }
