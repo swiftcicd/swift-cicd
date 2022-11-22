@@ -1,7 +1,7 @@
 import Foundation
 
 public struct ArchiveExportUpload: Step {
-    let xcodeProject: String
+    var xcodeProject: String?
     var scheme: String?
     let profile: ProvisioningProfile
     let appStoreConnectKey: AppStoreConnect.Key
@@ -16,7 +16,7 @@ public struct ArchiveExportUpload: Step {
     }
 
     public init(
-        xcodeProject: String,
+        xcodeProject: String? = nil,
         scheme: String? = nil,
         profile: ProvisioningProfile,
         appStoreConnectKey: AppStoreConnect.Key,
@@ -36,6 +36,12 @@ public struct ArchiveExportUpload: Step {
     }
 
     public func run() async throws -> Output {
+        let xcodeProject = context.xcodeProject ?? xcodeProject
+
+        guard let xcodeProject else {
+            throw StepError("Missing Xcode project. Either pass an explicit xcodeProject or call this step from an XcodeProjectWorkflow.")
+        }
+
         let buildSettings = try getBuildSettings(fromXcodeProject: xcodeProject)
         let productName = try buildSettings.require(.productName)
         let archivePath = context.temporaryDirectory/"Archive/\(productName).xcarchive"
