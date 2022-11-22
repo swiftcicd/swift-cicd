@@ -26,7 +26,15 @@ public extension WorkflowRunner {
         try await self.workflow(name: nil, workflow)
     }
 
-    func workflow<W: Workflow>(name: String? = nil, _ workflow: () -> W) async throws {
+    func workflow(name: String? = nil, _ workflow: () -> any Workflow) async throws {
         try await self.workflow(name: nil, workflow())
+    }
+
+    func workflow(name: String? = nil, _ workflow: () -> (any Workflow)?) async throws {
+        guard let workflow = workflow() else {
+            return
+        }
+
+        try await self.workflow(name: nil, workflow)
     }
 }
