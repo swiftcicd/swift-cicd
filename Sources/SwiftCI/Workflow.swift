@@ -7,55 +7,9 @@ import Logging
 //  - So instead of: swift run name-of-executable
 //  - It would be: swift ci
 
-
-// Root workflow
-//  starts workflow A       <-- xcode project workflow
-//      starts workflow B
-//  starts workflow C
-
-// root.xcodeProject: nil
-// a.xcodeProject: some
-// b.xcodeProject: some (via a)
-// c.xcodeProject: nil
-
-//        root
-//        /  \
-//       A*   C
-//      /
-//     B*
-
-// [(root, nil), (A, root), (B, A), (C, root)
-
-
-public protocol Workflow: StepRunner, WorkflowRunner, AnyObject {
+public protocol Workflow: StepRunner, WorkflowRunner {
     static var name: String { get }
     static var logLevel: Logger.Level { get }
-
-
-
-
-    // TODO:
-    // In order to do contextual lookups based on parentage (like getting the xcodeproject from a parent workflow) we need workflows and steps
-    // to have a concept of identity. Either we make Workflow and Step classes (or actors) and use object identity or we add an id to the protocols.
-    // Workflow and Step could conform to Identifiable where their ID is UUID.
-    //
-    // Just to settle this thought. We could just set the xcodeproject in the context. But that would require running some code before the workflow
-    // runs to actually do the setting. We could add a "lifecyle" to workflows/steps.
-    // - setUp
-    // - run
-    // - tearDown
-    // But if we're using protocols, those methods could get "overridden" and then they wouldn't do what we need them to do (in this case, set the xcodeproject in the context.)
-    // Those lifecycle methods could be internal to swift-ci, but then 3rd party workflows couldn't customize the context in the same way that custom workflow protocols can.
-
-    // Maybe workflow and step should require that their conforming objects are classes?
-    // maybe workflow and step instances really should just be classes?
-    // Then we can just use object identity.
-
-//    var id: UUID { get }
-
-
-
-
     init()
     func run() async throws
 }
@@ -74,7 +28,18 @@ public extension Workflow {
     func workflow<W: Workflow>(name: String? = nil, _ workflow: W) async throws {
         // Parents are restored to their current directory after a child workflow runs
         let currentDirectory = context.fileManager.currentDirectoryPath
+
+        // TODO: Configurable logging format?
+        // Should the child workflow inherit the logging level of the parent?
+        logger.info("Workflow: \(name ?? W.name)")
+
+        context.stack.pushWorkflow(workflow)
+        context.currentWorkflow = workflow
+
         defer {
+            context.currentWorkflow = nil
+            context.stack.popWorkflow()
+
             do {
                 try context.fileManager.changeCurrentDirectory(to: currentDirectory)
             } catch {
@@ -82,21 +47,12 @@ public extension Workflow {
             }
         }
 
-        // TODO: Configurable logging format?
-        // Should the child workflow inherit the logging level of the parent?
-        logger.info("Workflow: \(name ?? W.name)")
-
-//        let parent = context.currentWorkflow
-        context.currentWorkflow = workflow
-        defer { context.currentWorkflow = nil }
-//        await context.stack.push(workflow, parent: parent)
-
         try await workflow.run()
     }
 
     @discardableResult
     func step<S: Step>(name: String? = nil, _ step: S) async throws -> S.Output {
-        await context.stack.push(step)
+        context.stack.pushStep(step)
         context.currentStep = step
         defer { context.currentStep = nil }
         // TODO: Configurable format?
@@ -108,7 +64,7 @@ public extension Workflow {
 public extension Step {
     @discardableResult
     func step<S: Step>(name: String? = nil, _ step: S) async throws -> S.Output {
-        await context.stack.push(step)
+        context.stack.pushStep(step)
         context.currentStep = step
         defer { context.currentStep = self }
         // TODO: Configurable format?
@@ -166,7 +122,7 @@ public extension Workflow {
     }
 
     private static func cleanUp(error: Error?) async {
-        while let step = await context.stack.pop() {
+        while let step = context.stack.popStep() {
             logger.info("Cleaning up after step: \(step.name)")
             do {
                 try await step.cleanUp(error: error)
@@ -262,43 +218,50 @@ public extension ContextValues {
 
 // MARK: - Workflow Stack
 
-actor WorkflowStack {
-//    enum Node {
-//        case workflow(any Workflow)
-//        case step(any Step)
-//    }
+struct WorkflowStack {
 
-//    typealias WorkflowNode = (this: any Workflow, parent: (any Workflow)?)
-
-//    private var workflows = [WorkflowNode]()
+    private var workflows = [any Workflow]()
     private var steps = [any Step]()
 
-//    func firstWorkflow<T>(as targetType: T.Type) -> T? {
-//        var workflow = workflows.last
-//        while let current = workflow {
-//            if let target = current.this as? T {
-//                return target
-//            } else {
-//                workflow = current.parent
-//            }
-//        }
-//        return nil
-//    }
-//
-//    func push(_ workflow: any Workflow, parent: (any Workflow)?) {
-//        workflows.append((workflow, parent))
-//    }
+    mutating func pushWorkflow(_ workflow: any Workflow) {
+        workflows.append(workflow)
+    }
 
-    func push(_ step: any Step) {
+    @discardableResult
+    mutating func popWorkflow() -> (any Workflow)? {
+        guard !workflows.isEmpty else {
+            return nil
+        }
+
+        return workflows.removeLast()
+    }
+
+    mutating func pushStep(_ step: any Step) {
         steps.append(step)
     }
 
-    func pop() -> (any Step)? {
+    mutating func popStep() -> (any Step)? {
         guard !steps.isEmpty else {
             return nil
         }
 
         return steps.removeLast()
+    }
+
+    func inheritWorkflow<W>(_ workflowType: W.Type) -> W? {
+        for workflow in workflows.lazy.reversed() {
+            if let targetType = workflow as? W {
+                return targetType
+            }
+        }
+
+        return nil
+    }
+}
+
+extension ContextValues {
+    public func inheritWorkflow<W>(_ workflowType: W.Type) -> W? {
+        stack.inheritWorkflow(workflowType)
     }
 }
 

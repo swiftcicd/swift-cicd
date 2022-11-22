@@ -7,20 +7,11 @@ public extension ContextValues {
 
     /// Returns the Xcode project when accessed during an `XcodeProjectWorkflow` run.
     var xcodeProject: String? {
-
-
-
-        // workflow stack could be an array of [(workflow: Workflow, parent: Workflow?)]
-        // then you can go up the stack of workflows, looking for parents that match criteria
-
-
-
-
-        if let xcodeProjectWorkflow = currentWorkflow as? XcodeProjectWorkflow {
-            return xcodeProjectWorkflow.xcodeProject
-        } else {
+        guard let xcodeProjectWorkflow = inheritWorkflow(XcodeProjectWorkflow.self) else {
             return nil
         }
+
+        return xcodeProjectWorkflow.xcodeProject
     }
 }
 
