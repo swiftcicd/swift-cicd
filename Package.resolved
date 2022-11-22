@@ -10,6 +10,24 @@
       }
     },
     {
+      "identity" : "octokit.swift",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/nerdishbynature/octokit.swift",
+      "state" : {
+        "branch" : "main",
+        "revision" : "c73dd980e225f4da3cff964dd81be53636ee2d70"
+      }
+    },
+    {
+      "identity" : "requestkit",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/nerdishbynature/RequestKit.git",
+      "state" : {
+        "revision" : "8b0258ea2a4345cbcac90509b764faacea12efb0",
+        "version" : "3.2.1"
+      }
+    },
+    {
       "identity" : "shellout",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/JohnSundell/ShellOut",
@@ -52,6 +70,15 @@
       "state" : {
         "revision" : "6fe203dc33195667ce1759bf0182975e4653ba1c",
         "version" : "1.4.4"
+      }
+    },
+    {
+      "identity" : "swift-pr",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/clayellis/swift-pr",
+      "state" : {
+        "branch" : "main",
+        "revision" : "69c703dc3bda003f76498ecd92b667130e46e2ec"
       }
     }
   ],
