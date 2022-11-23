@@ -154,6 +154,8 @@ public extension StepRunner {
 
     @discardableResult
     func commit(message: String, flags: [String] = [], filesMatching predicate: @escaping (String) -> Bool) async throws -> Commit.Output {
+        context.logger.info("Committing files matching predicate.")
+
         let status = try context.shell("git", "status", "--short")
         let files = status
             .components(separatedBy: "\n")
@@ -163,6 +165,11 @@ public extension StepRunner {
 
         context.logger.debug("Files with changes:\n\(files)")
         context.logger.debug("Files to commit:\n\(filesToCommit)")
+
+        guard !filesToCommit.isEmpty else {
+            context.logger.info("No files to commit.")
+            return .init(commitSHA: nil)
+        }
 
         for file in filesToCommit {
             if file.status.contains(.deleted) {
