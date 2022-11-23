@@ -46,11 +46,19 @@ public struct Commit: Step {
             commit.add("-\(flags.joined())")
         }
 
+        if !context.environment.github.isCI {
+            commit.add("--dry-run")
+        }
+
         try context.shell(commit)
 
         if pushChanges {
             let branch = try context.shell("git", "branch", "--show-current")
-            try context.shell("git", "push", "--set-upstream", "origin", "HEAD:\(branch)")
+            var push = Command("git", "push", "--set-upstream", "origin", "HEAD:\(branch)")
+            if !context.environment.github.isCI {
+                commit.add("--dry-run")
+            }
+            try context.shell(push)
         }
 
         let sha = try context.shell("git", "rev-parse", "HEAD")
@@ -69,6 +77,7 @@ extension Commit {
         }
 
         init?(line: String) {
+            var line = line.trimmingCharacters(in: .whitespaces)
             guard let delimeter = line.firstIndex(of: " ") else {
                 return nil
             }
@@ -85,9 +94,8 @@ extension Commit {
                 return nil
             }
             self.status = _status
-
-            let path = line[delimeter...]
-            self.path = path.trimmingCharacters(in: CharacterSet(charactersIn: "\""))
+            let path = line[delimeter...].trimmingCharacters(in: .whitespaces)
+            self.path = path
         }
     }
 
@@ -148,7 +156,7 @@ public extension StepRunner {
 
         for file in filesToCommit {
             if file.status.contains(.deleted) {
-                try context.shell("git", "rm", file.path)
+                try context.shell("git", "rm", "--cached", file.path)
             } else {
                 try context.shell("git", "add", file.path)
             }
