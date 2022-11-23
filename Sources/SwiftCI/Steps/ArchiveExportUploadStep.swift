@@ -100,11 +100,11 @@ public struct ArchiveExportUpload: Step {
             try context.fileManager.changeCurrentDirectory(to: sourceRoot)
         }
 
-        try await step(.xcodebuild(
-            buildScheme: scheme,
+        try await step(Build(
+            scheme: scheme,
             configuration: .release,
             destination: .generic(platform: .iOS),
-            archiveTo: archivePath,
+            archivePath: archivePath,
             codeSignStyle: .manual(profile: profile),
             projectVersion: overrideProjectVersion
         ))
@@ -137,5 +137,23 @@ public struct ArchiveExportUpload: Step {
             export: exportPath,
             uploadedBuildNumber: uploadOutput.buildNumber
         )
+    }
+}
+
+public extension StepRunner {
+    func uploadToAppStore(
+        xcodeProject: String? = nil,
+        scheme: String? = nil,
+        profile: ProvisioningProfile,
+        appStoreConnectKey: AppStoreConnect.Key,
+        buildNumberStrategy: ArchiveExportUpload.BuildNumberStrategy = .autoIncrementingInteger
+    ) async throws {
+        try await step(ArchiveExportUpload(
+            xcodeProject: xcodeProject,
+            scheme: scheme,
+            profile: profile,
+            appStoreConnectKey: appStoreConnectKey,
+            buildNumberStrategy: buildNumberStrategy
+        ))
     }
 }
