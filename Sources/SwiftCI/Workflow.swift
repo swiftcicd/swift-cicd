@@ -2,10 +2,23 @@ import Arguments
 import Foundation
 import Logging
 
+// TODO: Built-in swift-pr support
+// TODO: replicate the ssh action (https://github.com/webfactory/ssh-agent/blob/master/index.js, https://github.com/webfactory/ssh-agent/blob/master/cleanup.js)
+// TODO: Add build to test flight group
+// TODO: Attach build artifacts to GitHub artifacts
+// - upload artifact: https://github.com/actions/toolkit/blob/819157bf872a49cfcc085190da73894e7091c83c/packages/artifact/src/internal/upload-http-client.ts#L399
+// https://github.com/actions/toolkit/blob/819157bf872a49cfcc085190da73894e7091c83c/packages/artifact/src/internal/utils.ts#L221
+// - .app (simulator build)
+// - .ipa (distribution build)
+// - .xcarchive (archive for flexibility)
+
 // TODO: Should a workflow have an Outcome (success, failure, etc.) kind of like how a step has an output?
 // TODO: Would it be possible to make swift-ci run as a subcommand of swift?
 //  - So instead of: swift run name-of-executable
 //  - It would be: swift ci
+
+// TODO: Simulator builds
+// - (set the build number to the PR number, change the bundle identifier to the pr number, and the display name) so that PR builds can be identified on simulator
 
 public protocol Workflow: StepRunner, WorkflowRunner {
     static var name: String { get }
