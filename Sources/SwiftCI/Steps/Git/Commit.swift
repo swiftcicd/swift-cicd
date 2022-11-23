@@ -5,19 +5,36 @@ public struct Commit: Step {
 
     let flags: [String]
     let message: String
+    var authorName: String?
+    var authorEmail: String?
 
-    public init(flags: [String], message: String) {
+    public init(flags: [String], message: String, authorName: String? = nil, authorEmail: String? = nil) {
         self.message = message
         self.flags = flags.filter { $0 != "m" }
+        self.authorName = authorName
+        self.authorEmail = authorEmail
     }
 
     // TODO: Output should be a list of changes, and a flag "changes detected?"
 
     public func run() async throws -> String {
+
+        // TODO: Auto-detect user name/email from GITHUB_ACTOR and event contents (sender object)
+
+        if let authorName {
+            try context.shell("git", "config", "--local", "user.name", authorName)
+        }
+
+        if let authorEmail {
+            try context.shell("git", "config", "--local", "user.email", authorEmail)
+        }
+
         var commit = Command("git", "commit", "-m", message)
+
         if !flags.isEmpty {
             commit.add("-\(flags.joined())")
         }
+
         return try context.shell(commit)
     }
 }
