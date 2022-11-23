@@ -10,7 +10,11 @@ public struct ImportSigningAssets: Step {
         public let keyID: String
         public let keyIssuerID: String
 
-        public init(p8: Secret, keyID: String, keyIssuerID: String) {
+        public init(
+            p8: Secret = .environmentValue("APP_STORE_CONNECT_KEY_P8"),
+            keyID: String,
+            keyIssuerID: String
+        ) {
             self.p8 = p8
             self.keyID = keyID
             self.keyIssuerID = keyIssuerID
@@ -21,7 +25,10 @@ public struct ImportSigningAssets: Step {
         public let p12: Secret
         public let password: Secret
 
-        public init(p12: Secret, password: Secret) {
+        public init(
+            p12: Secret = .base64EncodedEnvironmentValue("CERTIFICATE_P12"),
+            password: Secret = .environmentValue("CERTIFICATE_PASSWORD")
+        ) {
             self.p12 = p12
             self.password = password
         }
@@ -63,5 +70,20 @@ public struct ImportSigningAssets: Step {
             certificatePath: savedCertificate.filePath,
             profile: profile
         )
+    }
+}
+
+public extension StepRunner {
+    @discardableResult
+    func importSigningAssets(
+        appStoreConnectKeySecret: ImportSigningAssets.AppStoreConnectKeySecret,
+        certificateSecret: ImportSigningAssets.CertificateSecret = .init(),
+        profileSecret: Secret = .base64EncodedEnvironmentValue("PROVISIONING_PROFILE")
+    ) async throws -> ImportSigningAssets.Output {
+        try await step(ImportSigningAssets(
+            appStoreConnectKeySecret: appStoreConnectKeySecret,
+            certificateSecret: certificateSecret,
+            profileSecret: profileSecret
+        ))
     }
 }
