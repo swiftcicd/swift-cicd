@@ -53,7 +53,7 @@ public struct Commit: Step {
         try context.shell(commit)
 
         if pushChanges {
-            let branch = try context.shell("git", "branch", "--show-current")
+            let branch = try context.environment.github.$headRef.require()
             var push = Command("git", "push", "--set-upstream", "origin", "HEAD:\(branch)")
             if !context.environment.github.isCI {
                 commit.add("--dry-run")
