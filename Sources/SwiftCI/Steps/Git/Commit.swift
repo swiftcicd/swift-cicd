@@ -19,9 +19,19 @@ public struct Commit: Step {
         self.pushChanges = pushChanges
     }
 
-    // TODO: Output should be a list of changes, and a flag "changes detected?"
+    public struct Output {
+        public var commitSHA: String?
 
-    public func run() async throws {
+        public var hadChanges: Bool {
+            commitSHA != nil
+        }
+    }
+
+    public func run() async throws -> Output {
+        guard try !context.shell("git", "status", "-s").isEmpty else {
+            return Output(commitSHA: nil)
+        }
+
         let actor = try context.environment.github.$actor.require()
         let userName = userName ?? "github-actions[bot]"
         // The default value is the email address of the GitHub actions bot: https://github.com/orgs/community/discussions/26560#discussioncomment-3252339
@@ -42,6 +52,9 @@ public struct Commit: Step {
             let branch = try context.shell("git", "branch", "--show-current")
             try context.shell("git", "push", "--set-upstream", "origin", "HEAD:\(branch)")
         }
+
+        let sha = try context.shell("git", "rev-parse", "HEAD")
+        return Output(commitSHA: sha)
     }
 }
 
@@ -96,35 +109,44 @@ extension Commit {
 }
 
 public extension StepRunner {
-    func commit(flags: [String] = [], message: String) async throws {
+    @discardableResult
+    func commit(flags: [String] = [], message: String) async throws -> Commit.Output {
         try await step(Commit(flags: flags, message: message))
     }
 
-    func commitTrackedChanges(message: String, flags: [String] = []) async throws {
+    @discardableResult
+    func commitTrackedChanges(message: String, flags: [String] = []) async throws -> Commit.Output {
         try await step(Commit(flags: ["a"] + flags, message: message))
     }
 
-    func commitAllChanges(message: String, flags: [String] = []) async throws {
+    @discardableResult
+    func commitAllChanges(message: String, flags: [String] = []) async throws -> Commit.Output {
         try context.shell("git", "add", "-A")
         return try await commit(flags: flags, message: message)
     }
 
-    func commit(files: String..., message: String, flags: [String] = []) async throws {
+    @discardableResult
+    func commit(files: String..., message: String, flags: [String] = []) async throws -> Commit.Output {
         for file in files {
             try context.shell("git", "add", file)
         }
 
-        try await commit(flags: flags, message: message)
+        return try await commit(flags: flags, message: message)
     }
 
-    func commit(message: String, flags: [String] = [], filesMatching predicate: @escaping (String) -> Bool) async throws {
+    @discardableResult
+    func commit(message: String, flags: [String] = [], filesMatching predicate: @escaping (String) -> Bool) async throws -> Commit.Output {
         let status = try context.shell("git", "status", "--short")
         let files = status
             .components(separatedBy: "\n")
             .compactMap(Commit.File.init(line:))
-            .filter { predicate($0.path) }
 
-        for file in files {
+        let filesToCommit = files.filter { predicate($0.path) }
+
+        context.logger.debug("Files with changes:\n\(files)")
+        context.logger.debug("Files to commit:\n\(filesToCommit)")
+
+        for file in filesToCommit {
             if file.status.contains(.deleted) {
                 try context.shell("git", "rm", file.path)
             } else {
@@ -132,10 +154,11 @@ public extension StepRunner {
             }
         }
 
-        try await commit(flags: flags, message: message)
+        return try await commit(flags: flags, message: message)
     }
 
-    func commitLocalizedFiles(message: String) async throws {
+    @discardableResult
+    func commitLocalizedFiles(message: String) async throws -> Commit.Output {
         try await commit(message: message, filesMatching: { file in
             [".strings", ".xliff", ".xcloc", ".lproj"].contains { file.hasSuffix($0) }
         })
