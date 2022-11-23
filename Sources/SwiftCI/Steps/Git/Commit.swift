@@ -1,5 +1,7 @@
 import Foundation
 
+// Reference: https://github.com/stefanzweifel/git-auto-commit-action/blob/master/entrypoint.sh
+
 public struct Commit: Step {
     public let name = "git commit"
 
