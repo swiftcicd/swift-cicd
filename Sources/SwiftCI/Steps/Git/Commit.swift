@@ -94,7 +94,7 @@ extension Commit {
                 return nil
             }
             self.status = _status
-            let path = line[delimeter...].trimmingCharacters(in: .whitespaces)
+            let path = line[delimeter...].trimmingCharacters(in: .whitespaces.union(.init(charactersIn: "\"")))
             self.path = path
         }
     }
@@ -156,9 +156,9 @@ public extension StepRunner {
 
         for file in filesToCommit {
             if file.status.contains(.deleted) {
-                try context.shell("git", "rm", "--cached", file.path)
+                try context.shell("git", "rm", "--cached", file.path.escaped)
             } else {
-                try context.shell("git", "add", file.path)
+                try context.shell("git", "add", file.path.escaped)
             }
         }
 
