@@ -135,7 +135,7 @@ public extension StepRunner {
         try await commit(flags: flags, message: message)
     }
 
-    func commitLocalizedFiles(message: String, pushChanges: Bool) async throws {
+    func commitLocalizedFiles(message: String) async throws {
         try await commit(message: message, filesMatching: { file in
             [".strings", ".xliff", ".xcloc", ".lproj"].contains { file.hasSuffix($0) }
         })
