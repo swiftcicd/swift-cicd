@@ -5,37 +5,43 @@ public struct Commit: Step {
 
     let flags: [String]
     let message: String
-    var authorName: String?
-    var authorEmail: String?
+    var author: String?
+    var userName: String?
+    var userEmail: String?
+    let pushChanges: Bool
 
-    public init(flags: [String], message: String, authorName: String? = nil, authorEmail: String? = nil) {
+    public init(flags: [String], message: String, author: String? = nil, userName: String? = nil, userEmail: String? = nil, pushChanges: Bool = true) {
         self.message = message
         self.flags = flags.filter { $0 != "m" }
-        self.authorName = authorName
-        self.authorEmail = authorEmail
+        self.author = author
+        self.userName = userName
+        self.userEmail = userEmail
+        self.pushChanges = pushChanges
     }
 
     // TODO: Output should be a list of changes, and a flag "changes detected?"
 
-    public func run() async throws -> String {
+    public func run() async throws {
+        let actor = try context.environment.github.$actor.require()
+        let userName = userName ?? "github-actions[bot]"
+        // The default value is the email address of the GitHub actions bot: https://github.com/orgs/community/discussions/26560#discussioncomment-3252339
+        let userEmail = userEmail ?? "41898282+github-actions[bot]@users.noreply.github.com"
+        let author = author ?? "\(actor) <\(actor)@users.noreply.github.com>"
+        try context.shell("git", "config", "--local", "user.name", userName)
+        try context.shell("git", "config", "--local", "user.email", userEmail)
 
-        // TODO: Auto-detect user name/email from GITHUB_ACTOR and event contents (sender object)
-
-        if let authorName {
-            try context.shell("git", "config", "--local", "user.name", authorName)
-        }
-
-        if let authorEmail {
-            try context.shell("git", "config", "--local", "user.email", authorEmail)
-        }
-
-        var commit = Command("git", "commit", "-m", message)
+        var commit = Command("git", "commit", "-m", message, "--author=\(author)")
 
         if !flags.isEmpty {
             commit.add("-\(flags.joined())")
         }
 
-        return try context.shell(commit)
+        try context.shell(commit)
+
+        if pushChanges {
+            let branch = try context.shell("git", "branch", "--show-current")
+            try context.shell("git", "push", "--set-upstream", "origin", "HEAD:\(branch)")
+        }
     }
 }
 
@@ -90,33 +96,28 @@ extension Commit {
 }
 
 public extension StepRunner {
-    @discardableResult
-    func commit(flags: [String] = [], message: String) async throws -> String {
+    func commit(flags: [String] = [], message: String) async throws {
         try await step(Commit(flags: flags, message: message))
     }
 
-    @discardableResult
-    func commitTrackedChanges(message: String, flags: [String] = []) async throws -> String {
+    func commitTrackedChanges(message: String, flags: [String] = []) async throws {
         try await step(Commit(flags: ["a"] + flags, message: message))
     }
 
-    @discardableResult
-    func commitAllChanges(message: String, flags: [String] = []) async throws -> String {
+    func commitAllChanges(message: String, flags: [String] = []) async throws {
         try context.shell("git", "add", "-A")
         return try await commit(flags: flags, message: message)
     }
 
-    @discardableResult
-    func commit(files: String..., message: String, flags: [String] = []) async throws -> String {
+    func commit(files: String..., message: String, flags: [String] = []) async throws {
         for file in files {
             try context.shell("git", "add", file)
         }
 
-        return try await commit(flags: flags, message: message)
+        try await commit(flags: flags, message: message)
     }
 
-    @discardableResult
-    func commit(message: String, flags: [String] = [], filesMatching predicate: @escaping (String) -> Bool) async throws -> String {
+    func commit(message: String, flags: [String] = [], filesMatching predicate: @escaping (String) -> Bool) async throws {
         let status = try context.shell("git", "status", "--short")
         let files = status
             .components(separatedBy: "\n")
@@ -131,16 +132,12 @@ public extension StepRunner {
             }
         }
 
-        return try await commit(flags: flags, message: message)
+        try await commit(flags: flags, message: message)
     }
 
     func commitLocalizedFiles(message: String, pushChanges: Bool) async throws {
         try await commit(message: message, filesMatching: { file in
             [".strings", ".xliff", ".xcloc", ".lproj"].contains { file.hasSuffix($0) }
         })
-
-        if pushChanges {
-            try context.shell("git", "push")
-        }
     }
 }
