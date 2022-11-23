@@ -36,6 +36,10 @@ public struct ExportLocalizations: Step {
 
 public extension StepRunner {
     func importLocalizations(fromDirectory localizationsDirectory: String, xcodeProject: String? = nil) async throws {
+        if !context.fileManager.fileExists(atPath: localizationsDirectory) {
+            try context.fileManager.createDirectory(atPath: localizationsDirectory, withIntermediateDirectories: true)
+        }
+
         for file in try context.fileManager.contentsOfDirectory(atPath: localizationsDirectory) {
             guard file.hasSuffix(".xcloc") else { continue }
             try await step(ImportLocalizations(xcodeProject: xcodeProject, localizationPath: localizationsDirectory/file))
