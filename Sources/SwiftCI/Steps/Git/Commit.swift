@@ -35,17 +35,13 @@ public struct Commit: Step {
         let branch = try context.environment.github.$headRef.require()
         try context.shell("git", "fetch", "--depth=1")
         // TODO: If the branch already exists, just check it out, don't create it (-B)
-//        try context.shell("git", "checkout", "-B", branch, "--")
-        try context.shell("git", "checkout", branch)//, "--")
+        try context.shell("git", "checkout", branch)
 
         let actor = try context.environment.github.$actor.require()
         let userName = userName ?? "github-actions[bot]"
         // The default value is the email address of the GitHub actions bot: https://github.com/orgs/community/discussions/26560#discussioncomment-3252339
         let userEmail = userEmail ?? "41898282+github-actions[bot]@users.noreply.github.com"
         let author = author ?? "\(actor) <\(actor)@users.noreply.github.com>"
-
-//        try context.shell("git", "config", "--local", "user.name", userName)
-//        try context.shell("git", "config", "--local", "user.email", userEmail)
 
         var commit = Command(
             "git",
@@ -70,7 +66,6 @@ public struct Commit: Step {
 
         if pushChanges {
             var push = Command("git", "push", "--set-upstream", "origin", "HEAD:\(branch)", "--atomic")
-//            var push = Command("git", "push", "origin")
             if !context.environment.github.isCI {
                 commit.add("--dry-run")
             }
