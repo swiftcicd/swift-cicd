@@ -197,6 +197,12 @@ public struct SSHAgent: Step {
     }
 }
 
+public extension StepRunner {
+    func addSSHKeys(_ sshKeys: [Secret]) async throws {
+        try await step(SSHAgent(sshPrivateKeys: sshKeys))
+    }
+}
+
 /*
  const core = require('@actions/core');
  const child_process = require('child_process');
