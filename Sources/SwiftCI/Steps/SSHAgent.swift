@@ -1,6 +1,8 @@
 import Crypto
 import Foundation
 
+// Reference: https://github.com/webfactory/ssh-agent/blob/209e2d72ff4a448964d26610aceaaf1b3f8764c6/index.js
+
 public struct SSHAgent: Step {
     var sshPrivateKey: Secret
     var sshAuthSocket: String?
