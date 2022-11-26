@@ -136,7 +136,6 @@ public struct SSHAgent: Step {
                 continue
             }
 
-            FileManager.default.contents(atPath: <#T##String#>)
             ownerAndRepo = ownerAndRepo.replacingOccurrences(of: ".git", with: "")
 
             let sha256 = CryptoKit.SHA256.hash(data: Data(publicKey.utf8))
