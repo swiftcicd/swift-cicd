@@ -45,20 +45,22 @@ public struct SSHAgent: Step {
 
         logger.info("Starting ssh-agent")
 
+        // TODO: Do we need to start the ssh-agent in the background first before adding values?
         var sshAgent = Command("ssh-agent")
         sshAgent.add("-a", ifLet: sshAuthSocket)
         let sshAgentOutput = try context.shell(sshAgent)
+
         for line in sshAgentOutput.components(separatedBy: "\n") {
             let key: String
             let value: String
-            if #available(macOS 13.0, *) {
-                guard let match = line.wholeMatch(of: #/^(SSH_AUTH_SOCK|SSH_AGENT_PID)=(.*); export \1/#) else {
-                    continue
-                }
-
-                key = String(match.output.1)
-                value = String(match.output.2)
-            } else {
+//            if #available(macOS 13.0, *) {
+//                guard let match = line.wholeMatch(of: #/^(SSH_AUTH_SOCK|SSH_AGENT_PID)=(.*); export \1/#) else {
+//                    continue
+//                }
+//
+//                key = String(match.output.1)
+//                value = String(match.output.2)
+//            } else {
                 guard
                     let equals = line.firstIndex(of: "="),
                     let semicolon = line.firstIndex(of: ";"),
@@ -73,7 +75,7 @@ public struct SSHAgent: Step {
                 guard key == "SSH_AUTH_SOCK" || key == "SSH_AGENT_PID" else {
                     continue
                 }
-            }
+//            }
 
             setenv(key, value)
             logger.info("\(key)=\(value)")
@@ -81,17 +83,13 @@ public struct SSHAgent: Step {
 
         logger.info("Adding private key(s) to agent")
 
-        for key in sshPrivateKeys {
-            let privateKeys: String = try loadSecret(key)
-            let sshPrivateKeyPreamble = "-----BEGIN"
-            for var key in privateKeys.components(separatedBy: sshPrivateKeyPreamble) {
-                key = sshPrivateKeyPreamble + key + "\n"
-                try context.shell("ssh-add", "-E", key.trimmingCharacters(in: .whitespaces))
-            }
-
-            let keys = try context.shell("ssh-add", "-l", quiet: true)
-            logger.info("Key(s) added:\n\(keys)")
+        for sshPrivateKey in sshPrivateKeys {
+            let key: String = try loadSecret(sshPrivateKey)
+            try context.shell("ssh-add", key)
         }
+
+        let keys = try context.shell("ssh-add", "-l", quiet: true)
+        logger.info("Key(s) added:\n\(keys)")
 
         logger.info("Configuring deployment key(s)")
 
