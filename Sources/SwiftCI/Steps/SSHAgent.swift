@@ -4,34 +4,43 @@ import Foundation
 // Reference: https://github.com/webfactory/ssh-agent/blob/209e2d72ff4a448964d26610aceaaf1b3f8764c6/index.js
 
 public struct SSHAgent: Step {
-    var sshPrivateKey: Secret
+    var sshPrivateKeys: [Secret]
     var sshAuthSocket: String?
     var shouldLogPublicKey: Bool = true
 
+    @StepState var createdFiles = [String]()
     @StepState var previousSSHConfig: String?
-    @StepState var previousGitConfig: String?
+    @StepState var previousGitConfig: (path: URL, contents: Data)?
+
+    var ssh: String {
+        context.fileManager.homeDirectoryForCurrentUser.appendingPathComponent(".ssh").path
+    }
+
+    var knownHosts: String {
+        ssh/"known_hosts"
+    }
+
+    var sshConfig: String {
+        ssh/"config"
+    }
+
+    public init(sshPrivateKeys: [Secret], sshAuthSocket: String? = nil, shouldLogPublicKey: Bool = true) {
+        self.sshPrivateKeys = sshPrivateKeys
+        self.sshAuthSocket = sshAuthSocket
+        self.shouldLogPublicKey = shouldLogPublicKey
+    }
 
     public func run() async throws {
-        let home = context.fileManager.homeDirectoryForCurrentUser
-        let ssh = home.appendingPathComponent(".ssh")
-        let knownHosts = ssh.appendingPathComponent("known_hosts")
+        logger.info("adding GitHub.com keys to \(ssh)/known_hosts")
 
-        logger.info("adding GitHub.com keys to \(ssh.path)/known_hosts")
+        try context.fileManager.createDirectory(atPath: ssh, withIntermediateDirectories: true)
 
-        try context.fileManager.createDirectory(at: ssh, withIntermediateDirectories: true)
+        try await updateFile(knownHosts) { $0 += """
+            github.com ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBEmKSENjQEezOmxkZMy7opKgwFB9nkt5YRrYMjNuG5N87uRgg6CLrbo5wAdT/y6v0mKV0U2w0WZ2YB/++Tpockg=
+            github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl
+            github.com ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAq2A7hRGmdnm9tUDbO9IDSwBK6TbQa+PXYPCPy6rbTrTtw7PHkccKrpp0yVhp5HdEIcKr6pLlVDBfOLX9QUsyCOV0wzfjIJNlGEYsdlLJizHhbn2mUjvSAHQqZETYP81eFzLQNnPHt4EVVUh7VfDESU84KezmD5QlWpXLmvU31/yMf+Se8xhHTvKSCZIFImWwoG6mbUoWf9nzpIoaSjB+weqqUUmpaaasXVal72J+UX2B+2RPW3RcT0eOzQgqlJL3RKrTJvdsjE3JEAvGq3lGHSZXy28G3skua2SmVi/w4yCE6gbODqnTWlg7+wC604ydGXA8VJiS5ap43JXiUFFAaQ==
 
-        var knownHostsFile = context.fileManager.contents(atPath: knownHosts.path)
-            .map { String(decoding: $0, as: UTF8.self) } ?? ""
-
-        knownHostsFile += """
-        github.com ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBEmKSENjQEezOmxkZMy7opKgwFB9nkt5YRrYMjNuG5N87uRgg6CLrbo5wAdT/y6v0mKV0U2w0WZ2YB/++Tpockg=
-        github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl
-        github.com ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAq2A7hRGmdnm9tUDbO9IDSwBK6TbQa+PXYPCPy6rbTrTtw7PHkccKrpp0yVhp5HdEIcKr6pLlVDBfOLX9QUsyCOV0wzfjIJNlGEYsdlLJizHhbn2mUjvSAHQqZETYP81eFzLQNnPHt4EVVUh7VfDESU84KezmD5QlWpXLmvU31/yMf+Se8xhHTvKSCZIFImWwoG6mbUoWf9nzpIoaSjB+weqqUUmpaaasXVal72J+UX2B+2RPW3RcT0eOzQgqlJL3RKrTJvdsjE3JEAvGq3lGHSZXy28G3skua2SmVi/w4yCE6gbODqnTWlg7+wC604ydGXA8VJiS5ap43JXiUFFAaQ==
-
-        """
-
-        guard context.fileManager.createFile(atPath: knownHosts.path, contents: Data(knownHostsFile.utf8)) else {
-            throw StepError("Failed to create \(knownHosts.path)")
+            """
         }
 
         logger.info("Starting ssh-agent")
@@ -72,19 +81,42 @@ public struct SSHAgent: Step {
 
         logger.info("Adding private key(s) to agent")
 
-        let privateKeys: String = try loadSecret(sshPrivateKey)
-        let sshPrivateKeyPreamble = "-----BEGIN"
-        for var key in privateKeys.components(separatedBy: sshPrivateKeyPreamble) {
-            key = sshPrivateKeyPreamble + key + "\n"
-            try context.shell("ssh-add", "-", key.trimmingCharacters(in: .whitespaces))
-        }
+        for key in sshPrivateKeys {
+            let privateKeys: String = try loadSecret(key)
+            let sshPrivateKeyPreamble = "-----BEGIN"
+            for var key in privateKeys.components(separatedBy: sshPrivateKeyPreamble) {
+                key = sshPrivateKeyPreamble + key + "\n"
+                try context.shell("ssh-add", "-", key.trimmingCharacters(in: .whitespaces))
+            }
 
-        logger.info("Key(s) added:")
-        try context.shell("ssh-add", "-l")
+            let keys = try context.shell("ssh-add", "-l", quiet: true)
+            logger.info("Key(s) added:\n\(keys)")
+        }
 
         logger.info("Configuring deployment key(s)")
 
-        let publicKeys = try context.shell("ssh-add", "-L").components(separatedBy: "\n")
+        guard var sshConfigContents = context.fileManager.contents(atPath: sshConfig).map({ String(decoding: $0, as: UTF8.self) }) else {
+            throw StepError("Failed to get contents of \(sshConfig)")
+        }
+
+        previousSSHConfig = sshConfigContents
+
+
+        guard let globalGitConfig = try context.shell("git", "config", "--global", "--list", "--show-origin")
+            .components(separatedBy: "\n")
+            .first
+            .flatMap(URL.init(string:))
+        else {
+            throw StepError("Failed to locate global git config file")
+        }
+
+        guard let globalGitConfigContents = context.fileManager.contents(atPath: globalGitConfig.path) else {
+            throw StepError("Failed to get global git config file contents")
+        }
+
+        previousGitConfig = (path: globalGitConfig, contents: globalGitConfigContents)
+
+        let publicKeys = try context.shell("ssh-add", "-L", quiet: true).components(separatedBy: "\n")
         for publicKey in publicKeys {
             var ownerAndRepo: String?
             if #available(macOS 13.0, *) {
@@ -104,38 +136,34 @@ public struct SSHAgent: Step {
                 continue
             }
 
+            FileManager.default.contents(atPath: <#T##String#>)
             ownerAndRepo = ownerAndRepo.replacingOccurrences(of: ".git", with: "")
 
             let sha256 = CryptoKit.SHA256.hash(data: Data(publicKey.utf8))
-            let keyFilePath = ssh.appendingPathComponent("key-\(sha256.description)")
+            let keyFilePath = ssh/"key-\(sha256.description)"
             let keyFileContents = Data((sha256.description + "\n").utf8)
 
-            guard context.fileManager.createFile(atPath: keyFilePath.path, contents: keyFileContents, attributes: [.posixPermissions: 600]) else {
+            guard context.fileManager.createFile(atPath: keyFilePath, contents: keyFileContents, attributes: [.posixPermissions: 600]) else {
                 throw StepError("Failed to create ssh key file \(keyFilePath)")
             }
 
-            if context.environment.github.isCI {
-                try context.shell("git", "config", "--global", "--replace-all", "url.\"git@key-\(sha256.description).github.com:\(ownerAndRepo)\".insteadOf", "https://github.com/\(ownerAndRepo)")
-                try context.shell("git", "config", "--global", "--add", "url.\"git@key-\(sha256.description).github.com:\(ownerAndRepo)\".insteadOf", "git@github.com:\(ownerAndRepo)")
-                try context.shell("git", "config", "--global", "--add", "url.\"git@key-\(sha256.description).github.com:\(ownerAndRepo)\".insteadOf", "ssh://github.com/\(ownerAndRepo)")
+            createdFiles?.append(keyFilePath)
 
-                let sshConfigPath = ssh.appendingPathComponent("config").path
-                guard var sshConfigContents = context.fileManager.contents(atPath: sshConfigPath).map({ String(decoding: $0, as: UTF8.self) }) else {
-                    throw StepError("Failed to get contents of \(sshConfigPath)")
-                }
+            try context.shell("git", "config", "--global", "--replace-all", "url.\"git@key-\(sha256.description).github.com:\(ownerAndRepo)\".insteadOf", "https://github.com/\(ownerAndRepo)")
+            try context.shell("git", "config", "--global", "--add", "url.\"git@key-\(sha256.description).github.com:\(ownerAndRepo)\".insteadOf", "git@github.com:\(ownerAndRepo)")
+            try context.shell("git", "config", "--global", "--add", "url.\"git@key-\(sha256.description).github.com:\(ownerAndRepo)\".insteadOf", "ssh://github.com/\(ownerAndRepo)")
 
-                sshConfigContents += """
+            sshConfigContents += """
 
-                    Host key-\(sha256.description).github.com
-                        HostName github.com
-                        IdentityFile \(keyFilePath)
-                        IdentitiesOnly yes
+                Host key-\(sha256.description).github.com
+                    HostName github.com
+                    IdentityFile \(keyFilePath)
+                    IdentitiesOnly yes
 
-                    """
+                """
 
-                guard context.fileManager.createFile(atPath: sshConfigPath, contents: Data(sshConfigContents.utf8)) else {
-                    throw StepError("Failed to update \(sshConfigPath)")
-                }
+            guard context.fileManager.createFile(atPath: sshConfig, contents: Data(sshConfigContents.utf8)) else {
+                throw StepError("Failed to update \(sshConfig)")
             }
 
             logger.info("Added deploy-key mapping: Use identity \(keyFilePath) for GitHub repository \(ownerAndRepo)")
@@ -143,9 +171,21 @@ public struct SSHAgent: Step {
     }
 
     public func cleanUp(error: Error?) async throws {
-        // TODO: Save the previous ssh config and then restore it
-        // TODO: Save the previous git config and then restore it
-        // TODO: Kill the ssh-agent process
+        if let previousGitConfig {
+            context.fileManager.createFile(atPath: previousGitConfig.path.path, contents: previousGitConfig.contents)
+        }
+
+        if let previousSSHConfig {
+            context.fileManager.createFile(atPath: sshConfig, contents: Data(previousSSHConfig.utf8))
+        }
+
+        if let createdFiles {
+            for file in createdFiles {
+                try context.fileManager.removeItem(atPath: file)
+            }
+        }
+
+        try context.shell("ssh-agent", "-k")
     }
 
     func setenv(_ key: String, _ value: String) {
