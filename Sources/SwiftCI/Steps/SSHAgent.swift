@@ -86,7 +86,7 @@ public struct SSHAgent: Step {
             let sshPrivateKeyPreamble = "-----BEGIN"
             for var key in privateKeys.components(separatedBy: sshPrivateKeyPreamble) {
                 key = sshPrivateKeyPreamble + key + "\n"
-                try context.shell("ssh-add", "-", key.trimmingCharacters(in: .whitespaces))
+                try context.shell("ssh-add", "-E", key.trimmingCharacters(in: .whitespaces))
             }
 
             let keys = try context.shell("ssh-add", "-l", quiet: true)
