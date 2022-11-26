@@ -69,7 +69,7 @@ public struct Commit: Step {
         if pushChanges {
             var push = Command("git", "push", "--set-upstream", "origin", "HEAD:\(branch)", "--atomic")
             if !context.environment.github.isCI {
-                commit.add("--dry-run")
+                push.add("--dry-run")
             }
             try context.shell(push)
         }
@@ -89,7 +89,7 @@ extension Commit {
         }
 
         init?(line: String) {
-            var line = line.trimmingCharacters(in: .whitespaces)
+            let line = line.trimmingCharacters(in: .whitespaces)
             guard let delimeter = line.firstIndex(of: " ") else {
                 return nil
             }
