@@ -6,12 +6,21 @@ public struct Shell {
 
     @discardableResult
     func callAsFunction(_ command: String, _ arguments: [Argument], quiet: Bool = false) throws -> String {
-        logger.debug("Shell (at: \(fileManager.currentDirectoryPath)): \(command) \(arguments.map(\.escaped).joined(separator: " "))")
+        let commandArgumentsDescription = "\(command) \(arguments.map(\.escaped).joined(separator: " "))"
+
+        if logger.logLevel == .trace {
+            logger.debug("Shell (at: \(fileManager.currentDirectoryPath)): \(commandArgumentsDescription)")
+        } else {
+            logger.debug("Shell: \(commandArgumentsDescription)")
+        }
+
         let output = try shellOut(to: command, arguments: arguments.map(\.escaped), at: fileManager.currentDirectoryPath)
+
         // TODO: We're just going to print the output for now, but eventually it should be streamed out as it comes in and made available for formatting
         if !quiet {
             print(output)
         }
+
         return output
     }
 
