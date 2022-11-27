@@ -46,7 +46,7 @@ public struct SSHAgent: Step {
         logger.info("Starting ssh-agent")
 
         // TODO: Do we need to start the ssh-agent in the background first before adding values?
-        var sshAgent = Command("ssh-agent")
+        var sshAgent = Command("eval", "\"$(ssh-agent -s)\"")
         sshAgent.add("-a", ifLet: sshAuthSocket)
         let sshAgentOutput = try context.shell(sshAgent)
 
@@ -144,8 +144,8 @@ public struct SSHAgent: Step {
             ownerAndRepo = ownerAndRepo.replacingOccurrences(of: ".git", with: "")
 
             let sha256 = CryptoKit.SHA256.hash(data: Data(publicKey.utf8))
-            let keyFilePath = ssh/"key-\(sha256.description)"
-            let keyFileContents = Data((sha256.description + "\n").utf8)
+            let keyFilePath = ssh/"key-\(sha256)"
+            let keyFileContents = Data(("\(sha256)" + "\n").utf8)
 
             guard context.fileManager.createFile(atPath: keyFilePath, contents: keyFileContents, attributes: [.posixPermissions: 600]) else {
                 throw StepError("Failed to create ssh key file \(keyFilePath)")
@@ -153,13 +153,13 @@ public struct SSHAgent: Step {
 
             createdFiles?.append(keyFilePath)
 
-            try context.shell("git", "config", "--global", "--replace-all", "url.\"git@key-\(sha256.description).github.com:\(ownerAndRepo)\".insteadOf", "https://github.com/\(ownerAndRepo)")
-            try context.shell("git", "config", "--global", "--add", "url.\"git@key-\(sha256.description).github.com:\(ownerAndRepo)\".insteadOf", "git@github.com:\(ownerAndRepo)")
-            try context.shell("git", "config", "--global", "--add", "url.\"git@key-\(sha256.description).github.com:\(ownerAndRepo)\".insteadOf", "ssh://github.com/\(ownerAndRepo)")
+            try context.shell("git", "config", "--global", "--replace-all", "url.\"git@key-\(sha256).github.com:\(ownerAndRepo)\".insteadOf", "https://github.com/\(ownerAndRepo)")
+            try context.shell("git", "config", "--global", "--add", "url.\"git@key-\(sha256).github.com:\(ownerAndRepo)\".insteadOf", "git@github.com:\(ownerAndRepo)")
+            try context.shell("git", "config", "--global", "--add", "url.\"git@key-\(sha256).github.com:\(ownerAndRepo)\".insteadOf", "ssh://github.com/\(ownerAndRepo)")
 
             sshConfigContents += """
 
-                Host key-\(sha256.description).github.com
+                Host key-\(sha256).github.com
                     HostName github.com
                     IdentityFile \(keyFilePath)
                     IdentitiesOnly yes
