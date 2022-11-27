@@ -134,10 +134,11 @@ public struct SSHAgent: Step {
 
             createdFiles?.append(keyFilePath)
 
-            let section = "url.\"git@\(keyName).github.com:\(ownerAndRepo)\".insteadOf"
-            try context.shell("git", "config", "--global", "--replace-all", section, "https://github.com/\(ownerAndRepo)")
-            try context.shell("git", "config", "--global", "--add", section, "git@github.com:\(ownerAndRepo)")
-            try context.shell("git", "config", "--global", "--add", section, "ssh://github.com/\(ownerAndRepo)")
+            let section = "url.\"git@\(keyName).github.com:\(ownerAndRepo)\""
+            let sectionInsteadOf = "\(section).insteadOf"
+            try context.shell("git", "config", "--global", "--replace-all", sectionInsteadOf, "https://github.com/\(ownerAndRepo)")
+            try context.shell("git", "config", "--global", "--add", sectionInsteadOf, "git@github.com:\(ownerAndRepo)")
+            try context.shell("git", "config", "--global", "--add", sectionInsteadOf, "ssh://github.com/\(ownerAndRepo)")
             addedSections?.append(section)
 
             try await updateFile(sshConfig) {
