@@ -15,7 +15,7 @@ extension Argument {
     var escaped: String {
         // TODO: If the argument has newlines in it, should we esacpe the lines?
 
-        if argument.contains(" ") && !(argument.hasPrefix("'") && argument.hasSuffix("'")) {
+        if argument.contains(" ") && !((argument.hasPrefix("'") && argument.hasSuffix("'")) || (argument.hasPrefix("\"") && argument.hasSuffix("\""))) {
             return "'\(argument)'"
         } else {
             return argument
