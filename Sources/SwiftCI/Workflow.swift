@@ -109,8 +109,6 @@ public extension Workflow {
             await cleanUp(error: nil)
             exit(0)
         } catch {
-            await cleanUp(error: error)
-
             let errorLocalizedDescription = error.localizedDescription
             let interpolatedError = "\(error)"
             var errorMessage = "Exiting on error:\n"
@@ -123,7 +121,9 @@ public extension Workflow {
                 errorMessage += errorLocalizedDescription
             }
 
-            logger.error("\(errorMessage)")
+            logger.error("\n❌ \(errorMessage)\n")
+            logger.info("Cleaning up...")
+            await cleanUp(error: error)
             exit(1)
         }
     }
