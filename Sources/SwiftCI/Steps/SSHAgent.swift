@@ -9,8 +9,7 @@ public struct SSHAgent: Step {
     var shouldLogPublicKey: Bool = true
 
     @StepState var createdFiles = [String]()
-    @StepState var previousSSHConfig: String?
-    @StepState var previousGitConfig: (path: URL, contents: Data)?
+    @StepState var addedSections = [String]()
 
     var ssh: String {
         context.fileManager.homeDirectoryForCurrentUser.appendingPathComponent(".ssh").path
@@ -46,6 +45,12 @@ public struct SSHAgent: Step {
         logger.info("Starting ssh-agent")
 
         // TODO: Do we need to start the ssh-agent in the background first before adding values?
+        // Not necessarily, I don't think. We just need to put the ssh_agent_pid and ssh_auth_sock variables into the environment, which is what eval should do (and the manual code just below this.)
+        // But when we go to clean up after this and call "ssh-agent -k" it throws an error:
+//        Failed to clean up after SSHAgent: ShellOut encountered an error
+//        Status code: 1
+//        Message: "SSH_AGENT_PID not set, cannot kill agent"
+
         var sshAgent = Command("eval", "\"$(ssh-agent -s)\"")
         sshAgent.add("-a", ifLet: sshAuthSocket)
         let sshAgentOutput = try context.shell(sshAgent)
@@ -93,34 +98,6 @@ public struct SSHAgent: Step {
 
         logger.info("Configuring deployment key(s)")
 
-        guard var sshConfigContents = context.fileManager.contents(atPath: sshConfig).map({ String(decoding: $0, as: UTF8.self) }) else {
-            throw StepError("Failed to get contents of \(sshConfig)")
-        }
-
-        previousSSHConfig = sshConfigContents
-
-        guard let globalGitConfig = try context.shell("git", "config", "--global", "--list", "--show-origin")
-            // file:/Users/clayellis/.gitconfig    user.name=User Name
-            // file:/Users/clayellis/.gitconfig    user.email=username@example.com
-            // ...
-            .components(separatedBy: "\n")
-            // file:/Users/clayellis/.gitconfig    user.name=User Name
-            .first?
-            // [file:/Users/clayellis/.gitconfig, user.name=User Name]
-            .components(separatedBy: .whitespaces)
-            // file:/Users/clayellis/.gitconfig
-            .first
-            .flatMap(URL.init(string:))
-        else {
-            throw StepError("Failed to locate global git config file")
-        }
-
-        guard let globalGitConfigContents = context.fileManager.contents(atPath: globalGitConfig.path) else {
-            throw StepError("Failed to get global git config file contents")
-        }
-
-        previousGitConfig = (path: globalGitConfig, contents: globalGitConfigContents)
-
         let publicKeys = try context.shell("ssh-add", "-L", quiet: true).components(separatedBy: "\n")
         for publicKey in publicKeys {
             var ownerAndRepo: String?
@@ -143,31 +120,35 @@ public struct SSHAgent: Step {
 
             ownerAndRepo = ownerAndRepo.replacingOccurrences(of: ".git", with: "")
 
+            // Save public key
+            // TODO: We don't actually have to use the sha hash here. It's just for unique file names.
             let sha256 = CryptoKit.SHA256.hash(data: Data(publicKey.utf8))
-            let keyFilePath = ssh/"key-\(sha256)"
-            let keyFileContents = Data(("\(sha256)" + "\n").utf8)
+            let sha = sha256.sha
+            let keyName = "key-\(sha).pub"
+            let keyFilePath = ssh/keyName
+            let keyFileContents = Data((publicKey + "\n").utf8)
 
-            guard context.fileManager.createFile(atPath: keyFilePath, contents: keyFileContents, attributes: [.posixPermissions: 600]) else {
+            guard context.fileManager.createFile(atPath: keyFilePath, contents: keyFileContents, attributes: [.posixPermissions: 420]) else {
                 throw StepError("Failed to create ssh key file \(keyFilePath)")
             }
 
             createdFiles?.append(keyFilePath)
 
-            try context.shell("git", "config", "--global", "--replace-all", "url.\"git@key-\(sha256).github.com:\(ownerAndRepo)\".insteadOf", "https://github.com/\(ownerAndRepo)")
-            try context.shell("git", "config", "--global", "--add", "url.\"git@key-\(sha256).github.com:\(ownerAndRepo)\".insteadOf", "git@github.com:\(ownerAndRepo)")
-            try context.shell("git", "config", "--global", "--add", "url.\"git@key-\(sha256).github.com:\(ownerAndRepo)\".insteadOf", "ssh://github.com/\(ownerAndRepo)")
+            let section = "url.\"git@\(keyName).github.com:\(ownerAndRepo)\".insteadOf"
+            try context.shell("git", "config", "--global", "--replace-all", section, "https://github.com/\(ownerAndRepo)")
+            try context.shell("git", "config", "--global", "--add", section, "git@github.com:\(ownerAndRepo)")
+            try context.shell("git", "config", "--global", "--add", section, "ssh://github.com/\(ownerAndRepo)")
+            addedSections?.append(section)
 
-            sshConfigContents += """
+            try await updateFile(sshConfig) {
+                $0 += """
 
-                Host key-\(sha256).github.com
+                Host \(keyName).github.com
                     HostName github.com
                     IdentityFile \(keyFilePath)
                     IdentitiesOnly yes
 
                 """
-
-            guard context.fileManager.createFile(atPath: sshConfig, contents: Data(sshConfigContents.utf8)) else {
-                throw StepError("Failed to update \(sshConfig)")
             }
 
             logger.info("Added deploy-key mapping: Use identity \(keyFilePath) for GitHub repository \(ownerAndRepo)")
@@ -175,18 +156,12 @@ public struct SSHAgent: Step {
     }
 
     public func cleanUp(error: Error?) async throws {
-        if let previousGitConfig {
-            context.fileManager.createFile(atPath: previousGitConfig.path.path, contents: previousGitConfig.contents)
+        for file in createdFiles ?? [] {
+            try context.fileManager.removeItem(atPath: file)
         }
 
-        if let previousSSHConfig {
-            context.fileManager.createFile(atPath: sshConfig, contents: Data(previousSSHConfig.utf8))
-        }
-
-        if let createdFiles {
-            for file in createdFiles {
-                try context.fileManager.removeItem(atPath: file)
-            }
+        for section in addedSections ?? [] {
+            try context.shell("git config --global --remove-section \(section)")
         }
 
         try context.shell("ssh-agent", "-k")
@@ -198,6 +173,12 @@ public struct SSHAgent: Step {
                 Darwin.setenv(keyPointer, valuePointer, 1)
             }
         }
+    }
+}
+
+extension SHA256Digest {
+    var sha: String {
+        compactMap { String(format: "%02x", $0) }.joined()
     }
 }
 
