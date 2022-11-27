@@ -83,17 +83,17 @@ public struct ProvisioningProfile: Decodable {
     }
 
     init(data: Data) throws {
-        let stringContents = String(decoding: data, as: UTF8.self)
+        let string = data.string
 
         guard
-            let xmlOpen = stringContents.range(of: "<?xml"),
-            let plistClose = stringContents.range(of: "</plist>")
+            let xmlOpen = string.range(of: "<?xml"),
+            let plistClose = string.range(of: "</plist>")
         else {
             throw ProfileError(message: "Couldn't find plist in profile")
         }
 
-        let plist = stringContents[xmlOpen.lowerBound...plistClose.upperBound]
-        let plistData = Data(plist.utf8)
+        let plist = string[xmlOpen.lowerBound...plistClose.upperBound]
+        let plistData = plist.data
         let profile = try PropertyListDecoder().decode(ProvisioningProfile.self, from: plistData)
         self = profile
     }

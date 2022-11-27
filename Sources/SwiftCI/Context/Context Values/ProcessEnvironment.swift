@@ -48,14 +48,14 @@ public extension ProcessEnvironment.GitHub {
                 contents = eventContents
             } else {
                 let stringContents = try context.environment.require("GITHUB_EVENT_CONTENTS")
-                contents = Data(stringContents.utf8)
+                contents = stringContents.data
             }
             
             func decodeEvent<E: Decodable>(_ event: (E) -> Event) -> Event? {
                 do {
                     context.logger.debug("""
                         Decoding GitHub event payload \(E.self):
-                        \(String(decoding: contents, as: UTF8.self))
+                        \(contents.string)
 
                         """
                     )
@@ -69,7 +69,7 @@ public extension ProcessEnvironment.GitHub {
                             Error:
                             \(error)
                             Contents:
-                            \(String(decoding: contents, as: UTF8.self))
+                            \(contents.string)
                             (End of error)
 
 

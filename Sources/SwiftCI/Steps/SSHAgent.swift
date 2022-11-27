@@ -122,11 +122,11 @@ public struct SSHAgent: Step {
 
             // Save public key
             // TODO: We don't actually have to use the sha hash here. It's just for unique file names.
-            let sha256 = CryptoKit.SHA256.hash(data: Data(publicKey.utf8))
+            let sha256 = CryptoKit.SHA256.hash(data: publicKey.data)
             let sha = sha256.sha
             let keyName = "key-\(sha).pub"
             let keyFilePath = ssh/keyName
-            let keyFileContents = Data((publicKey + "\n").utf8)
+            let keyFileContents = (publicKey + "\n").data
 
             guard context.fileManager.createFile(atPath: keyFilePath, contents: keyFileContents, attributes: [.posixPermissions: 420]) else {
                 throw StepError("Failed to create ssh key file \(keyFilePath)")
@@ -170,7 +170,8 @@ public struct SSHAgent: Step {
     func setenv(_ key: String, _ value: String) {
         _ = withUnsafePointer(to: Array(key.utf8CString)) { keyPointer in
             withUnsafePointer(to: Array(value.utf8CString)) { valuePointer in
-                Darwin.setenv(keyPointer, valuePointer, 1)
+                logger.debug("setenv(\(key), \(value))")
+                return Darwin.setenv(keyPointer, valuePointer, 1)
             }
         }
     }

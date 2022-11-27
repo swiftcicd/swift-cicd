@@ -15,7 +15,6 @@ public struct AppStoreConnect {
         let jwt = try token.generateJWT()
         request.addValue("Bearer \(jwt)", forHTTPHeaderField: "Authorization")
         let (data, _) = try await URLSession.shared.data(for: request)
-        print(String(decoding: data, as: UTF8.self))
         let response = try JSONDecoder().decode(Response.self, from: data)
         return response
     }
@@ -63,7 +62,7 @@ extension AppStoreConnect {
                 return nil
             }
 
-            self.init(id: id, issuerID: issuerID, key: String(decoding: key, as: UTF8.self), path: path)
+            self.init(id: id, issuerID: issuerID, key: key.string, path: path)
         }
     }
 

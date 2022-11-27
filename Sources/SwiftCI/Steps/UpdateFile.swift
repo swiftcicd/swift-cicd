@@ -14,9 +14,9 @@ public struct UpdateFile: Step {
     public init(filePath: String, update: @escaping (inout String) -> Void) {
         self.filePath = filePath
         self.update = { data in
-            var string = String(decoding: data, as: UTF8.self)
+            var string = data.string
             update(&string)
-            data = Data(string.utf8)
+            data = string.data
         }
     }
 
@@ -38,6 +38,8 @@ public struct UpdateFile: Step {
               context.fileManager.createFile(atPath: filePath, contents: previousFileContents) else {
             throw StepError("Failed to restore file \(filePath)")
         }
+        logger.debug("Restored \(filePath) to its previous state")
+        logger.trace("\(previousFileContents.string))")
     }
 }
 

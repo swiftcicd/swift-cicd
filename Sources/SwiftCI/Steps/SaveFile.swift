@@ -16,7 +16,7 @@ public struct SaveFile: Step {
     }
 
     public init(name: String, contents: String, attributes: [FileAttributeKey: Any]? = nil, parentDirectoryPath: String? = nil) {
-        self.init(name: name, contents: Data(contents.utf8), attributes: attributes, parentDirectoryPath: parentDirectoryPath)
+        self.init(name: name, contents: contents.data, attributes: attributes, parentDirectoryPath: parentDirectoryPath)
     }
 
     public struct Output {
