@@ -85,7 +85,7 @@ public struct SSHAgent: Step {
 
         for sshPrivateKey in sshPrivateKeys {
             let key: String = try loadSecret(sshPrivateKey)
-            try context.shell("ssh-add", key)
+            try context.shell("ssh-add", "-", "<<<", key)
         }
 
         let keys = try context.shell("ssh-add", "-l", quiet: true)
@@ -99,9 +99,16 @@ public struct SSHAgent: Step {
 
         previousSSHConfig = sshConfigContents
 
-
         guard let globalGitConfig = try context.shell("git", "config", "--global", "--list", "--show-origin")
+            // file:/Users/clayellis/.gitconfig    user.name=User Name
+            // file:/Users/clayellis/.gitconfig    user.email=username@example.com
+            // ...
             .components(separatedBy: "\n")
+            // file:/Users/clayellis/.gitconfig    user.name=User Name
+            .first?
+            // [file:/Users/clayellis/.gitconfig, user.name=User Name]
+            .components(separatedBy: .whitespaces)
+            // file:/Users/clayellis/.gitconfig
             .first
             .flatMap(URL.init(string:))
         else {
