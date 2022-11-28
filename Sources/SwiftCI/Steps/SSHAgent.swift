@@ -143,8 +143,9 @@ public struct SSHAgent: Step {
             addedSections?.append(section)
 
             try await updateFile(sshConfig) {
-                $0 += """
+                if !$0.hasSuffix("\n") { $0 += "\n" }
 
+                $0 += """
                 Host \(keyName).github.com
                     HostName github.com
                     IdentityFile \(keyFilePath)
