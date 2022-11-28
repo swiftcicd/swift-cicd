@@ -37,7 +37,7 @@ public struct ExportLocalizations: Step {
 public extension StepRunner {
     func importLocalizations(fromDirectory localizationsDirectory: String, xcodeProject: String? = nil) async throws {
         guard context.fileManager.fileExists(atPath: localizationsDirectory) else {
-            context.logger.info("Localizations directory (\(localizationsDirectory)) doesn't exist yet, skipping.")
+            context.logger.info("Localizations directory (\(localizationsDirectory)) doesn't exist yet, skipping import localizations step.")
             return
         }
 
