@@ -10,6 +10,8 @@ public struct SSHAgent: Step {
 
     @StepState var createdFiles = [String]()
     @StepState var addedSections = [String]()
+    @StepState var sshAgentPID: String?
+    @StepState var sshAgentAuthSocket: String?
 
     var ssh: String {
         context.fileManager.homeDirectoryForCurrentUser.appendingPathComponent(".ssh").path
@@ -44,20 +46,14 @@ public struct SSHAgent: Step {
 
         logger.info("Starting ssh-agent")
 
-        // TODO: Do we need to start the ssh-agent in the background first before adding values?
-        // Not necessarily, I don't think. We just need to put the ssh_agent_pid and ssh_auth_sock variables into the environment, which is what eval should do (and the manual code just below this.)
-        // But when we go to clean up after this and call "ssh-agent -k" it throws an error:
-//        Failed to clean up after SSHAgent: ShellOut encountered an error
-//        Status code: 1
-//        Message: "SSH_AGENT_PID not set, cannot kill agent"
-
-        var sshAgent = Command("eval", "\"$(ssh-agent -s)\"")
+        var sshAgent = Command("ssh-agent")
         sshAgent.add("-a", ifLet: sshAuthSocket)
         let sshAgentOutput = try context.shell(sshAgent)
 
         for line in sshAgentOutput.components(separatedBy: "\n") {
             let key: String
             let value: String
+
 //            if #available(macOS 13.0, *) {
 //                guard let match = line.wholeMatch(of: #/^(SSH_AUTH_SOCK|SSH_AGENT_PID)=(.*); export \1/#) else {
 //                    continue
@@ -65,25 +61,27 @@ public struct SSHAgent: Step {
 //
 //                key = String(match.output.1)
 //                value = String(match.output.2)
-//            } else {
-                guard
-                    let equals = line.firstIndex(of: "="),
-                    let semicolon = line.firstIndex(of: ";"),
-                    line.contains("; export ")
-                else {
-                    continue
-                }
-
-                key = String(line[line.startIndex..<equals])
-                value = String(line[line.index(after: equals)..<semicolon])
-
-                guard key == "SSH_AUTH_SOCK" || key == "SSH_AGENT_PID" else {
-                    continue
-                }
 //            }
 
-            setenv(key, value)
-            logger.info("\(key)=\(value)")
+            guard
+                let equals = line.firstIndex(of: "="),
+                let semicolon = line.firstIndex(of: ";"),
+                line.contains("; export ")
+            else {
+                continue
+            }
+
+            key = String(line[line.startIndex..<equals])
+            value = String(line[line.index(after: equals)..<semicolon])
+
+            switch key {
+            case "SSH_AGENT_PID":
+                sshAgentPID = value
+            case "SSH_AUTH_SOCK":
+                sshAgentAuthSocket = value
+            default:
+                continue
+            }
         }
 
         logger.info("Adding private key(s) to agent")
@@ -134,6 +132,9 @@ public struct SSHAgent: Step {
 
             createdFiles?.append(keyFilePath)
 
+            // Tell git to use the ssh key to authenticate with the repo by replacing any instances of:
+            // https://github.com/ower/repo, git@github.com:owner/repo, ssh://github.com/owner/repo
+            // with: git@key-hash.pub.github.com:owner/repo
             let section = "url.\"git@\(keyName).github.com:\(ownerAndRepo)\""
             let sectionInsteadOf = "\(section).insteadOf"
             try context.shell("git", "config", "--global", "--replace-all", sectionInsteadOf, "https://github.com/\(ownerAndRepo)")
@@ -165,7 +166,11 @@ public struct SSHAgent: Step {
             try context.shell("git config --global --remove-section \(section)")
         }
 
-        try context.shell("ssh-agent", "-k")
+        var command = Command("env")
+        sshAgentPID.map { command.add("SSH_AGENT_PID=\($0)") }
+        sshAgentAuthSocket.map { command.add("SSH_AUTH_SOCK=\($0)") }
+        command.add("ssh-agent", "-k")
+        try context.shell(command)
     }
 
     func setenv(_ key: String, _ value: String) {
