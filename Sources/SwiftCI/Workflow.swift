@@ -67,6 +67,7 @@ public extension WorkflowRunner {
 public extension StepRunner {
     @discardableResult
     func step<S: Step>(name: String? = nil, _ step: S) async throws -> S.Output {
+        let stepName = name ?? step.name
         let currentStep = context.currentStep
         context.stack.pushStep(step)
         context.currentStep = step
@@ -74,7 +75,19 @@ public extension StepRunner {
             context.currentStep = currentStep
         }
         // TODO: Configurable format?
-        context.logger.info("Running step: \(name ?? step.name)")
+
+        if self is Workflow {
+            try context.shell("echo ::group::Step: \(stepName)", quiet: true)
+        } else {
+            context.logger.info("Running step: \(stepName)")
+        }
+
+        defer {
+            if self is Workflow {
+                _ = try? context.shell("echo ::endgroup::", quiet: true)
+            }
+        }
+
         return try await step.run()
     }
 }
