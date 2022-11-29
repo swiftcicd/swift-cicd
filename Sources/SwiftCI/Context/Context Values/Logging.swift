@@ -23,3 +23,37 @@ public extension Workflow {
 public extension Step {
     var logger: Logger { context.logger }
 }
+
+public extension ContextValues {
+    func startLogGroup(name: String) {
+        _ = try? shell("echo \"::group::\(name)\"", log: false)
+    }
+
+    func endLogGroup() {
+        _ = try? shell("echo \"::endgroup::\"", log: false)
+    }
+
+    @discardableResult
+    func performInLogGroup<Result>(named name: String, operation: () throws -> Result) rethrows -> Result {
+        startLogGroup(name: name)
+        defer { endLogGroup() }
+        return try operation()
+    }
+
+    @discardableResult
+    func performInLogGroup<Result>(named name: String, operation: () async throws -> Result) async rethrows -> Result {
+        startLogGroup(name: name)
+        defer { endLogGroup() }
+        return try await operation()
+    }
+}
+
+public extension String {
+    func embeddedInLogGroup(named name: String) -> String {
+        """
+        ::group::\(name)
+        \(self)
+        ::endgroup::
+        """
+    }
+}

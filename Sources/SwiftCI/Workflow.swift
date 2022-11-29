@@ -76,15 +76,15 @@ public extension StepRunner {
         }
         // TODO: Configurable format?
 
-        if let workflow = self as? Workflow {
-            workflow.startLogGroup(name: "Step: \(stepName)")
+        if self is Workflow {
+            context.startLogGroup(name: "Step: \(stepName)")
         } else {
             context.logger.info("Step: \(stepName)")
         }
 
         defer {
-            if let workflow = self as? Workflow {
-                workflow.endLogGroup()
+            if self is Workflow {
+                context.endLogGroup()
             }
         }
 
@@ -109,12 +109,17 @@ public extension Workflow {
     //  - ⤵️ Step 4 (Skipped)
 
     static func main() async {
+        // The swift run command can be preceded by a log group for convenience.
+        // End that group just in case.
+        context.endLogGroup()
+
         // TODO: Allow for log level to be specified on the command line (either as an argument or an environment variable.)
         // If it's password from the outside, use it instead of the workflow's value.
-        endLogGroup()
         context.logger.logLevel = Self.logLevel
+
         logger.info("Starting Workflow: \(Self.name)")
-        performInLogGroup(name: "Environment") {
+
+        context.performInLogGroup(named: "Environment") {
             logger.debug("\(context.environment._dump())")
         }
 
@@ -144,7 +149,7 @@ public extension Workflow {
     }
 
     private static func cleanUp(error: Error?) async {
-        await performInLogGroup(name: "Cleaning up...") {
+        await context.performInLogGroup(named: "Cleaning up...") {
             while let step = context.stack.popStep() {
                 logger.info("Cleaning up after step: \(step.name)")
                 do {
@@ -154,46 +159,6 @@ public extension Workflow {
                 }
             }
         }
-    }
-}
-
-extension Workflow {
-    static func startLogGroup(name: String) {
-        _ = try? context.shell("echo \"::group::\(name)\"", log: false)
-    }
-
-    static func endLogGroup() {
-        _ = try? context.shell("echo \"::endgroup::\"", log: false)
-    }
-
-    @discardableResult
-    static func performInLogGroup<Result>(name: String, operation: () throws -> Result) rethrows -> Result {
-        startLogGroup(name: name)
-        defer { endLogGroup() }
-        return try operation()
-    }
-
-    @discardableResult
-    static func performInLogGroup<Result>(name: String, operation: () async throws -> Result) async rethrows -> Result {
-        startLogGroup(name: name)
-        defer { endLogGroup() }
-        return try await operation()
-    }
-
-    func startLogGroup(name: String) {
-        Self.startLogGroup(name: name)
-    }
-
-    func endLogGroup() {
-        Self.endLogGroup()
-    }
-
-    func performInLogGroup<Result>(name: String, operation: () throws -> Result) rethrows -> Result {
-        try Self.performInLogGroup(name: name, operation: operation)
-    }
-
-    func performInLogGroup<Result>(name: String, operation: () async throws -> Result) async rethrows -> Result {
-        try await Self.performInLogGroup(name: name, operation: operation)
     }
 }
 
