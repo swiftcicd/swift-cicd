@@ -27,13 +27,16 @@ public extension Step {
 // https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#grouping-log-lines
 // TODO: Only print group tokens if running on GitHub (for when other platforms are supported.)
 
+private let startGroupToken = "::group::"
+private let endGroupToken = "::endgroup::"
+
 public extension ContextValues {
     func startLogGroup(name: String) {
-        print("::group::\(name)")
+        print("\(startGroupToken)\(name)")
     }
 
     func endLogGroup() {
-        print("::endgroup::")
+        print(endGroupToken)
     }
 
     @discardableResult
@@ -54,9 +57,9 @@ public extension ContextValues {
 public extension String {
     func embeddedInLogGroup(named name: String) -> String {
         """
-        ::group::\(name)
+        \(startGroupToken)\(name)
         \(self)
-        ::endgroup::
+        \(endGroupToken)
         """
     }
 }
