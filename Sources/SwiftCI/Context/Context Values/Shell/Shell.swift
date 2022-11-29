@@ -5,12 +5,13 @@ public struct Shell {
     @Context(\.logger) var logger
 
     @discardableResult
-    func callAsFunction(_ command: String, _ arguments: [Argument], quiet: Bool = false) throws -> String {
+    func callAsFunction(_ command: String, _ arguments: [Argument], log: Bool = true, quiet: Bool = false) throws -> String {
         let commandArgumentsDescription = "\(command) \(arguments.map(\.escaped).joined(separator: " "))"
 
+        // Always log trace level
         if logger.logLevel == .trace {
             logger.debug("Shell (at: \(fileManager.currentDirectoryPath)): \(commandArgumentsDescription)")
-        } else {
+        } else if log {
             logger.debug("Shell: \(commandArgumentsDescription)")
         }
 
@@ -25,13 +26,13 @@ public struct Shell {
     }
 
     @discardableResult
-    func callAsFunction(_ command: String, _ arguments: Argument..., quiet: Bool = false) throws -> String {
-        try callAsFunction(command, arguments, quiet: quiet)
+    func callAsFunction(_ command: String, _ arguments: Argument..., log: Bool = true, quiet: Bool = false) throws -> String {
+        try callAsFunction(command, arguments, log: log, quiet: quiet)
     }
 
     @discardableResult
-    func callAsFunction(_ command: ShellCommand, quiet: Bool = false) throws -> String {
-        try callAsFunction(command.command, command.arguments, quiet: quiet)
+    func callAsFunction(_ command: ShellCommand, log: Bool = true, quiet: Bool = false) throws -> String {
+        try callAsFunction(command.command, command.arguments, log: log, quiet: quiet)
     }
 }
 

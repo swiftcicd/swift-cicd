@@ -158,11 +158,11 @@ public extension Workflow {
 
 extension Workflow {
     static func startLogGroup(name: String) {
-        _ = try? context.shell("echo \"::group::\(name)\"")
+        _ = try? context.shell("echo \"::group::\(name)\"", log: false)
     }
 
     static func endLogGroup() {
-        _ = try? context.shell("echo \"::endgroup::\"")
+        _ = try? context.shell("echo \"::endgroup::\"", log: false)
     }
 
     @discardableResult
