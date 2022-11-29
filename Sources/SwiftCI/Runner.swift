@@ -31,14 +31,16 @@ public extension WorkflowRunner {
     }
 
     func workflow(name: String? = nil, _ workflow: () -> (any Workflow)?) async throws {
+        // Don't end this group if errors are thrown so that steps can finish grouping their errors.
         context.startLogGroup(name: "Determining next workflow to run...")
-        defer { context.endLogGroup() }
 
         guard let workflow = workflow() else {
             context.logger.info("No workflow chosen")
+            context.endLogGroup()
             return
         }
 
         try await self.workflow(name: nil, workflow)
+        context.endLogGroup()
     }
 }
