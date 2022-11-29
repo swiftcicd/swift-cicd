@@ -76,15 +76,15 @@ public extension StepRunner {
         }
         // TODO: Configurable format?
 
-        if self is Workflow {
-            try context.shell("echo ::group::Step: \(stepName)", quiet: true)
+        if let workflow = self as? Workflow {
+            workflow.startLogGroup(name: "Step: \(stepName)")
         } else {
-            context.logger.info("Running step: \(stepName)")
+            context.logger.info("Step: \(stepName)")
         }
 
         defer {
-            if self is Workflow {
-                _ = try? context.shell("echo ::endgroup::", quiet: true)
+            if let workflow = self as? Workflow {
+                workflow.endLogGroup()
             }
         }
 
@@ -113,7 +113,9 @@ public extension Workflow {
         // If it's password from the outside, use it instead of the workflow's value.
         context.logger.logLevel = Self.logLevel
         logger.info("Starting Workflow: \(Self.name)")
-        logger.debug("Environment:\n\(context.environment._dump())")
+        performInLogGroup(name: "Environment") {
+            logger.debug("\(context.environment._dump())")
+        }
 
         do {
             try setUpWorkspace()
@@ -135,21 +137,62 @@ public extension Workflow {
             }
 
             logger.error("\n❌ \(errorMessage)\n")
-            logger.info("Cleaning up...")
             await cleanUp(error: error)
             exit(1)
         }
     }
 
     private static func cleanUp(error: Error?) async {
-        while let step = context.stack.popStep() {
-            logger.info("Cleaning up after step: \(step.name)")
-            do {
-                try await step.cleanUp(error: error)
-            } catch {
-                logger.error("Failed to clean up after \(step.name): \(error)")
+        await performInLogGroup(name: "Cleaning up...") {
+            while let step = context.stack.popStep() {
+                logger.info("Cleaning up after step: \(step.name)")
+                do {
+                    try await step.cleanUp(error: error)
+                } catch {
+                    logger.error("Failed to clean up after \(step.name): \(error)")
+                }
             }
         }
+    }
+}
+
+extension Workflow {
+    static func startLogGroup(name: String) {
+        _ = try? context.shell("echo \"::group::\(name)\"")
+    }
+
+    static func endLogGroup() {
+        _ = try? context.shell("echo \"::endgroup::\"")
+    }
+
+    @discardableResult
+    static func performInLogGroup<Result>(name: String, operation: () throws -> Result) rethrows -> Result {
+        startLogGroup(name: name)
+        defer { endLogGroup() }
+        return try operation()
+    }
+
+    @discardableResult
+    static func performInLogGroup<Result>(name: String, operation: () async throws -> Result) async rethrows -> Result {
+        startLogGroup(name: name)
+        defer { endLogGroup() }
+        return try await operation()
+    }
+
+    func startLogGroup(name: String) {
+        Self.startLogGroup(name: name)
+    }
+
+    func endLogGroup() {
+        Self.endLogGroup()
+    }
+
+    func performInLogGroup<Result>(name: String, operation: () throws -> Result) rethrows -> Result {
+        try Self.performInLogGroup(name: name, operation: operation)
+    }
+
+    func performInLogGroup<Result>(name: String, operation: () async throws -> Result) async rethrows -> Result {
+        try await Self.performInLogGroup(name: name, operation: operation)
     }
 }
 
