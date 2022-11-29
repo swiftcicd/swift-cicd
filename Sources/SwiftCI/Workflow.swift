@@ -118,10 +118,7 @@ public extension Workflow {
         context.logger.logLevel = Self.logLevel
 
         logger.info("Starting Workflow: \(Self.name)")
-
-        context.performInLogGroup(named: "Environment") {
-            logger.debug("\(context.environment._dump())")
-        }
+        logger.debug("Environment: \(context.environment._dump().embeddedInLogGroup(named: "Environment"))")
 
         do {
             try setUpWorkspace()

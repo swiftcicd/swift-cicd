@@ -156,6 +156,9 @@ public extension StepRunner {
 
     @discardableResult
     func commit(message: String, flags: [String] = [], filesMatching predicate: @escaping (String) -> Bool) async throws -> Commit.Output {
+        context.startLogGroup(name: "Step: Commit Files Matching Predicate")
+        defer { context.endLogGroup() }
+
         context.logger.info("Committing files matching predicate.")
 
         let status = try context.shell("git", "status", "--short")
