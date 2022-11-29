@@ -111,6 +111,7 @@ public extension Workflow {
     static func main() async {
         // TODO: Allow for log level to be specified on the command line (either as an argument or an environment variable.)
         // If it's password from the outside, use it instead of the workflow's value.
+        endLogGroup()
         context.logger.logLevel = Self.logLevel
         logger.info("Starting Workflow: \(Self.name)")
         performInLogGroup(name: "Environment") {
