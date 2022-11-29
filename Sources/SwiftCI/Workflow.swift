@@ -114,20 +114,14 @@ public extension Workflow {
     static func main() async {
         // The swift run command can be preceded by a log group for convenience.
         // End that group just in case.
-        context.endLogGroup()
+//        context.endLogGroup()
 
         // TODO: Allow for log level to be specified on the command line (either as an argument or an environment variable.)
         // If it's password from the outside, use it instead of the workflow's value.
         context.logger.logLevel = Self.logLevel
 
-
         do {
-            context.startLogGroup(name: "Workflow Setup")
-            logger.debug("Environment: \(context.environment._dump().embeddedInLogGroup(named: "Environment"))")
             try setUpWorkspace()
-            context.endLogGroup()
-
-            logger.info("Workflow: \(Self.name)")
             let workflow = self.init()
             try await workflow.workflow(workflow)
             await cleanUp(error: nil)
@@ -181,10 +175,13 @@ public extension ContextValues {
 
 extension Workflow {
     private static func setUpWorkspace() throws {
-        let workspace = try context.environment.github.$workspace.require()
-        logger.debug("Setting current directory: \(workspace)")
-        try context.fileManager.changeCurrentDirectory(to: workspace)
-        context.workspace = workspace
+        try context.performInLogGroup(named: "Workspace") {
+            logger.debug("Environment: \(context.environment._dump())")
+            let workspace = try context.environment.github.$workspace.require()
+            logger.debug("Setting current directory: \(workspace)")
+            try context.fileManager.changeCurrentDirectory(to: workspace)
+            context.workspace = workspace
+        }
     }
 }
 
