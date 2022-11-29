@@ -32,7 +32,7 @@ public struct SSHAgent: Step {
     }
 
     public func run() async throws {
-        logger.info("adding GitHub.com keys to \(ssh)/known_hosts")
+        logger.info("Adding \(sshPrivateKeys.count) key(s) to \(ssh)/known_hosts")
 
         try context.fileManager.createDirectory(atPath: ssh, withIntermediateDirectories: true)
 
