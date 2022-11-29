@@ -34,6 +34,7 @@ public struct Build: Step {
     var scheme: String?
     var configuration: Configuration?
     let destination: String?
+    var cleanBuild: Bool
     var archivePath: String?
     var codeSignStyle: CodeSignStyle?
     var projectVersion: String?
@@ -42,6 +43,7 @@ public struct Build: Step {
         scheme: String? = nil,
         configuration: Configuration? = nil,
         destination: String? = nil,
+        cleanBuild: Bool = false,
         archivePath: String? = nil,
         codeSignStyle: CodeSignStyle? = nil,
         projectVersion: String? = nil
@@ -49,6 +51,7 @@ public struct Build: Step {
         self.scheme = scheme
         self.configuration = configuration
         self.destination = destination
+        self.cleanBuild = cleanBuild
         self.archivePath = archivePath
         self.codeSignStyle = codeSignStyle
         self.projectVersion = projectVersion
@@ -58,6 +61,7 @@ public struct Build: Step {
         scheme: String? = nil,
         configuration: Configuration? = nil,
         destination: XcodeBuildStep.Destination? = nil,
+        cleanBuild: Bool = false,
         archivePath: String? = nil,
         codeSignStyle: CodeSignStyle? = nil,
         projectVersion: String? = nil
@@ -66,6 +70,7 @@ public struct Build: Step {
             scheme: scheme,
             configuration: configuration,
             destination: destination?.argument,
+            cleanBuild: cleanBuild,
             archivePath: archivePath,
             codeSignStyle: codeSignStyle,
             projectVersion: projectVersion
@@ -120,6 +125,12 @@ public struct Build: Step {
             xcodebuild.add("CURRENT_PROJECT_VERSION=\(projectVersion)")
         }
 
+        if cleanBuild {
+            xcodebuild.add("clean")
+        }
+
+        xcodebuild.add("build")
+
         return try context.shell(xcodebuild)
     }
 
@@ -136,6 +147,7 @@ public extension StepRunner {
         scheme: String? = nil,
         configuration: Build.Configuration? = nil,
         destination: XcodeBuildStep.Destination? = nil,
+        cleanBuild: Bool = false,
         archivePath: String? = nil,
         codeSignStyle: Build.CodeSignStyle? = nil,
         projectVersion: String? = nil
@@ -145,6 +157,7 @@ public extension StepRunner {
                 scheme: scheme,
                 configuration: configuration,
                 destination: destination,
+                cleanBuild: cleanBuild,
                 archivePath: archivePath,
                 codeSignStyle: codeSignStyle,
                 projectVersion: projectVersion
