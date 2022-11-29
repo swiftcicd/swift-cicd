@@ -60,7 +60,9 @@ public extension WorkflowRunner {
 
         // TODO: Configurable logging format?
         // Should the child workflow inherit the logging level of the parent?
-        context.logger.info("Workflow: \(name ?? W.name)")
+        let workflowName = name ?? W.name
+        context.startLogGroup(name: "Workflow: \(workflowName)")
+        // Not ending the workflow group so that any logs before the first step get placed under this group.
 
         context.stack.pushWorkflow(workflow)
         context.currentWorkflow = workflow
@@ -176,7 +178,11 @@ public extension ContextValues {
 extension Workflow {
     private static func setUpWorkspace() throws {
         try context.performInLogGroup(named: "Workspace") {
-            logger.debug("Environment: \(context.environment._dump())")
+            logger.debug("""
+                Environment:
+                \(context.environment._dump().indented())
+                """
+            )
             let workspace = try context.environment.github.$workspace.require()
             logger.debug("Setting current directory: \(workspace)")
             try context.fileManager.changeCurrentDirectory(to: workspace)

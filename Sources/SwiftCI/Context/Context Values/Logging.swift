@@ -64,4 +64,10 @@ public extension String {
         \(endGroupToken)
         """
     }
+
+    func indented(tabs: Int = 1, tab: String = "\t") -> String {
+        self.components(separatedBy: "\n")
+            .map { Array(repeating: tab, count: tabs).joined() + $0 }
+            .joined(separator: "\n")
+    }
 }
