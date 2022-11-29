@@ -31,7 +31,11 @@ public extension WorkflowRunner {
     }
 
     func workflow(name: String? = nil, _ workflow: () -> (any Workflow)?) async throws {
+        context.startLogGroup(name: "Determining next workflow to run...")
+        defer { context.endLogGroup() }
+
         guard let workflow = workflow() else {
+            context.logger.info("No workflow chosen")
             return
         }
 
