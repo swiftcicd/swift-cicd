@@ -140,6 +140,8 @@ public extension Workflow {
             }
 
             logger.error("\n❌ \(errorMessage)\n")
+            context.endLogGroup()
+            
             await cleanUp(error: error)
             exit(1)
         }
