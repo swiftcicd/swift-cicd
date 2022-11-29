@@ -102,22 +102,20 @@ public extension StepRunner {
             context.logger.info("Step: \(stepName)")
         }
 
-        defer {
-            if self is Workflow {
-                context.endLogGroup()
-            }
+        let output = try await step.run()
+
+        // Only end the log group on successful builds (so that errors are grouped under the step.)
+        // And only end the group when step is run from a workflow.
+        if self is Workflow {
+            context.endLogGroup()
         }
 
-        return try await step.run()
+        return output
     }
 }
 
 public extension Workflow {
     static func main() async {
-        // The swift run command can be preceded by a log group for convenience.
-        // End that group just in case.
-//        context.endLogGroup()
-
         // TODO: Allow for log level to be specified on the command line (either as an argument or an environment variable.)
         // If it's password from the outside, use it instead of the workflow's value.
         context.logger.logLevel = Self.logLevel

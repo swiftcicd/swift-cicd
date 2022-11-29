@@ -32,6 +32,8 @@ private let endGroupToken = "::endgroup::"
 
 public extension ContextValues {
     func startLogGroup(name: String) {
+        // End any existing log group before starting a new one.
+        endLogGroup()
         print("\(startGroupToken)\(name)")
     }
 
