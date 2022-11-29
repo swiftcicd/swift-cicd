@@ -55,8 +55,7 @@ public extension ProcessEnvironment.GitHub {
                 do {
                     context.logger.debug("""
                         Decoding GitHub event payload \(E.self):
-                        \(contents.string.embeddedInLogGroup(named: "Payload"))
-
+                        \(contents.string.embeddedInLogGroup(named: "Payload", startingWithBlankLine: false))
                         """
                     )
                     let payload = try JSONDecoder().decode(E.self, from: contents)

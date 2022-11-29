@@ -55,11 +55,11 @@ public extension ContextValues {
 }
 
 public extension String {
-    func embeddedInLogGroup(named name: String) -> String {
-        // Start with a blank line to ensure that the the start token is at the start of a new line.
+    func embeddedInLogGroup(named name: String, startingWithBlankLine: Bool = true) -> String {
+        // Start with a blank line by default to ensure that the the start token is at the start of a new line.
+        // Callers can turn this off if needed.
         """
-
-        \(startGroupToken)\(name)
+        \(startingWithBlankLine ? "\n" : "")\(startGroupToken)\(name)
         \(self)
         \(endGroupToken)
         """

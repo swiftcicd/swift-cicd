@@ -20,6 +20,22 @@ import Logging
 // TODO: Simulator builds
 // - (set the build number to the PR number, change the bundle identifier to the pr number, and the display name) so that PR builds can be identified on simulator
 
+
+// TODO: Track which steps were explicitly run by the workflow (current step will be nil when these steps are called.)
+// Or, just show all tasks?
+// Output a summary of the workflow run at the end.
+//  - ✅ Step 1
+//  - ✅ Step 2
+//      - ✅ Substep A
+//      - ✅ Substep B
+//  - ✅ Step 3
+//  - ✅ Workflow A
+//      - ✅ Step A.1
+//          - ✅ Substep A.1.A
+//      - ✅ Step A.2
+//  - ❌ Step 4 (Failed)
+//  - ⤵️ Step 4 (Skipped)
+
 public protocol Workflow: StepRunner, WorkflowRunner {
     static var name: String { get }
     static var logLevel: Logger.Level { get }
@@ -44,7 +60,7 @@ public extension WorkflowRunner {
 
         // TODO: Configurable logging format?
         // Should the child workflow inherit the logging level of the parent?
-        context.logger.info("Running workflow: \(name ?? W.name)")
+        context.logger.info("Workflow: \(name ?? W.name)")
 
         context.stack.pushWorkflow(workflow)
         context.currentWorkflow = workflow
@@ -76,6 +92,8 @@ public extension StepRunner {
         }
         // TODO: Configurable format?
 
+        // Only start a log group if the step is run from a workflow.
+        // Steps called by other steps will be logged under their parent step.
         if self is Workflow {
             context.startLogGroup(name: "Step: \(stepName)")
         } else {
@@ -93,21 +111,6 @@ public extension StepRunner {
 }
 
 public extension Workflow {
-    // TODO: Track which steps were explicitly run by the workflow (current step will be nil when these steps are called.)
-    // Or, just show all tasks?
-    // Output a summary of the workflow run at the end.
-    //  - ✅ Step 1
-    //  - ✅ Step 2
-    //      - ✅ Substep A
-    //      - ✅ Substep B
-    //  - ✅ Step 3
-    //  - ✅ Workflow A
-    //      - ✅ Step A.1
-    //          - ✅ Substep A.1.A
-    //      - ✅ Step A.2
-    //  - ❌ Step 4 (Failed)
-    //  - ⤵️ Step 4 (Skipped)
-
     static func main() async {
         // The swift run command can be preceded by a log group for convenience.
         // End that group just in case.
@@ -117,11 +120,14 @@ public extension Workflow {
         // If it's password from the outside, use it instead of the workflow's value.
         context.logger.logLevel = Self.logLevel
 
-        logger.info("Starting Workflow: \(Self.name)")
-        logger.debug("Environment: \(context.environment._dump().embeddedInLogGroup(named: "Environment"))")
 
         do {
+            context.startLogGroup(name: "Workflow Setup")
+            logger.debug("Environment: \(context.environment._dump().embeddedInLogGroup(named: "Environment"))")
             try setUpWorkspace()
+            context.endLogGroup()
+
+            logger.info("Workflow: \(Self.name)")
             let workflow = self.init()
             try await workflow.workflow(workflow)
             await cleanUp(error: nil)
