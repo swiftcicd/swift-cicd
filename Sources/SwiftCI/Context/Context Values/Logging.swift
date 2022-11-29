@@ -12,8 +12,7 @@ public extension ContextValues {
     }
 }
 
-// Logging is so essential to workflows and steps, we'll make the
-// logger available without reaching through the context.
+// Logging is so essential to workflows and steps, we'll make the logger available without reaching through the context.
 
 public extension Workflow {
     static var logger: Logger { context.logger }
@@ -24,13 +23,17 @@ public extension Step {
     var logger: Logger { context.logger }
 }
 
+// MARK: - Log Group
+// https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#grouping-log-lines
+// TODO: Only print group tokens if running on GitHub (for when other platforms are supported.)
+
 public extension ContextValues {
     func startLogGroup(name: String) {
-        _ = try? shell("echo \"::group::\(name)\"", log: false)
+        print("::group::\(name)")
     }
 
     func endLogGroup() {
-        _ = try? shell("echo \"::endgroup::\"", log: false)
+        print("::endgroup::")
     }
 
     @discardableResult
