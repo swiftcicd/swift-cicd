@@ -2,13 +2,31 @@ import OctoKit
 import SwiftEnvironment
 
 public struct SetCommitStatus: Step {
-    var owner: String?
-    var repository: String?
     let commitSHA: String
     let statusState: Status.State
-    var targetURL: String?
-    var description: String?
     var context: String?
+    var description: String?
+    var detailsURL: String?
+    var owner: String?
+    var repository: String?
+
+    public init(
+        commitSHA: String,
+        statusState: Status.State,
+        context: String? = nil,
+        description: String? = nil,
+        detailsURL: String? = nil,
+        owner: String? = nil,
+        repository: String? = nil
+    ) {
+        self.commitSHA = commitSHA
+        self.statusState = statusState
+        self.context = context
+        self.description = description
+        self.detailsURL = detailsURL
+        self.owner = owner
+        self.repository = repository
+    }
 
     public func run() async throws {
         let environmentOwnerRepository = Self.context.environment.github.ownerRepository
@@ -30,7 +48,7 @@ public struct SetCommitStatus: Step {
             repository: repository,
             sha: commitSHA,
             state: statusState,
-            targetURL: targetURL,
+            targetURL: detailsURL,
             description: description,
             context: context
         )
@@ -40,6 +58,28 @@ public struct SetCommitStatus: Step {
             \("\(response)".indented())
             """
         )
+    }
+}
+
+public extension StepRunner {
+    func setCommit(
+        sha: String,
+        status: Status.State,
+        context: String? = nil,
+        description: String? = nil,
+        detailsURL: String? = nil,
+        owner: String? = nil,
+        repository: String? = nil
+    ) async throws {
+        try await step(SetCommitStatus(
+            commitSHA: sha,
+            statusState: status,
+            context: context,
+            description: description,
+            detailsURL: detailsURL,
+            owner: owner,
+            repository: repository
+        ))
     }
 }
 
