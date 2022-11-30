@@ -1,19 +1,26 @@
+import OctoKit
 import SwiftPR
 
 public struct RunSwiftPR: Step {
-    let prCheck: PRCheck
+    let prCheck: PRCheck.Type
 
-    public init(prCheck: PRCheck) {
+    public init(prCheck: PRCheck.Type) {
         self.prCheck = prCheck
     }
 
-    public func run() async throws {
-        try await type(of: prCheck).main()
+    public struct Output {
+        let status: Status.State
+    }
+
+    public func run() async throws -> Output {
+        try await prCheck.main()
+        let status = prCheck.statusState
+        return Output(status: status)
     }
 }
 
 public extension StepRunner {
-    func swiftPR(_ prCheck: PRCheck) async throws {
+    func runSwiftPR(_ prCheck: PRCheck.Type) async throws -> RunSwiftPR.Output {
         try await step(RunSwiftPR(prCheck: prCheck))
     }
 }
