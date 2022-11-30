@@ -9,7 +9,7 @@ public struct RunSwiftPR: Step {
     }
 
     public struct Output {
-        let status: Status.State
+        public let status: Status.State
     }
 
     public func run() async throws -> Output {
@@ -20,6 +20,7 @@ public struct RunSwiftPR: Step {
 }
 
 public extension StepRunner {
+    @discardableResult
     func runSwiftPR(_ prCheck: PRCheck.Type) async throws -> RunSwiftPR.Output {
         try await step(RunSwiftPR(prCheck: prCheck))
     }
