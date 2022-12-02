@@ -8,6 +8,7 @@ public struct ImportLocalizations: Step {
     }
 
     public func run() async throws -> String {
+        logger.info("Importing \(localizationPath)")
         var xcodebuild = Command("xcodebuild", "-importLocalizations", "-localizationPath", localizationPath)
         xcodebuild.add("-project", ifLet: xcodeProject ?? context.xcodeProject)
         return try context.shell(xcodebuild)
@@ -36,12 +37,14 @@ public struct ExportLocalizations: Step {
 
 public extension StepRunner {
     func importLocalizations(fromDirectory localizationsDirectory: String, xcodeProject: String? = nil) async throws {
-        context.startLogGroup(name: "Step: Import Localizations")
-        defer { context.endLogGroup() }
+        do {
+            context.startLogGroup(name: "Preparing to import localizations...")
+            defer { context.endLogGroup() }
 
-        guard context.fileManager.fileExists(atPath: localizationsDirectory) else {
-            context.logger.info("Localizations directory (\(localizationsDirectory)) doesn't exist yet, skipping import localizations step.")
-            return
+            guard context.fileManager.fileExists(atPath: localizationsDirectory) else {
+                context.logger.info("Localizations directory (\(localizationsDirectory)) doesn't exist yet, skipping import localizations step.")
+                return
+            }
         }
 
         for file in try context.fileManager.contentsOfDirectory(atPath: localizationsDirectory) {
