@@ -41,7 +41,7 @@ public struct SetCommitStatus: Step {
             throw StepError("Missing repository")
         }
 
-        logger.info("Setting commit \(commitSHA.prefix(5)) status to \(statusState)")
+        logger.info("Setting commit \(commitSHA.prefix(5)) status to \(statusState) for context: \(context ?? "nil")")
 
         let response = try await Self.context.githubAPI.createCommitStatus(
             owner: owner,
