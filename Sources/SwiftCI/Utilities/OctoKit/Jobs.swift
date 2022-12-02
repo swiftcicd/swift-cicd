@@ -84,4 +84,11 @@ public extension StepRunner {
         }
         return job
     }
+
+    func getCurrentWorkflowRunJobURL(jobName: String) async throws -> String {
+        let (owner, repository) = try context.environment.github.requireOwnerRepository()
+        let runID = try context.environment.github.$runID.require()
+        let jobID = try await getCurrentWorkflowRunJob(named: jobName)
+        return "https://github.com/\(owner)/\(repository)/actions/runs/\(runID)/jobs/\(jobID)"
+    }
 }
