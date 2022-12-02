@@ -60,7 +60,7 @@ enum JobsRouter: Router {
     var path: String {
         switch self {
         case let .listJobsForWorkflowRunAttempt(_, owner, repository, runID, attemptNumber):
-            return "repos/\(owner)/\(repository)/actions/runs/\(runID)/attempts\(attemptNumber)/jobs"
+            return "repos/\(owner)/\(repository)/actions/runs/\(runID)/attempts/\(attemptNumber)/jobs"
         }
     }
 
