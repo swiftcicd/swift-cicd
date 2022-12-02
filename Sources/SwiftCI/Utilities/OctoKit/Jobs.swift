@@ -12,10 +12,12 @@ import RequestKit
 open class Job: Codable {
     open internal(set) var id: Int = -1
     open var name: String
+    open var htmlURL: String
 
     enum CodingKeys: String, CodingKey {
         case id
         case name
+        case htmlURL = "html_url"
     }
 }
 
@@ -84,13 +86,5 @@ public extension StepRunner {
             throw StepError("Couldn't find current workflow job named '\(jobName)'")
         }
         return job
-    }
-
-    func getCurrentWorkflowRunJobURL(jobName: String? = nil) async throws -> String {
-        let (owner, repository) = try context.environment.github.requireOwnerRepository()
-        let job = try context.environment.github.$job.require()
-        let runID = try context.environment.github.$runID.require()
-        let jobID = try await getCurrentWorkflowRunJob(named: jobName)
-        return "https://github.com/\(owner)/\(repository)/actions/runs/\(runID)/jobs/\(jobID)"
     }
 }
