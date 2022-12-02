@@ -1,3 +1,11 @@
+/// A namespace for discoverable workflows.
+public enum Workflows {}
+
+public extension Workflows {
+    typealias XcodeProject = XcodeProjectWorkflow
+    typealias SwiftPackage = SwiftPackageWorkflow
+}
+
 public protocol XcodeProjectWorkflow: Workflow {
     var xcodeProject: String { get }
 }
