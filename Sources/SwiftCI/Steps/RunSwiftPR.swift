@@ -10,12 +10,16 @@ public struct RunSwiftPR: Step {
 
     public struct Output {
         public let status: Status.State
+        public let comment: Comment
     }
 
     public func run() async throws -> Output {
         try await prCheck.main()
         let status = prCheck.statusState
-        return Output(status: status)
+        guard let comment = try await prCheck.getSwiftPRComment() else {
+            throw StepError("SwiftPR comment not found")
+        }
+        return Output(status: status, comment: comment)
     }
 }
 

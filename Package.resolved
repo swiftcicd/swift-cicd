@@ -60,7 +60,7 @@
       "location" : "https://github.com/clayellis/swift-environment",
       "state" : {
         "branch" : "main",
-        "revision" : "2d9145efa9436f4f89c15c89aaf32ef3338b22d7"
+        "revision" : "4d7c99ccc45b6c2afd81ee6287454c874ea0bd01"
       }
     },
     {
@@ -78,7 +78,7 @@
       "location" : "https://github.com/clayellis/swift-pr",
       "state" : {
         "branch" : "main",
-        "revision" : "54a490ff510f505d3521d5082a6492af252595c8"
+        "revision" : "d909f357eea9be7bf29a05e7ff3f9470d6c37d56"
       }
     }
   ],
