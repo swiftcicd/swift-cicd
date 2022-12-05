@@ -57,7 +57,7 @@ public struct ExportLocalizations: Step {
         let other = Output.Warning.other(String(line))
 
         if #available(macOS 13.0, *) {
-            guard let match = line.wholeMatch(of: #/Key (?<key>".+") used with multiple values. Value (?<kept>".+") kept. Vlaue (?<ignored>".+") ignored./#) else {
+            guard let match = line.wholeMatch(of: #/Key "(?<key>.+)" used with multiple values. Value "(?<kept>.+)" kept. Vlaue "(?<ignored>.+)" ignored./#) else {
                 return other
             }
 
@@ -67,7 +67,7 @@ public struct ExportLocalizations: Step {
             let key = "key"
             let kept = "kept"
             let ignored = "ignored"
-            let regex = try! NSRegularExpression(pattern: "Key (?<\(key)>\".+\") used with multiple values. Value (?<\(kept)>\".+\") kept. Value (?<\(ignored)>\".+\") ignored.")
+            let regex = try! NSRegularExpression(pattern: "Key \"(?<\(key)>.+)\" used with multiple values. Value \"(?<\(kept)>.+)\" kept. Value \"(?<\(ignored)>.+)\" ignored.")
             guard let match = regex.firstMatch(in: line, range: NSRange(line.startIndex..<line.endIndex, in: line)) else {
                 return other
             }
