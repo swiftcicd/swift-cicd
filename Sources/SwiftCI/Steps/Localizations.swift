@@ -32,9 +32,6 @@ public struct ExportLocalizations: Step {
 
     public struct Output {
         public enum Warning {
-            static let token = "--- WARNING: "
-            static let duplicateToken = #"Key (?<key>".+") used with multiple values. Value (?<valueKept>".+") kept. Value (?<valueIgnored>".+") ignored."#
-
             case duplicate(key: String, valueKept: String, valueIgnored: String)
             case other(String)
         }
@@ -48,7 +45,7 @@ public struct ExportLocalizations: Step {
         let commandOutput = try context.shell(xcodebuild)
         var output = Output()
         for line in commandOutput.components(separatedBy: "\n") {
-            if let warningToken = line.range(of: Output.Warning.token) {
+            if let warningToken = line.range(of: "--- WARNING: ") {
                 let warningBody = line[line.index(after: warningToken.upperBound)...]
                 output.warnings.append(warning(from: String(warningBody)))
             }
