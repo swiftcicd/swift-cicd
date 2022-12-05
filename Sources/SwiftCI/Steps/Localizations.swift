@@ -57,17 +57,13 @@ public struct ExportLocalizations: Step {
         var output = Output()
         for line in commandOutput.components(separatedBy: "\n") {
             if let warningToken = line.range(of: "--- WARNING: ") {
-                let warningBody = line[line.index(after: warningToken.upperBound)...]
+                let warningBody = line[warningToken.upperBound...]
                 output.warnings.append(warning(from: String(warningBody)))
             }
         }
 
         if failOnWarnings, !output.warnings.isEmpty {
-            throw StepError("""
-                Failing on warnings:
-                \(output.warnings.map { "- \($0.description)" }.joined(separator: "\n").indented())
-                """
-            )
+            throw StepError("Failing on warnings: \(output.warnings)")
         }
 
         return output
