@@ -1,3 +1,5 @@
+import Foundation
+
 public protocol Step<Output>: StepRunner {
     associatedtype Output
     // TODO: Rename this stepName to avoid collision (name is a super common variable name and Step shouldn't steal/squat on it.)
@@ -33,7 +35,7 @@ public struct StepState<T> {
     }
 }
 
-public struct StepError: Error {
+public struct StepError: LocalizedError, CustomStringConvertible {
     let step: (any Step)?
     let message: String
     let error: Error?
@@ -53,6 +55,25 @@ public struct StepError: Error {
         self.error = error
         self.file = file
         self.line = line
+    }
+
+    public var description: String {
+        var description = "Step Error (file: \(file), line: \(line))"
+        if let step {
+            description += "\nStep: \(step)"
+        }
+
+        if let error {
+            description += "\nError: \(error)"
+        }
+
+        description += "\nMessage: \(message)"
+
+        return description
+    }
+
+    public var errorDescription: String? {
+        description
     }
 }
 
