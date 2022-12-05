@@ -33,21 +33,21 @@ public struct ExportLocalizations: Step {
     }
 
     public struct Output {
-        public enum Warning: CustomStringConvertible {
+        public enum Warning: Hashable, CustomStringConvertible {
             case duplicate(key: String, valueKept: String, valueIgnored: String)
             case other(String)
 
             public var description: String {
                 switch self {
                 case let .duplicate(key, valueKept, valueIgnored):
-                    return "Key \"\(key)\" used with multiple values. Value \"\(valueKept)\". Value \"\(valueIgnored)\" ignored."
+                    return "Duplicate localization key found: \"\(key)\". Keeping value: \"\(valueKept)\". Ignoring value: \"\(valueIgnored)\"."
                 case let .other(warning):
                     return warning
                 }
             }
         }
 
-        public var warnings = [Warning]()
+        public var warnings = Set<Warning>()
     }
 
     public func run() async throws -> Output {
@@ -58,7 +58,7 @@ public struct ExportLocalizations: Step {
         for line in commandOutput.components(separatedBy: "\n") {
             if let warningToken = line.range(of: "--- WARNING: ") {
                 let warningBody = line[warningToken.upperBound...]
-                output.warnings.append(warning(from: String(warningBody)))
+                output.warnings.insert(warning(from: String(warningBody)))
             }
         }
 
