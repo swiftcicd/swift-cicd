@@ -24,16 +24,27 @@ public struct ExportLocalizations: Step {
 
     var xcodeProject: String?
     let localizationPath: String
+    let failOnWarnings: Bool
 
-    public init(xcodeProject: String? = nil, localizationPath: String) {
+    public init(xcodeProject: String? = nil, localizationPath: String, failOnWarnings: Bool = true) {
         self.xcodeProject = xcodeProject
         self.localizationPath = localizationPath
+        self.failOnWarnings = failOnWarnings
     }
 
     public struct Output {
-        public enum Warning {
+        public enum Warning: CustomStringConvertible {
             case duplicate(key: String, valueKept: String, valueIgnored: String)
             case other(String)
+
+            public var description: String {
+                switch self {
+                case let .duplicate(key, valueKept, valueIgnored):
+                    return "Key \"\(key)\" used with multiple values. Value \"\(valueKept)\". Value \"\(valueIgnored)\" ignored."
+                case let .other(warning):
+                    return warning
+                }
+            }
         }
 
         public var warnings = [Warning]()
@@ -50,6 +61,15 @@ public struct ExportLocalizations: Step {
                 output.warnings.append(warning(from: String(warningBody)))
             }
         }
+
+        if failOnWarnings, !output.warnings.isEmpty {
+            throw StepError("""
+                Failing on warnings:
+                \(output.warnings.map { "- \($0.description)" }.joined(separator: "\n").indented())
+                """
+            )
+        }
+
         return output
     }
 
@@ -57,7 +77,7 @@ public struct ExportLocalizations: Step {
         let other = Output.Warning.other(String(line))
 
         if #available(macOS 13.0, *) {
-            guard let match = line.wholeMatch(of: #/Key "(?<key>.+)" used with multiple values. Value "(?<kept>.+)" kept. Vlaue "(?<ignored>.+)" ignored./#) else {
+            guard let match = line.wholeMatch(of: #/Key "(?<key>.+)" used with multiple values. Value "(?<kept>.+)" kept. Value "(?<ignored>.+)" ignored./#) else {
                 return other
             }
 
