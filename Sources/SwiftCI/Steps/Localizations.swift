@@ -133,7 +133,7 @@ public extension StepRunner {
     }
 
     @discardableResult
-    func exportLocalizations(to localizationPath: String, xcodeProject: String? = nil) async throws -> ExportLocalizations.Output {
-        try await step(ExportLocalizations(xcodeProject: xcodeProject, localizationPath: localizationPath))
+    func exportLocalizations(to localizationPath: String, xcodeProject: String? = nil, failOnWarnings: Bool = true) async throws -> ExportLocalizations.Output {
+        try await step(ExportLocalizations(xcodeProject: xcodeProject, localizationPath: localizationPath, failOnWarnings: failOnWarnings))
     }
 }
