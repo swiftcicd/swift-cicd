@@ -63,7 +63,11 @@ public struct ExportLocalizations: Step {
         }
 
         if failOnWarnings, !output.warnings.isEmpty {
-            throw StepError("Failing on warnings: \(output.warnings)")
+            throw StepError("""
+                Failing on warnings:
+                \(output.warnings.map { "\t- \($0.description)" }.joined(separator: "\n"))
+                """
+            )
         }
 
         return output
