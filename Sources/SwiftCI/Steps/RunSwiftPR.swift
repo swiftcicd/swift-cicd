@@ -20,7 +20,7 @@ public struct RunSwiftPR: Step {
         // FIXME: If the swift-pr comment is created for the first time it may be slow to appear on the API.
         // We may need to introduce a slight delay here, or potentially a retry.
         // Try 3 times with one, two, three seconds in between before failing?
-        return try await retry(atIntervals: [0, 1, 2, 3, 5, 10, 15, 30]) {
+        return try await retry(atIntervals: [0, 1, 2, 3, 5, 10, 15, 30, 60]) {
             guard let comment = try await prCheck.getSwiftPRComment() else {
                 throw StepError("SwiftPR comment not found")
             }
@@ -41,8 +41,8 @@ enum RetryError: Error {
     case retryFailedAfterAllAttempts
 }
 
-func retry<R>(atIntervals backoff: [Double], operation: () async throws -> R) async throws -> R {
-    var backoff = backoff
+func retry<R>(atIntervals intervals: [Double], operation: () async throws -> R) async throws -> R {
+    var backoff = intervals
     while !backoff.isEmpty {
         let delay = backoff.removeFirst()
         if delay > 0 {
@@ -52,6 +52,8 @@ func retry<R>(atIntervals backoff: [Double], operation: () async throws -> R) as
 
         do {
             let result = try await operation()
+            let attempts = intervals.count - backoff.count
+            ContextValues.shared.logger.debug("Successful after \(attempts) retry attempt(s)")
             return result
         } catch {
             ContextValues.shared.logger.debug("Attempt failed: \(error)")
