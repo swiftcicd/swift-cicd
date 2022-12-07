@@ -35,6 +35,6 @@ let package = Package(
             name: "SwiftCITests",
             dependencies: ["SwiftCI"]
         ),
-        .executableTarget(name: "Demo", dependencies: ["SwiftCI"])
+        .executableTarget(name: "Demo", dependencies: ["SwiftCI"], sources: ["DemoWorkflow.swift"])
     ]
 )
