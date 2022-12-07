@@ -21,8 +21,13 @@ public struct Xcbeautify: Step {
     }
 
     func isInstalled() throws -> Bool {
-        let output = try context.shell("which", "xcbeautify")
-        return !output.contains("not found")
+        do {
+            let output = try context.shell("which", "xcbeautify")
+            return !output.contains("not found")
+        } catch {
+            // 'which' will exit with status 1 (throw an error) when the tool isn't found.
+            return false
+        }
     }
 
     func install() async throws {
