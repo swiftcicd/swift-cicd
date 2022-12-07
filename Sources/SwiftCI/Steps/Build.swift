@@ -31,6 +31,9 @@ public struct Build: Step {
         }
     }
 
+    @Context(\.xcodeProject) var xcodeProject
+
+    var project: String?
     var scheme: String?
     var configuration: Configuration?
     let destination: String?
@@ -41,6 +44,7 @@ public struct Build: Step {
     let xcbeautify: Bool
 
     public init(
+        project: String? = nil,
         scheme: String? = nil,
         configuration: Configuration? = nil,
         destination: String? = nil,
@@ -50,6 +54,7 @@ public struct Build: Step {
         projectVersion: String? = nil,
         xcbeautify: Bool = false
     ) {
+        self.project = project
         self.scheme = scheme
         self.configuration = configuration
         self.destination = destination
@@ -61,6 +66,7 @@ public struct Build: Step {
     }
 
     public init(
+        project: String? = nil,
         scheme: String? = nil,
         configuration: Configuration? = nil,
         destination: XcodeBuildStep.Destination? = nil,
@@ -71,6 +77,7 @@ public struct Build: Step {
         xcbeautify: Bool = false
     ) {
         self.init(
+            project: project,
             scheme: scheme,
             configuration: configuration,
             destination: destination?.argument,
@@ -84,6 +91,8 @@ public struct Build: Step {
 
     public func run() async throws -> String {
         var xcodebuild = Command("xcodebuild")
+        let project = self.project ?? xcodeProject
+        xcodebuild.add("-project", ifLet: project)
         xcodebuild.add("-scheme", ifLet: scheme)
         xcodebuild.add("-destination", ifLet: destination)
         xcodebuild.add("-configuration", ifLet: configuration?.string)
@@ -153,6 +162,7 @@ public struct Build: Step {
 public extension StepRunner {
     @discardableResult
     func build(
+        project: String? = nil,
         scheme: String? = nil,
         configuration: Build.Configuration? = nil,
         destination: XcodeBuildStep.Destination? = nil,
@@ -164,6 +174,7 @@ public extension StepRunner {
     ) async throws -> String {
         try await step {
             Build(
+                project: project,
                 scheme: scheme,
                 configuration: configuration,
                 destination: destination,
