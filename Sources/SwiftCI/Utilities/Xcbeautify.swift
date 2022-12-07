@@ -52,7 +52,8 @@ public struct Xcbeautify: Step {
             try context.fileManager.removeItem(atPath: xcbeautify)
         }
 
-        try context.shell("git clone https://github.com/tuist/xcbeautify.git")
+//        try context.shell("git clone https://github.com/tuist/xcbeautify.git")
+        try context.shell("git clone --branch export-localizations-warnings-support --single-branch https://github.com/clayellis/xcbeautify.git")
         xcbeautifyDirectory = xcbeautify
 
         // 'make install' needs sudo permissions to copy into /usr/local/bin/
