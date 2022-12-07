@@ -1,4 +1,5 @@
 public struct Xcbeautify: Step {
+    private static var binPath: String?
     @StepState var xcbeautifyDirectory: String?
 
     let command: ShellCommand
@@ -12,7 +13,8 @@ public struct Xcbeautify: Step {
             try await install()
         }
 
-        let xcbeautify = Command("set -o pipefail && \(command.command)", command.arguments + ["|", "xcbeautify"])
+        let binPath = Self.binPath ?? "xcbeautify"
+        let xcbeautify = Command("set -o pipefail && \(command.command)", command.arguments + ["|", binPath])
         return try context.shell(xcbeautify)
     }
 
@@ -26,28 +28,46 @@ public struct Xcbeautify: Step {
             return !output.contains("not found")
         } catch {
             // 'which' will exit with status 1 (throw an error) when the tool isn't found.
-            return false
+            // Prefer the installed version over the temporary bin path.
+            // But if the binPath has been cached from a previous build, treat it as installed.
+            return Self.binPath != nil
         }
     }
 
     func install() async throws {
+        let currentDirectory = context.fileManager.currentDirectoryPath
+        defer {
+            do {
+                try context.fileManager.changeCurrentDirectory(to: currentDirectory)
+            } catch {
+                logger.error("Failed to return to current directory '\(currentDirectory)' after installing xcbeautify")
+            }
+        }
+
         let temp = context.fileManager.temporaryDirectory.path
         try context.fileManager.changeCurrentDirectory(to: temp)
         let xcbeautify = temp/"xcbeautify"
+
+        if context.fileManager.fileExists(atPath: xcbeautify) {
+            try context.fileManager.removeItem(atPath: xcbeautify)
+        }
+
         try context.shell("git clone https://github.com/tuist/xcbeautify.git")
-        try context.shell("cd xcbeautify")
-        try context.shell("make install")
         xcbeautifyDirectory = xcbeautify
+
+        // 'make install' needs sudo permissions to copy into /usr/local/bin/
+        // So instead of running install, we'll build the xcbeautify and then cache its bin path
+        let flags = "--configuration release --disable-sandbox"
+        try context.fileManager.changeCurrentDirectory(to: xcbeautify)
+        try context.shell("swift build \(flags)")
+        let binPath = try context.shell("swift build --show-bin-path \(flags)")
+        Self.binPath = binPath/"xcbeautify"
     }
 
     func uninstall() throws {
-        guard let xcbeautifyDirectory else {
-            return
+        if let xcbeautifyDirectory {
+            try context.fileManager.removeItem(atPath: xcbeautifyDirectory)
         }
-
-        try context.fileManager.changeCurrentDirectory(to: xcbeautifyDirectory)
-        try context.shell("make uninstall")
-        try context.fileManager.removeItem(atPath: xcbeautifyDirectory)
     }
 }
 
