@@ -38,6 +38,7 @@ public struct Build: Step {
     var archivePath: String?
     var codeSignStyle: CodeSignStyle?
     var projectVersion: String?
+    let xcbeautify: Bool
 
     public init(
         scheme: String? = nil,
@@ -46,7 +47,8 @@ public struct Build: Step {
         cleanBuild: Bool = false,
         archivePath: String? = nil,
         codeSignStyle: CodeSignStyle? = nil,
-        projectVersion: String? = nil
+        projectVersion: String? = nil,
+        xcbeautify: Bool = false
     ) {
         self.scheme = scheme
         self.configuration = configuration
@@ -55,6 +57,7 @@ public struct Build: Step {
         self.archivePath = archivePath
         self.codeSignStyle = codeSignStyle
         self.projectVersion = projectVersion
+        self.xcbeautify = xcbeautify
     }
 
     public init(
@@ -64,7 +67,8 @@ public struct Build: Step {
         cleanBuild: Bool = false,
         archivePath: String? = nil,
         codeSignStyle: CodeSignStyle? = nil,
-        projectVersion: String? = nil
+        projectVersion: String? = nil,
+        xcbeautify: Bool = false
     ) {
         self.init(
             scheme: scheme,
@@ -73,7 +77,8 @@ public struct Build: Step {
             cleanBuild: cleanBuild,
             archivePath: archivePath,
             codeSignStyle: codeSignStyle,
-            projectVersion: projectVersion
+            projectVersion: projectVersion,
+            xcbeautify: xcbeautify
         )
     }
 
@@ -131,7 +136,11 @@ public struct Build: Step {
 
         xcodebuild.add("build")
 
-        return try context.shell(xcodebuild)
+        if xcbeautify {
+            return try await xcbeautify(xcodebuild)
+        } else {
+            return try context.shell(xcodebuild)
+        }
     }
 
     public func cleanUp(error: Error?) async throws {
@@ -150,7 +159,8 @@ public extension StepRunner {
         cleanBuild: Bool = false,
         archivePath: String? = nil,
         codeSignStyle: Build.CodeSignStyle? = nil,
-        projectVersion: String? = nil
+        projectVersion: String? = nil,
+        xcbeautify: Bool = false
     ) async throws -> String {
         try await step {
             Build(
@@ -160,7 +170,8 @@ public extension StepRunner {
                 cleanBuild: cleanBuild,
                 archivePath: archivePath,
                 codeSignStyle: codeSignStyle,
-                projectVersion: projectVersion
+                projectVersion: projectVersion,
+                xcbeautify: xcbeautify
             )
         }
     }

@@ -1,8 +1,6 @@
 public struct XcodeBuild: ShellCommand {
-    let command = "xcodebuild"
-    var arguments: [Argument] {
-        []
-    }
+    public let command = "xcodebuild"
+    public var arguments = [Argument]()
 
     //   -userdefault=value
     //         Set the user default userdefault to value.

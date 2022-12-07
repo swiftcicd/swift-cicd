@@ -6,6 +6,7 @@ public struct ArchiveExportUpload: Step {
     let profile: ProvisioningProfile
     let appStoreConnectKey: AppStoreConnect.Key
     let buildNumberStrategy: BuildNumberStrategy
+    let xcbeautify: Bool
 
     public enum BuildNumberStrategy {
         // TODO: Add a semantic version strategy
@@ -20,13 +21,15 @@ public struct ArchiveExportUpload: Step {
         scheme: String? = nil,
         profile: ProvisioningProfile,
         appStoreConnectKey: AppStoreConnect.Key,
-        buildNumberStrategy: BuildNumberStrategy = .autoIncrementingInteger
+        buildNumberStrategy: BuildNumberStrategy = .autoIncrementingInteger,
+        xcbeautify: Bool = false
     ) {
         self.xcodeProject = xcodeProject
         self.scheme = scheme
         self.profile = profile
         self.appStoreConnectKey = appStoreConnectKey
         self.buildNumberStrategy = buildNumberStrategy
+        self.xcbeautify = xcbeautify
     }
 
     public struct Output {
@@ -106,7 +109,8 @@ public struct ArchiveExportUpload: Step {
             destination: .generic(platform: .iOS),
             archivePath: archivePath,
             codeSignStyle: .manual(profile: profile),
-            projectVersion: overrideProjectVersion
+            projectVersion: overrideProjectVersion,
+            xcbeautify: xcbeautify
         ))
 
         try await step(.xcodeBuild(
@@ -122,7 +126,8 @@ public struct ArchiveExportUpload: Step {
                 signing: .manual(provisioningProfiles: [bundleID: profile.uuid]),
                 teamID: profile.requireTeamIdentifier()
             ),
-            appStoreConnectKey: appStoreConnectKey
+            appStoreConnectKey: appStoreConnectKey,
+            xcbeautify: xcbeautify
         ))
 
         let uploadOutput = try await step(UploadToAppStoreConnect(
@@ -146,14 +151,16 @@ public extension StepRunner {
         scheme: String? = nil,
         profile: ProvisioningProfile,
         appStoreConnectKey: AppStoreConnect.Key,
-        buildNumberStrategy: ArchiveExportUpload.BuildNumberStrategy = .autoIncrementingInteger
+        buildNumberStrategy: ArchiveExportUpload.BuildNumberStrategy = .autoIncrementingInteger,
+        xcbeautify: Bool = false
     ) async throws {
         try await step(ArchiveExportUpload(
             xcodeProject: xcodeProject,
             scheme: scheme,
             profile: profile,
             appStoreConnectKey: appStoreConnectKey,
-            buildNumberStrategy: buildNumberStrategy
+            buildNumberStrategy: buildNumberStrategy,
+            xcbeautify: xcbeautify
         ))
     }
 }

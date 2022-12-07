@@ -3,17 +3,23 @@ import Foundation
 public struct ImportLocalizations: Step {
     var xcodeProject: String?
     let localizationPath: String
+    let xcbeautify: Bool
 
-    public init(xcodeProject: String? = nil, localizationPath: String) {
+    public init(xcodeProject: String? = nil, localizationPath: String, xcbeautify: Bool = false) {
         self.xcodeProject = xcodeProject
         self.localizationPath = localizationPath
+        self.xcbeautify = xcbeautify
     }
 
     public func run() async throws -> String {
         logger.info("Importing \(localizationPath)")
         var xcodebuild = Command("xcodebuild", "-importLocalizations", "-localizationPath", localizationPath)
         xcodebuild.add("-project", ifLet: xcodeProject ?? context.xcodeProject)
-        return try context.shell(xcodebuild)
+        if xcbeautify {
+            return try await xcbeautify(xcodebuild)
+        } else {
+            return try context.shell(xcodebuild)
+        }
     }
 }
 
@@ -25,11 +31,13 @@ public struct ExportLocalizations: Step {
     var xcodeProject: String?
     let localizationPath: String
     let failOnWarnings: Bool
+    let xcbeautify: Bool
 
-    public init(xcodeProject: String? = nil, localizationPath: String, failOnWarnings: Bool = true) {
+    public init(xcodeProject: String? = nil, localizationPath: String, failOnWarnings: Bool = true, xcbeautify: Bool = false) {
         self.xcodeProject = xcodeProject
         self.localizationPath = localizationPath
         self.failOnWarnings = failOnWarnings
+        self.xcbeautify = xcbeautify
     }
 
     public struct Output {
@@ -53,7 +61,14 @@ public struct ExportLocalizations: Step {
     public func run() async throws -> Output {
         var xcodebuild = Command("xcodebuild", "-exportLocalizations", "-localizationPath", localizationPath)
         xcodebuild.add("-project", ifLet: xcodeProject ?? context.xcodeProject)
-        let commandOutput = try context.shell(xcodebuild)
+        let commandOutput: String
+
+        if xcbeautify {
+            commandOutput = try await xcbeautify(xcodebuild)
+        } else {
+            commandOutput = try context.shell(xcodebuild)
+        }
+
         var output = Output()
         for line in commandOutput.components(separatedBy: "\n") {
             if let warningToken = line.range(of: "--- WARNING: ") {
@@ -110,7 +125,7 @@ public struct ExportLocalizations: Step {
 }
 
 public extension StepRunner {
-    func importLocalizations(fromDirectory localizationsDirectory: String, xcodeProject: String? = nil) async throws {
+    func importLocalizations(fromDirectory localizationsDirectory: String, xcodeProject: String? = nil, xcbeautify: Bool = false) async throws {
         do {
             context.startLogGroup(name: "Preparing to import localizations...")
             defer { context.endLogGroup() }
@@ -123,17 +138,17 @@ public extension StepRunner {
 
         for file in try context.fileManager.contentsOfDirectory(atPath: localizationsDirectory) {
             guard file.hasSuffix(".xcloc") else { continue }
-            try await step(ImportLocalizations(xcodeProject: xcodeProject, localizationPath: localizationsDirectory/file))
+            try await step(ImportLocalizations(xcodeProject: xcodeProject, localizationPath: localizationsDirectory/file, xcbeautify: xcbeautify))
         }
     }
 
     @discardableResult
-    func importLocalizations(from localizationPath: String, xcodeProject: String? = nil) async throws -> String {
-        try await step(ImportLocalizations(xcodeProject: xcodeProject, localizationPath: localizationPath))
+    func importLocalizations(from localizationPath: String, xcodeProject: String? = nil, xcbeautify: Bool = false) async throws -> String {
+        try await step(ImportLocalizations(xcodeProject: xcodeProject, localizationPath: localizationPath, xcbeautify: xcbeautify))
     }
 
     @discardableResult
-    func exportLocalizations(to localizationPath: String, xcodeProject: String? = nil, failOnWarnings: Bool = true) async throws -> ExportLocalizations.Output {
-        try await step(ExportLocalizations(xcodeProject: xcodeProject, localizationPath: localizationPath, failOnWarnings: failOnWarnings))
+    func exportLocalizations(to localizationPath: String, xcodeProject: String? = nil, failOnWarnings: Bool = true, xcbeautify: Bool = false) async throws -> ExportLocalizations.Output {
+        try await step(ExportLocalizations(xcodeProject: xcodeProject, localizationPath: localizationPath, failOnWarnings: failOnWarnings, xcbeautify: xcbeautify))
     }
 }

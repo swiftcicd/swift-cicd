@@ -4,15 +4,18 @@ public struct Test: Step {
     var scheme: String?
     var destination: String?
     var withoutBuilding: Bool
+    let xcbeautify: Bool
 
     public init(
         scheme: String? = nil,
         destination: String? = nil,
-        withoutBuilding: Bool = false
+        withoutBuilding: Bool = false,
+        xcbeautify: Bool = false
     ) {
         self.scheme = scheme
         self.destination = destination
         self.withoutBuilding = withoutBuilding
+        self.xcbeautify = xcbeautify
     }
 
     public func run() async throws -> String {
@@ -22,7 +25,12 @@ public struct Test: Step {
         )
         xcodebuild.add("-scheme", ifLet: scheme)
         xcodebuild.add("-destination", ifLet: destination)
-        return try context.shell(xcodebuild)
+
+        if xcbeautify {
+            return try await xcbeautify(xcodebuild)
+        } else {
+            return try context.shell(xcodebuild)
+        }
     }
 }
 
@@ -31,10 +39,16 @@ public extension StepRunner {
     func test(
         scheme: String? = nil,
         destination: XcodeBuildStep.Destination? = nil,
-        withoutBuilding: Bool = false
+        withoutBuilding: Bool = false,
+        xcbeautify: Bool = false
     ) async throws -> String {
         try await step {
-            Test(scheme: scheme, destination: destination?.argument, withoutBuilding: withoutBuilding)
+            Test(
+                scheme: scheme,
+                destination: destination?.argument,
+                withoutBuilding: withoutBuilding,
+                xcbeautify: xcbeautify
+            )
         }
     }
 }

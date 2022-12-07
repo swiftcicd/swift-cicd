@@ -16,22 +16,24 @@ extension XcodeBuildStep {
         let allowProvisioningUpdates: Bool
         var appStoreConnectKey: AppStoreConnect.Key?
         var isExportOptionsSynthesized: Bool
+        let xcbeautify: Bool
 
-        public init(archivePath: String, exportPath: String? = nil, exportOptionsPlist: String, allowProvisioningUpdates: Bool, appStoreConnectKey: AppStoreConnect.Key? = nil) {
+        public init(archivePath: String, exportPath: String? = nil, exportOptionsPlist: String, allowProvisioningUpdates: Bool, appStoreConnectKey: AppStoreConnect.Key? = nil, xcbeautify: Bool = false) {
             self.archivePath = archivePath
             self.exportPath = exportPath
             self.exportOptionsPlist = exportOptionsPlist
             self.allowProvisioningUpdates = allowProvisioningUpdates
             self.appStoreConnectKey = appStoreConnectKey
             self.isExportOptionsSynthesized = false
+            self.xcbeautify = xcbeautify
         }
 
-        public init(archivePath: String, exportPath: String? = nil, exportOptions: Options, allowProvisioningUpdates: Bool, appStoreConnectKey: AppStoreConnect.Key? = nil) throws {
+        public init(archivePath: String, exportPath: String? = nil, exportOptions: Options, allowProvisioningUpdates: Bool, appStoreConnectKey: AppStoreConnect.Key? = nil, xcbeautify: Bool = false) throws {
             let plist = try exportOptions.generatePList()
             let temporaryDirectory = Self.context.temporaryDirectory
             let plistPath = temporaryDirectory + "exportOptions.plist"
             Self.context.fileManager.createFile(atPath: plistPath, contents: plist)
-            self.init(archivePath: archivePath, exportPath: exportPath, exportOptionsPlist: plistPath, allowProvisioningUpdates: allowProvisioningUpdates, appStoreConnectKey: appStoreConnectKey)
+            self.init(archivePath: archivePath, exportPath: exportPath, exportOptionsPlist: plistPath, allowProvisioningUpdates: allowProvisioningUpdates, appStoreConnectKey: appStoreConnectKey, xcbeautify: xcbeautify)
             self.isExportOptionsSynthesized = true
 
             logger.debug("""
@@ -41,20 +43,19 @@ extension XcodeBuildStep {
         }
 
         public func run() async throws -> String {
-            var arguments = [
+            var xcodebuild = Command("xcodebuild")
+            xcodebuild.add(
                 "-exportArchive",
                 "-archivePath", archivePath,
                 "-exportOptionsPlist", exportOptionsPlist
-            ]
+            )
 
             if allowProvisioningUpdates {
-                arguments.append("-allowProvisioningUpdates")
+                xcodebuild.add("-allowProvisioningUpdates")
             }
 
             if let exportPath {
-                arguments.append(contentsOf: [
-                    "-exportPath", exportPath
-                ])
+                xcodebuild.add("-exportPath", exportPath)
             }
 
             // FIXME: Uploading to App Store Connect via -exportArchive with authentication key parameters isn't working.
@@ -67,14 +68,18 @@ extension XcodeBuildStep {
             // altools or iTunes Transporter.
 
             if let appStoreConnectKey {
-                arguments += [
+                xcodebuild.add(
                     "-authenticationKeyPath", appStoreConnectKey.path,
                     "-authenticationKeyID", appStoreConnectKey.id,
                     "-authenticationKeyIssuerID", appStoreConnectKey.issuerID
-                ]
+                )
             }
 
-            return try context.shell("xcodebuild", arguments)
+            if xcbeautify {
+                return try await xcbeautify(xcodebuild)
+            } else {
+                return try context.shell(xcodebuild)
+            }
         }
 
         public func cleanUp(error: Error?) async throws {
@@ -88,12 +93,40 @@ extension XcodeBuildStep {
 }
 
 public extension Step where Self == XcodeBuildStep.ExportArchive {
-    static func xcodeBuild(exportArchive archivePath: String, to exportPath: String? = nil, allowProvisioningUpdates: Bool, optionsPlist: String, appStoreConnectKey: AppStoreConnect.Key? = nil) -> XcodeBuildStep.ExportArchive {
-        XcodeBuildStep.ExportArchive(archivePath: archivePath, exportPath: exportPath, exportOptionsPlist: optionsPlist, allowProvisioningUpdates: allowProvisioningUpdates, appStoreConnectKey: appStoreConnectKey)
+    static func xcodeBuild(
+        exportArchive archivePath: String,
+        to exportPath: String? = nil,
+        allowProvisioningUpdates: Bool,
+        optionsPlist: String,
+        appStoreConnectKey: AppStoreConnect.Key? = nil,
+        xcbeautify: Bool = false
+    ) -> XcodeBuildStep.ExportArchive {
+        XcodeBuildStep.ExportArchive(
+            archivePath: archivePath,
+            exportPath: exportPath,
+            exportOptionsPlist: optionsPlist,
+            allowProvisioningUpdates: allowProvisioningUpdates,
+            appStoreConnectKey: appStoreConnectKey,
+            xcbeautify: xcbeautify
+        )
     }
 
-    static func xcodeBuild(exportArchive archivePath: String, to exportPath: String? = nil, allowProvisioningUpdates: Bool, options: XcodeBuildStep.ExportArchive.Options, appStoreConnectKey: AppStoreConnect.Key? = nil) throws -> XcodeBuildStep.ExportArchive {
-        try XcodeBuildStep.ExportArchive(archivePath: archivePath, exportPath: exportPath, exportOptions: options, allowProvisioningUpdates: allowProvisioningUpdates, appStoreConnectKey: appStoreConnectKey)
+    static func xcodeBuild(
+        exportArchive archivePath: String,
+        to exportPath: String? = nil,
+        allowProvisioningUpdates: Bool,
+        options: XcodeBuildStep.ExportArchive.Options,
+        appStoreConnectKey: AppStoreConnect.Key? = nil,
+        xcbeautify: Bool = false
+    ) throws -> XcodeBuildStep.ExportArchive {
+        try XcodeBuildStep.ExportArchive(
+            archivePath: archivePath,
+            exportPath: exportPath,
+            exportOptions: options,
+            allowProvisioningUpdates: allowProvisioningUpdates,
+            appStoreConnectKey: appStoreConnectKey,
+            xcbeautify: xcbeautify
+        )
     }
 }
 

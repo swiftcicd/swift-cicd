@@ -47,7 +47,7 @@ public extension ContextValues {
     }
 }
 
-protocol ShellCommand {
+public protocol ShellCommand {
     var command: String { get }
     var arguments: [Argument] { get }
 }
