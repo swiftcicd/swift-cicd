@@ -85,12 +85,20 @@ public extension WorkflowRunner {
 public extension StepRunner {
     @discardableResult
     func step<S: Step>(name: String? = nil, _ step: S) async throws -> S.Output {
+        // Current directory is restored after a step runs
+        let currentDirectory = context.fileManager.currentDirectoryPath
         let stepName = name ?? step.name
         let currentStep = context.currentStep
         context.stack.pushStep(step)
         context.currentStep = step
         defer {
             context.currentStep = currentStep
+
+            do {
+                try context.fileManager.changeCurrentDirectory(to: currentDirectory)
+            } catch {
+                context.logger.error("Failed to restore current directory to \(currentDirectory) after running step \(stepName).")
+            }
         }
         // TODO: Configurable format?
 
