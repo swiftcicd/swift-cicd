@@ -19,7 +19,7 @@ public struct RunSwiftPR: Step {
         let status = prCheck.statusState
         // If the swift-pr comment is created for the first time it may be slow to appear on the API.
         // It usually appears between 30 and 60 seconds.
-        return try await retry(atIntervals: [5, 10, 15, 30, 60]) {
+        return try await retry(every: 15, times: 5) {
             guard let comment = try await prCheck.getSwiftPRComment() else {
                 throw StepError("SwiftPR comment not found")
             }

@@ -4,6 +4,10 @@ enum RetryError: Error {
     case retryFailedAfterAllAttempts
 }
 
+func retry<R>(every interval: Double, times: Int, operation: () async throws -> R) async throws -> R {
+    try await retry(atIntervals: Array(repeating: interval, count: times), operation: operation)
+}
+
 func retry<R>(atIntervals intervals: [Double], operation: () async throws -> R) async throws -> R {
     @Context(\.logger) var logger
     var backoff = intervals
