@@ -73,6 +73,12 @@ public struct Command: ShellCommand, CustomStringConvertible {
         self.arguments.append(contentsOf: arguments)
     }
 
+    public mutating func add(_ argument: Argument, if flag: Bool) {
+        if flag {
+            self.arguments.append(argument)
+        }
+    }
+
     public mutating func add(_ option: String? = nil, ifLet argument: Argument?) {
         if let argument {
             if let option {
