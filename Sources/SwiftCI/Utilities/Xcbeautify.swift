@@ -1,11 +1,52 @@
 public struct Xcbeautify: Step {
+    public struct Options {
+        /// Only print tasks that have warnings or errors.
+        let quiet: Bool
+        /// Only print tasks that have errors.
+        let quieter: Bool
+        /// Preserves unbeautified output lines.
+        let preserveUnbeautified: Bool
+        /// Print test result too under quiet/quieter flag.
+        let isCI: Bool
+        /// Disable the colored output.
+        let disableColoredOutput: Bool
+        /// Generate the specified reports.
+        let report: String?
+        /// The path to use when generating reports (default: build/reports)
+        let reportPath: String?
+        /// The name of JUnit report file name (default: junit.xml)
+        let jUnitReportFileName: String?
+
+        public init(
+            quiet: Bool = false,
+            quieter: Bool = false,
+            preserveUnbeautified: Bool = false,
+            isCI: Bool? = nil,
+            disableColoredOutput: Bool = false,
+            report: String? = nil,
+            reportPath: String? = nil,
+            jUnitReportFileName: String? = nil
+        ) {
+            self.quiet = quiet
+            self.quieter = quieter
+            self.preserveUnbeautified = preserveUnbeautified
+            self.isCI = isCI ?? ContextValues.shared.environment.github.isCI
+            self.disableColoredOutput = disableColoredOutput
+            self.report = report
+            self.reportPath = reportPath
+            self.jUnitReportFileName = jUnitReportFileName
+        }
+    }
+
     private static var binPath: String?
     @StepState var xcbeautifyDirectory: String?
 
     let command: ShellCommand
+    let options: Options
 
-    public init(command: ShellCommand) {
+    public init(command: ShellCommand, options: Options = .init()) {
         self.command = command
+        self.options = options
     }
 
     public func run() async throws -> String {
@@ -14,7 +55,15 @@ public struct Xcbeautify: Step {
         }
 
         let binPath = Self.binPath ?? "xcbeautify"
-        let xcbeautify = Command("set -o pipefail && \(command.command)", command.arguments + ["|", binPath])
+        var xcbeautify = Command("set -o pipefail && \(command.command)", command.arguments + ["|", binPath])
+        xcbeautify.add("--quiet", if: options.quiet)
+        xcbeautify.add("--quieter", if: options.quieter)
+        xcbeautify.add("--preserve-unbeautified", if: options.preserveUnbeautified)
+        xcbeautify.add("--is-ci", if: options.isCI)
+        xcbeautify.add("--disable-colored-output", if: options.disableColoredOutput)
+        xcbeautify.add("--report", ifLet: options.report)
+        xcbeautify.add("--report-path", ifLet: options.reportPath)
+        xcbeautify.add("--junit-report-filename", ifLet: options.jUnitReportFileName)
         return try context.shell(xcbeautify)
     }
 
@@ -73,7 +122,7 @@ public struct Xcbeautify: Step {
 }
 
 public extension StepRunner {
-    func xcbeautify(_ command: ShellCommand) async throws -> String {
-        try await step(Xcbeautify(command: command))
+    func xcbeautify(_ command: ShellCommand, options: Xcbeautify.Options = .init()) async throws -> String {
+        try await step(Xcbeautify(command: command, options: options))
     }
 }

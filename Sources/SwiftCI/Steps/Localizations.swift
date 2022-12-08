@@ -16,7 +16,7 @@ public struct ImportLocalizations: Step {
         var xcodebuild = Command("xcodebuild", "-importLocalizations", "-localizationPath", localizationPath)
         xcodebuild.add("-project", ifLet: xcodeProject ?? context.xcodeProject)
         if xcbeautify {
-            return try await xcbeautify(xcodebuild)
+            return try await xcbeautify(xcodebuild, options: .init(preserveUnbeautified: true))
         } else {
             return try context.shell(xcodebuild)
         }
@@ -63,17 +63,32 @@ public struct ExportLocalizations: Step {
         xcodebuild.add("-project", ifLet: xcodeProject ?? context.xcodeProject)
         let commandOutput: String
 
+        var output = Output()
+
         if xcbeautify {
-            commandOutput = try await xcbeautify(xcodebuild)
+            commandOutput = try await xcbeautify(xcodebuild, options: .init(preserveUnbeautified: true))
+            for line in commandOutput.components(separatedBy: "\n") {
+                let warningRange: Range<String.Index>
+
+                if let asciiWarning = line.range(of: "[!] ") {
+                    warningRange = asciiWarning
+                } else if let coloredWarning = line.range(of: "⚠️ ") {
+                    warningRange = coloredWarning
+                } else {
+                    continue
+                }
+
+                let warningBody = line[warningRange.upperBound...]
+                output.warnings.insert(warning(from: String(warningBody)))
+            }
+
         } else {
             commandOutput = try context.shell(xcodebuild)
-        }
-
-        var output = Output()
-        for line in commandOutput.components(separatedBy: "\n") {
-            if let warningToken = line.range(of: "--- WARNING: ") {
-                let warningBody = line[warningToken.upperBound...]
-                output.warnings.insert(warning(from: String(warningBody)))
+            for line in commandOutput.components(separatedBy: "\n") {
+                if let warningToken = line.range(of: "--- WARNING: ") {
+                    let warningBody = line[warningToken.upperBound...]
+                    output.warnings.insert(warning(from: String(warningBody)))
+                }
             }
         }
 
