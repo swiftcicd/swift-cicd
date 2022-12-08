@@ -4,6 +4,7 @@ import PackageDescription
 
 let package = Package(
     name: "swift-ci",
+    defaultLocalization: "en-uS",
     platforms: [.macOS(.v12)],
     products: [
         .library(name: "SwiftCI", targets: ["SwiftCI"]),

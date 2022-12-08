@@ -12,5 +12,6 @@ struct Demo: Workflow {
 //        print(file.filePath)
 
         try await build(project: "Demo/Demo.xcodeproj", cleanBuild: true, xcbeautify: true)
+        try await exportLocalizations(to: "Demo/Demo Localizations", xcodeProject: "Demo/Demo.xcodeproj", failOnWarnings: true, xcbeautify: true)
     }
 }

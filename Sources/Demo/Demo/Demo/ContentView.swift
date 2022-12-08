@@ -14,6 +14,8 @@ struct ContentView: View {
                 .imageScale(.large)
                 .foregroundColor(.accentColor)
             Text("Hello, world!")
+            Text(NSLocalizedString("copy", value: "One", comment: ""))
+            Text(NSLocalizedString("copy", value: "Two", comment: ""))
         }
         .padding()
     }
