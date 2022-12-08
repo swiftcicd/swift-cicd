@@ -16,7 +16,7 @@ public struct ImportLocalizations: Step {
         var xcodebuild = Command("xcodebuild", "-importLocalizations", "-localizationPath", localizationPath)
         xcodebuild.add("-project", ifLet: xcodeProject ?? context.xcodeProject)
         if xcbeautify {
-            return try await xcbeautify(xcodebuild, options: .init(preserveUnbeautified: true))
+            return try await xcbeautify(xcodebuild)
         } else {
             return try context.shell(xcodebuild)
         }
@@ -64,7 +64,7 @@ public struct ExportLocalizations: Step {
 
         let commandOutput: String
         if xcbeautify {
-            commandOutput = try await xcbeautify(xcodebuild, options: .init(preserveUnbeautified: true))
+            commandOutput = try await xcbeautify(xcodebuild)
         } else {
             commandOutput = try context.shell(xcodebuild)
         }
