@@ -20,6 +20,8 @@ import Logging
 // TODO: Simulator builds
 // - (set the build number to the PR number, change the bundle identifier to the pr number, and the display name) so that PR builds can be identified on simulator
 
+// TODO: Track the current log group in context and end the group before starting a new one.
+// This may also help some logging determine if a new group needs to be started (the current group may be sufficient.)
 
 // TODO: Track which steps were explicitly run by the workflow (current step will be nil when these steps are called.)
 // Or, just show all tasks?
