@@ -61,34 +61,18 @@ public struct ExportLocalizations: Step {
     public func run() async throws -> Output {
         var xcodebuild = Command("xcodebuild", "-exportLocalizations", "-localizationPath", localizationPath)
         xcodebuild.add("-project", ifLet: xcodeProject ?? context.xcodeProject)
+
         let commandOutput: String
-
-        var output = Output()
-
         if xcbeautify {
             commandOutput = try await xcbeautify(xcodebuild, options: .init(preserveUnbeautified: true))
-            for line in commandOutput.components(separatedBy: "\n") {
-                let warningRange: Range<String.Index>
-
-                if let asciiWarning = line.range(of: "[!] ") {
-                    warningRange = asciiWarning
-                } else if let coloredWarning = line.range(of: "⚠️ ") {
-                    warningRange = coloredWarning
-                } else {
-                    continue
-                }
-
-                let warningBody = line[warningRange.upperBound...]
-                output.warnings.insert(warning(from: String(warningBody)))
-            }
-
         } else {
             commandOutput = try context.shell(xcodebuild)
-            for line in commandOutput.components(separatedBy: "\n") {
-                if let warningToken = line.range(of: "--- WARNING: ") {
-                    let warningBody = line[warningToken.upperBound...]
-                    output.warnings.insert(warning(from: String(warningBody)))
-                }
+        }
+
+        var output = Output()
+        for line in commandOutput.components(separatedBy: "\n") {
+            if let warning = warning(from: line) {
+                output.warnings.insert(warning)
             }
         }
 
@@ -103,12 +87,10 @@ public struct ExportLocalizations: Step {
         return output
     }
 
-    func warning(from line: String) -> Output.Warning {
-        let other = Output.Warning.other(String(line))
-
+    func warning(from line: String) -> Output.Warning? {
         if #available(macOS 13.0, iOS 16.0, *) {
-            guard let match = line.wholeMatch(of: #/Key "(?<key>.+)" used with multiple values. Value "(?<kept>.+)" kept. Value "(?<ignored>.+)" ignored./#) else {
-                return other
+            guard let match = line.firstMatch(of: #/Key "(?<key>.+)" used with multiple values. Value "(?<kept>.+)" kept. Value "(?<ignored>.+)" ignored./#) else {
+                return nil
             }
 
             return .duplicate(key: String(match.output.key), valueKept: String(match.output.kept), valueIgnored: String(match.output.ignored))
@@ -119,7 +101,7 @@ public struct ExportLocalizations: Step {
             let ignored = "ignored"
             let regex = try! NSRegularExpression(pattern: "Key \"(?<\(key)>.+)\" used with multiple values. Value \"(?<\(kept)>.+)\" kept. Value \"(?<\(ignored)>.+)\" ignored.")
             guard let match = regex.firstMatch(in: line, range: NSRange(line.startIndex..<line.endIndex, in: line)) else {
-                return other
+                return nil
             }
 
             func captureGroup(named name: String) -> String? {
@@ -130,9 +112,9 @@ public struct ExportLocalizations: Step {
                 return String(line[...][range])
             }
 
-            guard let capturedKey = captureGroup(named: key) else { return other }
-            guard let capturedKept = captureGroup(named: kept) else { return other }
-            guard let capturedIgnored = captureGroup(named: ignored) else { return other }
+            guard let capturedKey = captureGroup(named: key) else { return nil }
+            guard let capturedKept = captureGroup(named: kept) else { return nil }
+            guard let capturedIgnored = captureGroup(named: ignored) else { return nil }
 
             return .duplicate(key: capturedKey, valueKept: capturedKept, valueIgnored: capturedIgnored)
         }
