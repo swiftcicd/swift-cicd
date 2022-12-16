@@ -99,15 +99,15 @@ public struct SSHAgent: Step {
         let publicKeys = try context.shell("ssh-add", "-L", quiet: true).components(separatedBy: "\n")
         for publicKey in publicKeys {
             var ownerAndRepo: String?
-            if #available(macOS 13.0, *) {
-                let match = publicKey.lowercased().firstMatch(of: #/\bgithub\.com[:/]([_.a-z0-9-]+\/[_.a-z0-9-]+)/#)
-                ownerAndRepo = match.map { String($0.output.1) }
-            } else {
+//            if #available(macOS 13.0, *) {
+//                let match = publicKey.lowercased().firstMatch(of: #/\bgithub\.com[:/]([_.a-z0-9-]+\/[_.a-z0-9-]+)/#)
+//                ownerAndRepo = match.map { String($0.output.1) }
+//            } else {
                 if let githubSlash = publicKey.lowercased().range(of: "github.com/"),
                    publicKey.rangeOfCharacter(from: CharacterSet(charactersIn: "/"), range: githubSlash.upperBound..<publicKey.endIndex) != nil {
                     ownerAndRepo = String(publicKey[publicKey.index(after: githubSlash.upperBound)...])
                 }
-            }
+//            }
 
             guard var ownerAndRepo else {
                 if shouldLogPublicKey {

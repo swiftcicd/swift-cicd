@@ -88,14 +88,14 @@ public struct ExportLocalizations: Step {
     }
 
     func warning(from line: String) -> Output.Warning? {
-        if #available(macOS 13.0, iOS 16.0, *) {
-            guard let match = line.firstMatch(of: #/Key "(?<key>.+)" used with multiple values. Value "(?<kept>.+)" kept. Value "(?<ignored>.+)" ignored./#) else {
-                return nil
-            }
-
-            return .duplicate(key: String(match.output.key), valueKept: String(match.output.kept), valueIgnored: String(match.output.ignored))
-
-        } else {
+//        if #available(macOS 13.0, iOS 16.0, *) {
+//            guard let match = line.firstMatch(of: #/Key "(?<key>.+)" used with multiple values. Value "(?<kept>.+)" kept. Value "(?<ignored>.+)" ignored./#) else {
+//                return nil
+//            }
+//
+//            return .duplicate(key: String(match.output.key), valueKept: String(match.output.kept), valueIgnored: String(match.output.ignored))
+//
+//        } else {
             let key = "key"
             let kept = "kept"
             let ignored = "ignored"
@@ -117,7 +117,7 @@ public struct ExportLocalizations: Step {
             guard let capturedIgnored = captureGroup(named: ignored) else { return nil }
 
             return .duplicate(key: capturedKey, valueKept: capturedKept, valueIgnored: capturedIgnored)
-        }
+//        }
     }
 }
 
