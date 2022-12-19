@@ -20,7 +20,7 @@ public protocol Platform: ContextAware {
     static var isRunningCI: Bool { get }
 
     /// An absolute path to the workspace on the CI platform's machine.
-    static func workspace() throws -> AbsolutePath
+    static var workspace: String { get throws }
 
     /// Whether the platform supports grouping log messages together.
     static var supportsLogGroups: Bool { get }
@@ -50,9 +50,11 @@ extension ContextValues {
 struct UndetectedPlatform: Platform {
     static let name = "Undetected"
     static let isRunningCI = false
-    static func workspace() throws -> AbsolutePath {
-        struct UndetectedPlatformWorkspaceError: Error {}
-        throw UndetectedPlatformWorkspaceError()
+    static var workspace: String {
+        get throws {
+            struct UndetectedPlatformWorkspaceError: Error {}
+            throw UndetectedPlatformWorkspaceError()
+        }
     }
     static let supportsLogGroups = false
     static func startLogGroup(named groupName: String) {}

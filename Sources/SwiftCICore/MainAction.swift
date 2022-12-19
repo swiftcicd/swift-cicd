@@ -16,7 +16,7 @@ extension MainAction {
                 let platform = try detectPlatform()
                 logger.info("Running on \(platform.name)")
                 try await ContextValues.withValue(\.platform, platform) {
-                    try context.fileSystem.changeCurrentWorkingDirectory(to: platform.workspace())
+                    try context.files.changeCurrentDirectory(platform.workspace)
                     let mainAction = self.init()
                     try await mainAction.action(mainAction)
                     await cleanUp(error: nil)
@@ -69,25 +69,5 @@ extension MainAction {
                 }
             }
         }
-    }
-}
-
-extension ContextValues {
-    enum WorkspaceKey: ContextKey {
-        static let defaultValue: AbsolutePath = {
-            do {
-                let workspace = try ContextValues.current.environment.github.$workspace.require()
-                return try AbsolutePath(validating: workspace)
-            } catch {
-                // TODO: Should this fatalError?
-                // Falling back on the temporary directory is probably the best we can do.
-                return try! AbsolutePath(validating: FileManager.default.temporaryDirectory.path)
-            }
-        }()
-    }
-
-    public var workspace: AbsolutePath {
-        get { self[WorkspaceKey.self] }
-        set { self[WorkspaceKey.self] = newValue }
     }
 }

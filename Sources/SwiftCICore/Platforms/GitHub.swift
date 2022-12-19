@@ -8,9 +8,10 @@ public enum GitHubPlatform: Platform {
         context.environment.github.isCI
     }
 
-    public static func workspace() throws -> AbsolutePath {
-        let workspace = try context.environment.github.$workspace.require()
-        return try AbsolutePath(validating: workspace)
+    public static var workspace: String {
+        get throws {
+            try context.environment.github.$workspace.require()
+        }
     }
 
     // https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#grouping-log-lines
@@ -56,8 +57,7 @@ public extension ProcessEnvironment.GitHub {
 
             if context.environment.github.isCI {
                 let eventPath = try context.environment.github.$eventPath.require()
-                let eventContents = try context.fileSystem.readFileContents(AbsolutePath(validating: eventPath))
-                contents = eventContents.data
+                contents = try context.files.contents(at: eventPath)
             } else {
                 let stringContents = try context.environment.require("GITHUB_EVENT_CONTENTS")
                 contents = stringContents.data

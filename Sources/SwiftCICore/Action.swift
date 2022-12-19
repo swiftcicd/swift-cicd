@@ -24,14 +24,17 @@ public extension Action {
 
         return try await ContextValues.withValue(\.currentStackFrame, frame) {
             // Restore current working directory after the action runs.
-            let cachedCurrentDirectory = context.fileSystem.currentWorkingDirectory
+            let cachedCurrentDirectory = context.files.currentDirectoryPath
+            defer {
+                do {
+                    try context.files.changeCurrentDirectory(cachedCurrentDirectory)
+                } catch {
+                    logger.error("Failed to restore current working directory")
+                }
+            }
 
             let output = try await context.performInLogGroup(named: action.name) {
                 try await action.run()
-            }
-
-            if let cachedCurrentDirectory {
-                try context.fileSystem.changeCurrentWorkingDirectory(to: cachedCurrentDirectory)
             }
 
             return output

@@ -38,8 +38,8 @@ public struct Xcbeautify: Action {
         }
     }
 
-    private static var binPath: AbsolutePath?
-    @State var xcbeautifyDirectory: AbsolutePath?
+    private static var binPath: String?
+    @State var xcbeautifyDirectory: String?
 
     let command: ShellCommand
     let options: Options
@@ -54,7 +54,7 @@ public struct Xcbeautify: Action {
             try await install()
         }
 
-        let binPath = Self.binPath?.pathString ?? "xcbeautify"
+        let binPath = Self.binPath ?? "xcbeautify"
 
         var xcbeautify = ShellCommand("set -o pipefail && \(command) | \(binPath)")
         xcbeautify.append("--quiet", if: options.quiet)
@@ -85,21 +85,21 @@ public struct Xcbeautify: Action {
     }
 
     func install() async throws {
-        let currentDirectory = try context.fileSystem.requireCurrentWorkingDirectory()
+        let currentDirectory = context.files.currentDirectoryPath
         defer {
             do {
-                try context.fileSystem.changeCurrentWorkingDirectory(to: currentDirectory)
+                try context.files.changeCurrentDirectory(currentDirectory)
             } catch {
                 logger.error("Failed to return to current directory '\(currentDirectory)' after installing xcbeautify")
             }
         }
 
-        let temp = try context.fileSystem.tempDirectory
-        try context.fileSystem.changeCurrentWorkingDirectory(to: temp)
+        let temp = context.files.temporaryDirectory.path
+        try context.files.changeCurrentDirectory(temp)
         let xcbeautify = temp/"xcbeautify"
 
-        if context.fileSystem.exists(xcbeautify) {
-            try context.fileSystem.removeFileTree(xcbeautify)
+        if context.files.fileExists(atPath: xcbeautify) {
+            try context.files.removeItem(atPath: xcbeautify)
         }
 
 //        try context.shell("git clone https://github.com/tuist/xcbeautify.git")
@@ -109,15 +109,15 @@ public struct Xcbeautify: Action {
         // 'make install' needs sudo permissions to copy into /usr/local/bin/
         // So instead of running install, we'll build the xcbeautify and then cache its bin path
         let flags = "--configuration release --disable-sandbox"
-        try context.fileSystem.changeCurrentWorkingDirectory(to: xcbeautify)
+        try context.files.changeCurrentDirectory(xcbeautify)
         try context.shell("swift build \(flags)")
         let binPath = try context.shell("swift build --show-bin-path \(flags)")
-        Self.binPath = try AbsolutePath(validating: binPath)/"xcbeautify"
+        Self.binPath = try binPath/"xcbeautify"
     }
 
     func uninstall() throws {
         if let xcbeautifyDirectory {
-            try context.fileSystem.removeFileTree(xcbeautifyDirectory)
+            try context.files.removeItem(atPath: xcbeautifyDirectory)
         }
     }
 }
