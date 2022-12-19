@@ -11,43 +11,43 @@ public struct ShellCommand: ExpressibleByStringLiteral, ExpressibleByStringInter
         self.init(stringLiteral: staticString)
     }
 
-    public init(_ literal: Literal) {
-        self.command = literal.value
+    public init(_ component: Component) {
+        self.command = component.value
     }
 
     public init(stringLiteral value: StaticString) {
         self.command = "\(value)"
     }
 
-    public init(stringInterpolation: Literal.StringInterpolation) {
+    public init(stringInterpolation: Component.StringInterpolation) {
         self.command = stringInterpolation.output
     }
 
-    public mutating func append(_ literal: Literal) {
-        command.append(literal.value)
+    public mutating func append(_ component: Component) {
+        command.append(component.value)
     }
 
-    public mutating func append(_ literal: Literal?) {
-        if let literal {
-            append(literal)
+    public mutating func append(_ component: Component?) {
+        if let component {
+            append(component)
         }
     }
 
-    public mutating func append(_ literal: Literal, if flag: Bool) {
+    public mutating func append(_ component: Component, if flag: Bool) {
         if flag {
-            append(literal)
+            append(component)
         }
     }
 
-    public mutating func append(_ option: Literal, _ separator: String = " ", ifLet value: String?) {
+    public mutating func append(_ component: Component, _ separator: String = " ", ifLet value: Component?) {
         if let value {
-            command.append("\(option.value)\(separator)\(value)")
+            command.append("\(component.value)\(separator)\(value)")
         }
     }
 }
 
 extension ShellCommand {
-    public struct Literal: ExpressibleByStringLiteral, ExpressibleByStringInterpolation {
+    public struct Component: ExpressibleByStringLiteral, ExpressibleByStringInterpolation {
         public struct StringInterpolation: StringInterpolationProtocol {
             var output = ""
 
@@ -61,6 +61,10 @@ extension ShellCommand {
 
             public mutating func appendInterpolation(_ command: ShellCommand) {
                 output.append(command.command)
+            }
+
+            public mutating func appendInterpolation(unescaped: String) {
+                output.append(unescaped)
             }
 
             public mutating func appendInterpolation(_ argument: String, escapingWith escapeStyle: ArgumentEscapeStyle = .backslash) {
@@ -81,10 +85,6 @@ extension ShellCommand {
 
         public init(stringInterpolation: StringInterpolation) {
             self.value = stringInterpolation.output
-        }
-
-        init(value: String) {
-            self.value = value
         }
     }
 }
