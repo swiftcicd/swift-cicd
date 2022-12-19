@@ -24,7 +24,7 @@ public struct ShellCommand: ExpressibleByStringLiteral, ExpressibleByStringInter
     }
 
     public mutating func append(_ component: Component) {
-        command.append(component.value)
+        command.append(" \(component.value)")
     }
 
     public mutating func append(_ component: Component?) {
@@ -41,10 +41,11 @@ public struct ShellCommand: ExpressibleByStringLiteral, ExpressibleByStringInter
 
     public mutating func append(_ component: Component, _ separator: String = " ", ifLet value: Component?) {
         if let value {
-            command.append("\(component.value)\(separator)\(value)")
+            command.append(" \(component.value)\(separator)\(value)")
         }
     }
 
+    @_disfavoredOverload
     public mutating func append(_ component: Component, _ separator: String = " ", ifLet value: String?) {
         append(component, separator, ifLet: value.map { "\($0)" })
     }
