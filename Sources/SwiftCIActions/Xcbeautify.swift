@@ -1,3 +1,5 @@
+import SwiftCICore
+
 public struct Xcbeautify: Action {
     public struct Options {
         /// Only print tasks that have warnings or errors.
@@ -108,10 +110,10 @@ public struct Xcbeautify: Action {
 
         // 'make install' needs sudo permissions to copy into /usr/local/bin/
         // So instead of running install, we'll build the xcbeautify and then cache its bin path
-        let flags = "--configuration release --disable-sandbox"
         try context.fileManager.changeCurrentDirectory(xcbeautify)
-        try context.shell("swift build \(flags)")
-        let binPath = try context.shell("swift build --show-bin-path \(flags)")
+        let flags = "--configuration release --disable-sandbox"
+        try context.shell("swift build \(unescaped: flags)")
+        let binPath = try context.shell("swift build --show-bin-path \(unescaped: flags)")
         Self.binPath = binPath/"xcbeautify"
     }
 
