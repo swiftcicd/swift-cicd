@@ -11,12 +11,12 @@ public extension ProcessEnvironment.GitHub {
 
 public extension ContextValues {
     enum GitHubAPIKey: ContextKey {
-        static let defaultValue: GitHubAPI = {
-    //        if let token = ContextValues.shared.environment.github.token {
-    //            return GitHubAPI(TokenConfiguration(bearerToken: token))
-    //        } else {
-    //            return GitHubAPI()
-    //        }
+        public static let defaultValue: GitHubAPI = {
+            if let token = ContextValues.current.environment.github.token {
+                return GitHubAPI(TokenConfiguration(bearerToken: token))
+            } else {
+                return GitHubAPI()
+            }
         }()
     }
 

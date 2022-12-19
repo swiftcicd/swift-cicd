@@ -1,10 +1,12 @@
 // Modeling this code off of OctoKit's own sources
 
-import Foundation
 #if canImport(FoundationNetworking)
 import FoundationNetworking
+#else
+import Foundation
 #endif
 import OctoKit
+import SwiftCICore
 import RequestKit
 
 // MARK: Model
@@ -71,7 +73,7 @@ enum JobsRouter: Router {
     }
 }
 
-public extension StepRunner {
+public extension Action {
     func getCurrentWorkflowRunJobs() async throws -> [Job] {
         let (owner, repository) = try context.environment.github.requireOwnerRepository()
         let runID = try context.environment.github.$runID.require()
@@ -83,7 +85,7 @@ public extension StepRunner {
         let jobs = try await getCurrentWorkflowRunJobs()
         let jobName = try jobName ?? context.environment.github.$job.require()
         guard let job = jobs.first(where: { $0.name == jobName }) else {
-            throw StepError("Couldn't find current workflow job named '\(jobName)'")
+            throw ActionError("Couldn't find current workflow job named '\(jobName)'")
         }
         return job
     }
