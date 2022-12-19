@@ -112,7 +112,7 @@ public struct Xcbeautify: Action {
         try context.files.changeCurrentDirectory(xcbeautify)
         try context.shell("swift build \(flags)")
         let binPath = try context.shell("swift build --show-bin-path \(flags)")
-        Self.binPath = try binPath/"xcbeautify"
+        Self.binPath = binPath/"xcbeautify"
     }
 
     func uninstall() throws {

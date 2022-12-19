@@ -32,7 +32,7 @@ public struct EnvironmentSecret: Secret {
     }
 
     public func get() async throws -> Data {
-        guard var value = ProcessInfo.processInfo.environment[key] else {
+        guard let value = ProcessInfo.processInfo.environment[key] else {
             throw MissingEnvironmentSecretError(key: key)
         }
 
