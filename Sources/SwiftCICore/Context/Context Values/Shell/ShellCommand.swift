@@ -1,0 +1,126 @@
+public struct ShellCommand: ExpressibleByStringLiteral, ExpressibleByStringInterpolation, CustomStringConvertible {
+    public private(set) var command: String
+
+    public var description: String { command }
+
+    internal init() {
+        self.command = ""
+    }
+
+    public init(_ staticString: StaticString) {
+        self.init(stringLiteral: staticString)
+    }
+
+    public init(_ literal: Literal) {
+        self.command = literal.value
+    }
+
+    public init(stringLiteral value: StaticString) {
+        self.command = "\(value)"
+    }
+
+    public init(stringInterpolation: Literal.StringInterpolation) {
+        self.command = stringInterpolation.output
+    }
+
+    public mutating func append(_ literal: Literal) {
+        command.append(literal.value)
+    }
+
+    public mutating func append(_ literal: Literal?) {
+        if let literal {
+            append(literal)
+        }
+    }
+
+    public mutating func append(_ literal: Literal, if flag: Bool) {
+        if flag {
+            append(literal)
+        }
+    }
+
+    public mutating func append(_ option: Literal, _ separator: String = " ", ifLet value: String?) {
+        if let value {
+            command.append("\(option.value)\(separator)\(value)")
+        }
+    }
+}
+
+extension ShellCommand {
+    public struct Literal: ExpressibleByStringLiteral, ExpressibleByStringInterpolation {
+        public struct StringInterpolation: StringInterpolationProtocol {
+            var output = ""
+
+            public init(literalCapacity: Int, interpolationCount: Int) {
+                output.reserveCapacity(literalCapacity + interpolationCount * 2)
+            }
+
+            public mutating func appendLiteral(_ literal: StaticString) {
+                output.append("\(literal)")
+            }
+
+            public mutating func appendInterpolation(_ command: ShellCommand) {
+                output.append(command.command)
+            }
+
+            public mutating func appendInterpolation(_ argument: String, escapingWith escapeStyle: ArgumentEscapeStyle = .backslash) {
+                guard argument.contains(" ") else {
+                    output.append(argument)
+                    return
+                }
+
+                output.append(escapeStyle.escape(argument: argument))
+            }
+        }
+
+        public let value: String
+
+        public init(stringLiteral value: StaticString) {
+            self.value = "\(value)"
+        }
+
+        public init(stringInterpolation: StringInterpolation) {
+            self.value = stringInterpolation.output
+        }
+
+        init(value: String) {
+            self.value = value
+        }
+    }
+}
+
+public protocol ArgumentEscapeStyle {
+    func escape(argument: String) -> String
+}
+
+// TODO: Check if the argument is already escaped before esacping it.
+
+public struct SingleQuoteArgumentEscapeStyle: ArgumentEscapeStyle {
+    public func escape(argument: String) -> String {
+        "'\(argument)'"
+    }
+}
+
+public extension ArgumentEscapeStyle where Self == SingleQuoteArgumentEscapeStyle {
+    static var singleQuote: Self { Self() }
+}
+
+public struct DoubleQuoteArgumentEscapeStyle: ArgumentEscapeStyle {
+    public func escape(argument: String) -> String {
+        "\"\(argument)\""
+    }
+}
+
+public extension ArgumentEscapeStyle where Self == DoubleQuoteArgumentEscapeStyle {
+    static var doubleQuote: Self { Self() }
+}
+
+public struct BackslashArgumentEscapeStyle: ArgumentEscapeStyle {
+    public func escape(argument: String) -> String {
+        argument.replacingOccurrences(of: " ", with: "\\ ")
+    }
+}
+
+public extension ArgumentEscapeStyle where Self == BackslashArgumentEscapeStyle {
+    static var backslash: Self { Self() }
+}

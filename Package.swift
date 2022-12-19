@@ -8,6 +8,9 @@ let package = Package(
     platforms: [.macOS(.v12)],
     products: [
         .library(name: "SwiftCI", targets: ["SwiftCI"]),
+        .library(name: "SwiftCICore", targets: ["SwiftCICore"]),
+        .library(name: "SwiftCIActions", targets: ["SwiftCIActions"]),
+        .library(name: "SwiftCIPlatforms", targets: ["SwiftCIPlatforms"]),
         .executable(name: "Demo", targets: ["Demo"])
     ],
     dependencies: [
@@ -23,19 +26,45 @@ let package = Package(
         .target(
             name: "SwiftCI",
             dependencies: [
-                .product(name: "Arguments", package: "swift-arguments"),
+                .target(name: "SwiftCIActions"),
+                .target(name: "SwiftCICore"),
+                .target(name: "SwiftCIPlatforms")
+            ]
+       ),
+        .target(
+            name: "SwiftCIActions",
+            dependencies: [
+                .target(name: "SwiftCICore"),
+                .target(name: "SwiftCIPlatforms"),
                 .product(name: "JWTKit", package: "jwt-kit"),
-                .product(name: "Logging", package: "swift-log"),
                 .product(name: "OctoKit", package: "octokit.swift"),
                 .product(name: "ShellOut", package: "ShellOut"),
-                .product(name: "SwiftEnvironment", package: "swift-environment"),
                 .product(name: "SwiftPR", package: "swift-pr"),
+            ]
+        ),
+        .target(
+            name: "SwiftCICore",
+            dependencies: [
+                .product(name: "Arguments", package: "swift-arguments"),
+                .product(name: "Logging", package: "swift-log"),
+                .product(name: "ShellOut", package: "ShellOut"),
+                .product(name: "SwiftEnvironment", package: "swift-environment"),
+
+            ]
+        ),
+        .target(
+            name: "SwiftCIPlatforms",
+            dependencies: [
+                .target(name: "SwiftCICore"),
+                .product(name: "Logging", package: "swift-log"),
+                .product(name: "OctoKit", package: "octokit.swift"),
+                .product(name: "SwiftEnvironment", package: "swift-environment"),
             ]
         ),
         .testTarget(
             name: "SwiftCITests",
             dependencies: ["SwiftCI"]
         ),
-        .executableTarget(name: "Demo", dependencies: ["SwiftCI"], sources: ["DemoWorkflow.swift"])
+        .executableTarget(name: "Demo", dependencies: ["SwiftCICore"])
     ]
 )
