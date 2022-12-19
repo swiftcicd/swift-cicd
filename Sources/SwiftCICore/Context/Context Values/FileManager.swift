@@ -12,7 +12,7 @@ extension ContextValues {
         static let defaultValue = FileManager.default
     }
 
-    public var files: FileManager {
+    public var fileManager: FileManager {
         get { self[FileManagerKey.self] }
         set { self[FileManagerKey.self] = newValue }
     }

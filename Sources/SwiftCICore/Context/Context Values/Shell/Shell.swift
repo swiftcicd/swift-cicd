@@ -1,19 +1,20 @@
 import ShellOut
 
 public struct Shell {
-    @Context(\.files) var files
+    @Context(\.fileManager) var fileManager
     @Context(\.logger) var logger
 
     @discardableResult
     public func callAsFunction(_ command: ShellCommand, log: Bool = true, quiet: Bool = false) throws -> String {
+        let currentDirectory = fileManager.currentDirectoryPath
         // Always log trace level
         if logger.logLevel == .trace {
-            logger.debug("$ \(command) (at: \(files.currentDirectoryPath)")
+            logger.debug("$ \(command) (at: \(currentDirectory)")
         } else if log {
             logger.debug("$ \(command)")
         }
 
-        let output = try shellOut(to: command.command, at: files.currentDirectoryPath)
+        let output = try shellOut(to: command.command, at: currentDirectory)
 
         // TODO: Make output destination customizable via handles
         if !quiet {

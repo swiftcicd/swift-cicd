@@ -24,10 +24,10 @@ public extension Action {
 
         return try await ContextValues.withValue(\.currentStackFrame, frame) {
             // Restore current working directory after the action runs.
-            let cachedCurrentDirectory = context.files.currentDirectoryPath
+            let cachedCurrentDirectory = context.fileManager.currentDirectoryPath
             defer {
                 do {
-                    try context.files.changeCurrentDirectory(cachedCurrentDirectory)
+                    try context.fileManager.changeCurrentDirectory(cachedCurrentDirectory)
                 } catch {
                     logger.error("Failed to restore current working directory")
                 }
@@ -39,27 +39,5 @@ public extension Action {
 
             return output
         }
-    }
-}
-
-@propertyWrapper
-public struct State<T> {
-    private class Storage {
-        var state: T
-
-        init(state: T) {
-            self.state = state
-        }
-    }
-
-    private let storage: Storage
-
-    public init(wrappedValue: T) {
-        self.storage = Storage(state: wrappedValue)
-    }
-
-    public var wrappedValue: T {
-        get { storage.state }
-        nonmutating set { storage.state = newValue }
     }
 }

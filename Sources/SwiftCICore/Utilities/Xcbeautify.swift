@@ -85,21 +85,21 @@ public struct Xcbeautify: Action {
     }
 
     func install() async throws {
-        let currentDirectory = context.files.currentDirectoryPath
+        let currentDirectory = context.fileManager.currentDirectoryPath
         defer {
             do {
-                try context.files.changeCurrentDirectory(currentDirectory)
+                try context.fileManager.changeCurrentDirectory(currentDirectory)
             } catch {
                 logger.error("Failed to return to current directory '\(currentDirectory)' after installing xcbeautify")
             }
         }
 
-        let temp = context.files.temporaryDirectory.path
-        try context.files.changeCurrentDirectory(temp)
+        let temp = context.fileManager.temporaryDirectory.path
+        try context.fileManager.changeCurrentDirectory(temp)
         let xcbeautify = temp/"xcbeautify"
 
-        if context.files.fileExists(atPath: xcbeautify) {
-            try context.files.removeItem(atPath: xcbeautify)
+        if context.fileManager.fileExists(atPath: xcbeautify) {
+            try context.fileManager.removeItem(atPath: xcbeautify)
         }
 
 //        try context.shell("git clone https://github.com/tuist/xcbeautify.git")
@@ -109,7 +109,7 @@ public struct Xcbeautify: Action {
         // 'make install' needs sudo permissions to copy into /usr/local/bin/
         // So instead of running install, we'll build the xcbeautify and then cache its bin path
         let flags = "--configuration release --disable-sandbox"
-        try context.files.changeCurrentDirectory(xcbeautify)
+        try context.fileManager.changeCurrentDirectory(xcbeautify)
         try context.shell("swift build \(flags)")
         let binPath = try context.shell("swift build --show-bin-path \(flags)")
         Self.binPath = binPath/"xcbeautify"
@@ -117,7 +117,7 @@ public struct Xcbeautify: Action {
 
     func uninstall() throws {
         if let xcbeautifyDirectory {
-            try context.files.removeItem(atPath: xcbeautifyDirectory)
+            try context.fileManager.removeItem(atPath: xcbeautifyDirectory)
         }
     }
 }

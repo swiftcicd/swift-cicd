@@ -50,6 +50,14 @@ final class ActionStack {
         }
         return Trace(frames: trace.reversed())
     }
+
+    func traceLastFrame() -> Trace? {
+        guard let lastFrame = peak() else {
+            return nil
+        }
+
+        return trace(frame: lastFrame)
+    }
 }
 
 extension ContextValues {

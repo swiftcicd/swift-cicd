@@ -57,7 +57,7 @@ public extension ProcessEnvironment.GitHub {
 
             if context.environment.github.isCI {
                 let eventPath = try context.environment.github.$eventPath.require()
-                contents = try context.files.contents(at: eventPath)
+                contents = try context.fileManager.contents(at: eventPath)
             } else {
                 let stringContents = try context.environment.require("GITHUB_EVENT_CONTENTS")
                 contents = stringContents.data

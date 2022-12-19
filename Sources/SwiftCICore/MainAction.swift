@@ -16,18 +16,19 @@ extension MainAction {
                 let platform = try detectPlatform()
                 logger.info("Running on \(platform.name)")
                 try await ContextValues.withValue(\.platform, platform) {
-                    try context.files.changeCurrentDirectory(platform.workspace)
+                    try context.fileManager.changeCurrentDirectory(platform.workspace)
                     let mainAction = self.init()
                     try await mainAction.action(mainAction)
                     await cleanUp(error: nil)
                 }
                 exit(0)
             } catch {
-                let failedFrame = context.stack.peak()!
-                let trace = context.stack.trace(frame: failedFrame)
+                let trace = context.stack.traceLastFrame()
                 logger.error("\n❌ \(errorMessage(error: error))")
                 await cleanUp(error: error)
-                logger.error("\n❌ An error occurred while running action: \(trace)")
+                if let trace {
+                    logger.error("\n❌ An error occurred while running action: \(trace)")
+                }
                 exit(1)
             }
         }
