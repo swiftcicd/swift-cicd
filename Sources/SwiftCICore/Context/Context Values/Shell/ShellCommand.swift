@@ -44,6 +44,10 @@ public struct ShellCommand: ExpressibleByStringLiteral, ExpressibleByStringInter
             command.append("\(component.value)\(separator)\(value)")
         }
     }
+
+    public mutating func append(_ component: Component, _ separator: String = " ", ifLet value: String?) {
+        append(component, separator, ifLet: value.map { "\($0)" })
+    }
 }
 
 extension ShellCommand {
