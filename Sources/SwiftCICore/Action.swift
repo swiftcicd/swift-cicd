@@ -33,7 +33,7 @@ public extension Action {
                 }
             }
 
-            let output = try await context.performInLogGroup(named: action.name) {
+            let output = try await context.performInLogGroup(named: "Action: \(action.name)") {
                 try await action.run()
             }
 
