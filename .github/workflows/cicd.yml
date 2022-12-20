@@ -11,9 +11,6 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - uses: swift-actions/setup-swift@v1
-    - name: versions
-      run: |
-        swift --version
-        xcode-select -p
+    - run: xcode-select -s /Applications/Xcode_14.1.app
     - name: swift-ci
       run: swift run --package-path .github/workflows/cicd
