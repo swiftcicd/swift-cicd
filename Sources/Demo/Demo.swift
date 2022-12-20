@@ -14,7 +14,7 @@ struct Demo: MainAction {
         let name = "Clay Ellis"
         let greeting = "Hello there!"
         var command: ShellCommand = "echo \(greeting)"
-        command.append("\(name, escapingWith: .doubleQuote)")
+        command.append("\(name, escapingWith: .doubleQuotes)")
         let output = try context.shell(command)
         logger.info("Output: \(output)")
     }
