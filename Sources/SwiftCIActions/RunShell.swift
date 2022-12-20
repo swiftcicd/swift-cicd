@@ -17,6 +17,7 @@ public struct RunShell: Action {
 }
 
 public extension Action {
+    @discardableResult
     func shell(_ command: ShellCommand) async throws -> String {
         try await action(RunShell(command: command))
     }

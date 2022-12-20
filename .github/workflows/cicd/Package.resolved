@@ -1,12 +1,93 @@
 {
   "pins" : [
     {
+      "identity" : "jwt-kit",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/vapor/jwt-kit",
+      "state" : {
+        "revision" : "87ce13a1df913ba4d51cf00606df7ef24d455571",
+        "version" : "4.7.0"
+      }
+    },
+    {
+      "identity" : "octokit.swift",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/nerdishbynature/octokit.swift",
+      "state" : {
+        "branch" : "main",
+        "revision" : "62e4eb3e14f2c77535f121c41e8bed14cf0d0b13"
+      }
+    },
+    {
+      "identity" : "requestkit",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/nerdishbynature/RequestKit.git",
+      "state" : {
+        "revision" : "8b0258ea2a4345cbcac90509b764faacea12efb0",
+        "version" : "3.2.1"
+      }
+    },
+    {
       "identity" : "shellout",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/JohnSundell/ShellOut",
       "state" : {
         "revision" : "e1577acf2b6e90086d01a6d5e2b8efdaae033568",
         "version" : "2.3.0"
+      }
+    },
+    {
+      "identity" : "swift-arguments",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/clayellis/swift-arguments",
+      "state" : {
+        "branch" : "main",
+        "revision" : "9f402f7ba4f743639ad816c7a14ca99e09422204"
+      }
+    },
+    {
+      "identity" : "swift-ci",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/clayellis/swift-ci",
+      "state" : {
+        "branch" : "action",
+        "revision" : "9cd2c23444592722bf692c11d6e408f65ca0076d"
+      }
+    },
+    {
+      "identity" : "swift-crypto",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/apple/swift-crypto.git",
+      "state" : {
+        "revision" : "92a04c10fc5ce0504f8396aac7392126033e547c",
+        "version" : "2.2.2"
+      }
+    },
+    {
+      "identity" : "swift-environment",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/clayellis/swift-environment",
+      "state" : {
+        "branch" : "main",
+        "revision" : "c36e1b614d66b40475a3a27fd9fa95f313592370"
+      }
+    },
+    {
+      "identity" : "swift-log",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/apple/swift-log",
+      "state" : {
+        "revision" : "6fe203dc33195667ce1759bf0182975e4653ba1c",
+        "version" : "1.4.4"
+      }
+    },
+    {
+      "identity" : "swift-pr",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/clayellis/swift-pr",
+      "state" : {
+        "branch" : "main",
+        "revision" : "1d9411ca34f964c25c55b7048c05fbf25f586ec9"
       }
     }
   ],
