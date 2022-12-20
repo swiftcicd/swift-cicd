@@ -12,15 +12,14 @@ extension MainAction {
     public static func main() async {
         await ContextValues.withValues { $0.logger.logLevel = Self.logLevel } operation: {
             do {
-                logEnvironment()
-                let platform = try detectPlatform()
+                let platform = try context.platform
+                try context.endCurrentLogGroup()
+                try logEnvironment()
                 logger.info("Running on \(platform.name)")
-                try await ContextValues.withValue(\.platform, platform) {
-                    try context.fileManager.changeCurrentDirectory(platform.workspace)
-                    let mainAction = self.init()
-                    try await mainAction.action(mainAction)
-                    await cleanUp(error: nil)
-                }
+                try context.fileManager.changeCurrentDirectory(platform.workspace)
+                let mainAction = self.init()
+                try await mainAction.action(mainAction)
+                await cleanUp(error: nil)
                 exit(0)
             } catch {
                 let trace = context.stack.traceLastFrame()
@@ -34,8 +33,8 @@ extension MainAction {
         }
     }
 
-    static func logEnvironment() {
-        context.performInLogGroup(named: "Environment") {
+    static func logEnvironment() throws {
+        try context.performInLogGroup(named: "Environment") {
             logger.debug("""
                 Environment:
                 \(context.environment._dump().indented())
@@ -60,15 +59,19 @@ extension MainAction {
     }
 
     static func cleanUp(error: Error?) async {
-        await context.performInLogGroup(named: "Cleaning up...") {
-            while let action = context.stack.pop()?.action {
-                do {
-                    logger.info("Cleaning up after action: \(action.name).")
-                    try await action.cleanUp(error: error)
-                } catch {
-                    logger.error("Failed to clean up after action: \(action.name). Error: \(error)")
+        do {
+            try await context.performInLogGroup(named: "Cleaning up...") {
+                while let action = context.stack.pop()?.action {
+                    do {
+                        logger.info("Cleaning up after action: \(action.name).")
+                        try await action.cleanUp(error: error)
+                    } catch {
+                        logger.error("Failed to clean up after action: \(action.name). Error: \(error)")
+                    }
                 }
             }
+        } catch {
+            logger.error("Failed to clean up: \(error)")
         }
     }
 }

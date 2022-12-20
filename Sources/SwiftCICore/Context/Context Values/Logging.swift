@@ -17,110 +17,38 @@ extension ContextValues {
     }
 }
 
-public struct LogGroup {
-    public let name: String
-
-    public init(name: String) {
-        self.name = name
-    }
-}
-
 extension ContextValues {
-    enum LogGroupKey: ContextKey {
-        static var defaultValue: LogGroup?
+    func startLogGroup(name: String) throws {
+        let platform = try self.platform
+        guard platform.supportsLogGroups else { return }
+        platform.startLogGroup(named: name)
     }
 
-    public var currentLogGroup: LogGroup? {
-        get { self[LogGroupKey.self] }
-        set { self[LogGroupKey.self] = newValue }
-    }
-
-//    func startLogGroup(name: String) {
-//        guard platform.supportsLogGroups else { return }
-//        currentLogGroup = LogGroup(name: name)
-//        platform.startLogGroup(named: name)
-//    }
-//
-//    func endLogGroup() {
-//        guard platform.supportsLogGroups, let currentLogGroup else { return }
-//        self.currentLogGroup = nil
-//        platform.endLogGroup(named: currentLogGroup.name)
-//    }
-
-    public enum PerformInLogGroupOption {
-        case endCurrentLogGroup
-        case keepCurrentLogGroup
+    func endCurrentLogGroup() throws {
+        let platform = try self.platform
+        guard platform.supportsLogGroups else { return }
+        platform.endCurrentLogGroup()
     }
 
     @discardableResult
-    public func performInLogGroup<Result>(named name: String, option: PerformInLogGroupOption = .endCurrentLogGroup, operation: () throws -> Result) rethrows -> Result {
-        var logGroup = LogGroup(name: name)
-        var shouldStartNewGroup = true
+    public func performInLogGroup<Result>(named name: String, operation: () throws -> Result) throws -> Result {
+        try platform.startLogGroup(named: name)
 
-        if let currentLogGroup {
-            switch option {
-            case .endCurrentLogGroup:
-                platform.endLogGroup(named: currentLogGroup.name)
-            case .keepCurrentLogGroup:
-                logGroup = currentLogGroup
-                shouldStartNewGroup = false
-            }
+        defer {
+            try? platform.endCurrentLogGroup()
         }
 
-        return try ContextValues.withValue(\.currentLogGroup, logGroup) {
-            if shouldStartNewGroup {
-                platform.startLogGroup(named: name)
-            }
-
-            defer {
-                if shouldStartNewGroup {
-                    platform.endLogGroup(named: name)
-                }
-            }
-
-            return try operation()
-        }
+        return try operation()
     }
 
     @discardableResult
-    public func performInLogGroup<Result>(named name: String, option: PerformInLogGroupOption = .endCurrentLogGroup, operation: () async throws -> Result) async rethrows -> Result {
-        var logGroup = LogGroup(name: name)
-        var shouldStartNewGroup = true
+    public func performInLogGroup<Result>(named name: String, operation: () async throws -> Result) async throws -> Result {
+        try platform.startLogGroup(named: name)
 
-        if let currentLogGroup {
-            switch option {
-            case .endCurrentLogGroup:
-                platform.endLogGroup(named: currentLogGroup.name)
-            case .keepCurrentLogGroup:
-                logGroup = currentLogGroup
-                shouldStartNewGroup = false
-            }
+        defer {
+            try? platform.endCurrentLogGroup()
         }
 
-        return try await ContextValues.withValue(\.currentLogGroup, logGroup) {
-            if shouldStartNewGroup {
-                platform.startLogGroup(named: name)
-            }
-
-            defer {
-                if shouldStartNewGroup {
-                    platform.endLogGroup(named: name)
-                }
-            }
-
-            return try await operation()
-        }
+        return try await operation()
     }
 }
-
-//public extension String {
-//    func embeddedInLogGroup(named name: String, startingWithBlankLine: Bool = true) -> String {
-//        // Start with a blank line by default to ensure that the the start token is at the start of a new line.
-//        // Callers can turn this off if needed.
-//        """
-//        \(startingWithBlankLine ? "\n" : "")\(startGroupToken)\(name)
-//        \(self)
-//        \(endGroupToken)
-//        """
-//    }
-//}
