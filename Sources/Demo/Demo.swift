@@ -12,7 +12,10 @@ struct Demo: MainAction {
         try await action(Second())
 
         let name = "Clay Ellis"
-        let output = try context.shell("echo \(name)")
+        let greeting = "Hello there!"
+        var command: ShellCommand = "echo \(greeting)"
+        command.append("\(name, escapingWith: .doubleQuote)")
+        let output = try context.shell(command)
         logger.info("Output: \(output)")
     }
 }

@@ -40,13 +40,3 @@ public extension FileManager {
         return contents
     }
 }
-
-public extension String {
-    static func / (lhs: String, rhs: String) -> String {
-        if lhs.hasSuffix("/") {
-            return lhs + rhs
-        } else {
-            return "\(lhs)/\(rhs)"
-        }
-    }
-}

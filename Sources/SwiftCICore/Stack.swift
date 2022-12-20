@@ -85,3 +85,15 @@ extension ContextValues {
         currentStackFrame?.action
     }
 }
+
+extension ActionStack {
+    func inherit<A>(_ action: A.Type) -> A? {
+        stack.lazy.reversed().compactMap { $0.action as? A }.first
+    }
+}
+
+public extension ContextValues {
+    func inherit<A>(_ action: A.Type) -> A? {
+        stack.inherit(action)
+    }
+}

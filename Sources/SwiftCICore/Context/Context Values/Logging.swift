@@ -113,7 +113,7 @@ extension ContextValues {
     }
 }
 
-public extension String {
+//public extension String {
 //    func embeddedInLogGroup(named name: String, startingWithBlankLine: Bool = true) -> String {
 //        // Start with a blank line by default to ensure that the the start token is at the start of a new line.
 //        // Callers can turn this off if needed.
@@ -123,10 +123,4 @@ public extension String {
 //        \(endGroupToken)
 //        """
 //    }
-
-    func indented(tabs: Int = 1, tab: String = "\t") -> String {
-        self.components(separatedBy: "\n")
-            .map { Array(repeating: tab, count: tabs).joined() + $0 }
-            .joined(separator: "\n")
-    }
-}
+//}

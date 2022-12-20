@@ -39,15 +39,17 @@ public struct ShellCommand: ExpressibleByStringLiteral, ExpressibleByStringInter
         }
     }
 
-    public mutating func append(_ component: Component, _ separator: String = " ", ifLet value: Component?) {
+    public mutating func append(_ option: StaticString, _ separator: StaticString = " ", ifLet value: Component?) {
         if let value {
-            command.append(" \(component.value)\(separator)\(value)")
+            command.append(" \(option)\(separator)\(value)")
         }
     }
 
     @_disfavoredOverload
-    public mutating func append(_ component: Component, _ separator: String = " ", ifLet value: String?) {
-        append(component, separator, ifLet: value.map { "\($0)" })
+    public mutating func append(_ option: StaticString, _ separator: StaticString = " ", ifLet value: String?) {
+        if let value {
+            append(option, separator, ifLet: "\(value)")
+        }
     }
 }
 
@@ -72,13 +74,19 @@ extension ShellCommand {
                 output.append(unescaped)
             }
 
-            public mutating func appendInterpolation(_ argument: String, escapingWith escapeStyle: ArgumentEscapeStyle = .backslash) {
+            public mutating func appendInterpolation(_ argument: String, escapingWith escapeStyle: ArgumentEscapeStyle = .backslashes) {
                 guard argument.contains(" ") else {
                     output.append(argument)
                     return
                 }
 
                 output.append(escapeStyle.escape(argument: argument))
+            }
+
+            public mutating func appendInterpolation(_ arguments: [String], escapingWith escapeStyle: ArgumentEscapeStyle = .backslashes) {
+                for argument in arguments {
+                    appendInterpolation(argument, escapingWith: escapeStyle)
+                }
             }
         }
 
@@ -107,7 +115,7 @@ public struct SingleQuoteArgumentEscapeStyle: ArgumentEscapeStyle {
 }
 
 public extension ArgumentEscapeStyle where Self == SingleQuoteArgumentEscapeStyle {
-    static var singleQuote: Self { Self() }
+    static var singleQuotes: Self { Self() }
 }
 
 public struct DoubleQuoteArgumentEscapeStyle: ArgumentEscapeStyle {
@@ -117,7 +125,7 @@ public struct DoubleQuoteArgumentEscapeStyle: ArgumentEscapeStyle {
 }
 
 public extension ArgumentEscapeStyle where Self == DoubleQuoteArgumentEscapeStyle {
-    static var doubleQuote: Self { Self() }
+    static var doubleQuotes: Self { Self() }
 }
 
 public struct BackslashArgumentEscapeStyle: ArgumentEscapeStyle {
@@ -127,5 +135,5 @@ public struct BackslashArgumentEscapeStyle: ArgumentEscapeStyle {
 }
 
 public extension ArgumentEscapeStyle where Self == BackslashArgumentEscapeStyle {
-    static var backslash: Self { Self() }
+    static var backslashes: Self { Self() }
 }
