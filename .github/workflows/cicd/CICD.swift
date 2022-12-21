@@ -1,9 +1,9 @@
 import SwiftCI
 
 @main
-struct CICD: Workflow {
+struct CICD: MainAction {
     func run() async throws {
-        try await step(.swiftBuild)
-        try await step(.swiftTest)
+        try await shell("swift build")
+        try await shell("swift test")
     }
 }

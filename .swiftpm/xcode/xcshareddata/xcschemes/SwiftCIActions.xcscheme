@@ -14,9 +14,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "SwiftCI"
-               BuildableName = "SwiftCI"
-               BlueprintName = "SwiftCI"
+               BlueprintIdentifier = "SwiftCIActions"
+               BuildableName = "SwiftCIActions"
+               BlueprintName = "SwiftCIActions"
                ReferencedContainer = "container:">
             </BuildableReference>
          </BuildActionEntry>
@@ -50,9 +50,9 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "SwiftCI"
-            BuildableName = "SwiftCI"
-            BlueprintName = "SwiftCI"
+            BlueprintIdentifier = "SwiftCIActions"
+            BuildableName = "SwiftCIActions"
+            BlueprintName = "SwiftCIActions"
             ReferencedContainer = "container:">
          </BuildableReference>
       </MacroExpansion>
