@@ -7,8 +7,8 @@ public protocol Platform: ContextAware {
     /// Whether the platform has detected that SwiftCI is running as part of its CI workflow.
     static var isRunningCI: Bool { get }
 
-    /// An absolute path to the workspace on the CI platform's machine.
-    static var workspace: String { get throws }
+    /// An absolute path to the working directory on the CI platform's machine.
+    static var workingDirectory: String { get throws }
 
     /// Whether the platform supports grouping log messages together.
     static var supportsLogGroups: Bool { get }
@@ -35,8 +35,12 @@ private func detectPlatform() throws -> Platform.Type {
     return platform
 }
 
-extension ContextValues {
+public extension ContextValues {
     var platform: Platform.Type {
         get throws { try detectPlatform() }
+    }
+
+    var workingDirectory: String {
+        get throws { try platform.workingDirectory }
     }
 }

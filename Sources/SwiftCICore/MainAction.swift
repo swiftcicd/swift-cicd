@@ -15,7 +15,7 @@ extension MainAction {
                 let platform = try context.platform
                 try logEnvironment()
                 logger.info("Running on \(platform.name)")
-                try context.fileManager.changeCurrentDirectory(platform.workspace)
+                try context.fileManager.changeCurrentDirectory(platform.workingDirectory)
                 let mainAction = self.init()
                 try await mainAction.action(mainAction)
                 await cleanUp(error: nil)

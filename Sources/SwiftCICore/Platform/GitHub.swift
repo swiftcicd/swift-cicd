@@ -7,7 +7,7 @@ public enum GitHubPlatform: Platform {
         context.environment.github.isCI
     }
 
-    public static var workspace: String {
+    public static var workingDirectory: String {
         get throws {
             try context.environment.github.$workspace.require()
         }
