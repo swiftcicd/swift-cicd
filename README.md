@@ -1,5 +1,7 @@
 # SwiftCI
 
+> Note: This project is in its very early stages. Feel free to use it and submit issues with questions or ideas. Pull requests may or may not be accepted while the basic infrastructure is still under active development. 
+
 SwiftCI is a CI/CD scheme written in Swift that leverages the Swift ecosystem.
 
 A basic SwiftCI setup looks like this:
@@ -9,15 +11,23 @@ A basic SwiftCI setup looks like this:
 > import SwiftCI
 > 
 > @main
-> struct CICD: Workflow {
+> struct CICD: MainAction {
 >     func run() async throws {
 >         let project = "MyProject.xcodeproj"
->         try await buildAndTest(project: project)
->         try await archiveAndUploadToAppStore(project: project)
+>         try await buildXcodeProject(project)
+>         try await testXcodeProject(project, withoutBuilding: true)
+>         let signingAssets = try await importSigningAssets(
+>             appStoreConnectKeySecret: .init(keyID: "...", keyIssuerID: "...")
+>         )
+>         let upload = try await archiveExportUpload(
+>             xcodeProject: project, 
+>             profile: signingAssets.profile, 
+>             appStoreConnectKey: signingAssets.appStoreConnectKey
+>         )
+>         logger.info("Uploaded build: \(upload.uploadedBuildNumber)")
 >     }
 > }
 > ```
-
 
 ## Getting Started
 
@@ -25,20 +35,20 @@ _// TODO: Package.swift, directory structure, GitHub Action, etc._
 
 ## Overview
 
-SwiftCI has two main types: `Workflow` and `Step`. Workflows run steps or other workflows. Steps can run other steps, but not workflows. Steps return `Output`.
+SwiftCI is composed of `Action`s, where actions have an `Output`. A specialized action, `MainAction`, acts as the entry-point to your CICD workflow. It can and should be decorated with the `@main` attribute.
 
 _// TODO: `Context`_
 
-## First-Party Steps
+## First-Party Actions
 
-_// TODO: Table of steps with a brief description_
+_// TODO: Table of actions with a brief description_
 
 ## Developing Steps
 
-You can create your own steps by making a type that conforms to the `Step` protocol.
+You can create your own actions by making a type that conforms to the `Action` protocol.
 
 ```swift
-struct CreateFile: Step {
+struct CreateFile: Action {
     let path: String
     let contents: String
     
@@ -48,10 +58,10 @@ struct CreateFile: Step {
 }
 ```
 
-If your step makes any changes to the system, it's good practice to implement the `cleanUp` method to revert those changes. SwiftCI will call your step's `cleanUp` method before it exits and after the workflow finishes, either because of a successful run or an error. Steps will be be cleaned up in first-in-last-out order. The `cleanUp` method is optional, but again, it's good practice to clean up after your step if it makes any changes to the system.
+If your action makes any changes to the system, it's good practice to implement the `cleanUp` method to revert those changes. SwiftCI will call your action's `cleanUp` method before it exits and after the main action finishes, either because of a successful run or an error. Actions will be be cleaned up in first-in-last-out order. The `cleanUp` method is optional, but again, it's good practice to clean up after your action if it makes any changes to the system.
 
 ```swift
-struct CreateFile: Step {
+struct CreateFile: Action {
     ...
     
     func cleanUp(error: Error?) async throws {
@@ -61,62 +71,16 @@ struct CreateFile: Step {
 }
 ```
 
-### Making Your Steps Discoverable
+### Making Your Actions Ergonomic
 
-There are three main methods to make your custom steps discoverable. It is recommended to support all three when vending steps so that users can discover your step in any context.
+Actions can run other actions by invoking the `action(_:)` method. You can make your actions more ergonomic by extending `Action` and adding a method that takes the same parameters and returns the same output as your action, which invokes your action, like so:
 
-**1. Add a `typealias` to the `Steps` namespace:**
-
-```swift
-extension Steps {
-    public typealias MyStep = MyModule.MyStep
-}
-
-public struct MyStep: Step {
-    let input: String
-    
-    public init(input: String) {...} 
-}
-```
-
-This method enables users to discover your step using autocompletion when choosing a step to run:
+> Note: This action doesn't have any output (its `Output` is `Void`)
 
 ```swift
-try await step(Steps.MyStep(input: "hello"))
-```
-
-**2. Add your step using static member lookup:**
-
-```swift
-extension Step where Self == MyStep {
-    public static func myStep(input: String) -> MyStep {
-        MyStep(input: input)
+extension Action {
+    func createFile(path: String, contents: String) async throws {
+        try await action(CreateFile(path: path, contents: contents))
     }
-}
-```
-
-This method enables users to discover your step using autocompletion when invoking the `step(_:)` methods:
-
-```swift
-func run() async throws {
-    try await step(.myStep(input: "hello"))
-}
-```
-
-**3. Add a method to `StepRunner`:**
-
-```swift
-extension StepRunner {
-    public func myStep(input: String) async throws -> MyStep.Output {
-        try await step(MyStep(input: input))
-    }
-}
-```
-
-This method enables users to run your step directly from either another step or a workflow, without invoking their `step(_:)` methods:
-
-```swift
-func run() async throws {
-    try await myStep(input: "hello")
 }
 ```
