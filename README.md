@@ -43,7 +43,7 @@ _// TODO: `Context`_
 
 _// TODO: Table of actions with a brief description_
 
-## Developing Steps
+## Developing Actions
 
 You can create your own actions by making a type that conforms to the `Action` protocol.
 
