@@ -21,7 +21,7 @@ public enum GitHubPlatform: Platform {
         print("::group::\(groupName)")
     }
 
-    public static func endCurrentLogGroup() {
+    public static func endLogGroup() {
         guard isRunningCI else { return }
         print("::endgroup::")
     }

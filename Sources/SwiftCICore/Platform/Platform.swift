@@ -16,8 +16,8 @@ public protocol Platform: ContextAware {
     /// If the platform supports log groups, call this method to start a new log group.
     static func startLogGroup(named groupName: String)
 
-    /// If the platform supports log groups, call this method to end an existing log group.
-    static func endCurrentLogGroup()
+    /// If the platform supports log groups, call this method to eagerly end a log group.
+    static func endLogGroup()
 
     /// Returns whether this platform is detected as the current platform or not.
     static func detect() -> Bool

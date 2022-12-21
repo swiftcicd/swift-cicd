@@ -13,18 +13,19 @@ extension MainAction {
         await ContextValues.withValues { $0.logger.logLevel = Self.logLevel } operation: {
             do {
                 let platform = try context.platform
-                try context.endCurrentLogGroup()
                 try logEnvironment()
                 logger.info("Running on \(platform.name)")
                 try context.fileManager.changeCurrentDirectory(platform.workspace)
                 let mainAction = self.init()
                 try await mainAction.action(mainAction)
                 await cleanUp(error: nil)
+                try? context.endLogGroup()
                 exit(0)
             } catch {
                 let trace = context.stack.traceLastFrame()
                 logger.error("\n❌ \(errorMessage(error: error))")
                 await cleanUp(error: error)
+                try? context.endLogGroup()
                 if let trace {
                     logger.error("\n❌ An error occurred while running action: \(trace)")
                 }
@@ -34,7 +35,7 @@ extension MainAction {
     }
 
     static func logEnvironment() throws {
-        try context.performInLogGroup(named: "Environment") {
+        try context.withLogGroup(named: "Environment") {
             logger.debug("""
                 Environment:
                 \(context.environment._dump().indented())
@@ -60,7 +61,7 @@ extension MainAction {
 
     static func cleanUp(error: Error?) async {
         do {
-            try await context.performInLogGroup(named: "Cleaning up...") {
+            try await context.withLogGroup(named: "Cleaning up...") {
                 while let action = context.stack.pop()?.action {
                     do {
                         logger.info("Cleaning up after action: \(action.name).")
