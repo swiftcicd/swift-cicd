@@ -15,7 +15,7 @@ public struct ImportLocalizations: Action {
     public func run() async throws -> String {
         logger.info("Importing \(localizationPath)")
         var xcodebuild = ShellCommand("xcodebuild -importLocalizations -localizationPath \(localizationPath)")
-        xcodebuild.append("-project", ifLet: xcodeProject ?? context.xcodeProject)
+        try xcodebuild.append("-project", ifLet: xcodeProject ?? context.xcodeProject)
         if xcbeautify {
             return try await xcbeautify(xcodebuild)
         } else {
@@ -61,7 +61,7 @@ public struct ExportLocalizations: Action {
 
     public func run() async throws -> Output {
         var xcodebuild = ShellCommand("xcodebuild -exportLocalizations -localizationPath \(localizationPath)")
-        xcodebuild.append("-project", ifLet: xcodeProject ?? context.xcodeProject)
+        xcodebuild.append("-project", ifLet: try xcodeProject ?? context.xcodeProject)
 
         let commandOutput: String
         if xcbeautify {

@@ -76,7 +76,7 @@ public struct UploadToAppStoreConnect: Action {
         var bundleID = self.bundleID
 
         versions: if bundleShortVersion == nil || bundleVersion == nil || bundleID == nil {
-            guard let project = xcodeProject ?? context.xcodeProject else {
+            guard let project = try xcodeProject ?? context.xcodeProject else {
                 logger.debug("Couldn't detect bundle short version or bundle version because xcode project wasn't specified explicitly or contextually.")
                 break versions
             }

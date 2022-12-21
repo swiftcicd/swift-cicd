@@ -40,7 +40,7 @@ public struct ArchiveExportUploadXcodeProject: Action {
     }
 
     public func run() async throws -> Output {
-        let xcodeProject = xcodeProject ?? context.xcodeProject
+        let xcodeProject = try xcodeProject ?? context.xcodeProject
 
         guard let xcodeProject else {
             throw ActionError("Missing Xcode project. Either pass an explicit xcodeProject or call this step from an XcodeProjectWorkflow.")

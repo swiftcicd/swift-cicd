@@ -2,17 +2,19 @@ import SwiftCICore
 
 public protocol XcodeProjectAction: Action {
     /// Path to Xcode project.
-    var xcodeProject: String { get }
+    var xcodeProject: String { get throws }
 }
 
 public extension ContextValues {
     /// Returns the Xcode project when accessed during an `XcodeProjectAction` run.
     var xcodeProject: String? {
-        guard let xcodeProjectAction = inherit((any XcodeProjectAction).self) else {
-            return nil
-        }
+        get throws {
+            guard let xcodeProjectAction = inherit((any XcodeProjectAction).self) else {
+                return nil
+            }
 
-        return xcodeProjectAction.xcodeProject
+            return try xcodeProjectAction.xcodeProject
+        }
     }
 }
 

@@ -39,7 +39,7 @@ public struct BuildXcodeProject: Action {
 
     public func run() async throws -> String {
         var xcodebuild = ShellCommand("xcodebuild")
-        let project = self.project ?? context.xcodeProject
+        let project = try self.project ?? context.xcodeProject
         xcodebuild.append("-project", ifLet: project)
         xcodebuild.append("-scheme", ifLet: scheme)
         xcodebuild.append("-destination", ifLet: destination?.value)
