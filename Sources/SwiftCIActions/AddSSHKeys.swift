@@ -90,7 +90,7 @@ public struct AddSSHKeys: Action {
 
         for sshPrivateKey in sshPrivateKeys {
             let key = try await sshPrivateKey.get().string
-            try context.shell("ssh-add - <<< \(key)")
+            try context.shell("ssh-add - <<< \(key, escapingWith: .singleQuotes)")
         }
 
         let keys = try context.shell("ssh-add -l", quiet: true)
