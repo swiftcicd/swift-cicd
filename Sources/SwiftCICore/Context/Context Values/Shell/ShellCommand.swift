@@ -41,7 +41,7 @@ public struct ShellCommand: ExpressibleByStringLiteral, ExpressibleByStringInter
 
     public mutating func append(_ option: StaticString, _ separator: StaticString = " ", ifLet value: Component?) {
         if let value {
-            command.append(" \(option)\(separator)\(value)")
+            command.append(" \(option)\(separator)\(value.value)")
         }
     }
 
