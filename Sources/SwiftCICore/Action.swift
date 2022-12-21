@@ -40,4 +40,16 @@ public extension Action {
             return output
         }
     }
+
+    func action(_ selection: () async throws -> (any Action<Void>)?) async throws {
+        try await context.withLogGroup(named: "Selecting which action to run next...") {
+            guard let action = try await selection() else {
+                logger.info("No action selected")
+                return
+            }
+
+            logger.info("Selected: \(action.name)")
+            try await self.action(action)
+        }
+    }
 }
