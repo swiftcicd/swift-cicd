@@ -74,7 +74,7 @@ extension ShellCommand {
                 output.append(unescaped)
             }
 
-            public mutating func appendInterpolation(_ argument: String, escapingWith escapeStyle: ArgumentEscapeStyle = .backslashes) {
+            public mutating func appendInterpolation(_ argument: String, escapingWith escapeStyle: ArgumentEscapeStyle = .singleQuotes) {
                 guard argument.contains(" ") else {
                     output.append(argument)
                     return
@@ -83,7 +83,7 @@ extension ShellCommand {
                 output.append(escapeStyle.escape(argument: argument))
             }
 
-            public mutating func appendInterpolation(_ arguments: [String], escapingWith escapeStyle: ArgumentEscapeStyle = .backslashes) {
+            public mutating func appendInterpolation(_ arguments: [String], escapingWith escapeStyle: ArgumentEscapeStyle = .singleQuotes) {
                 for argument in arguments {
                     appendInterpolation(argument, escapingWith: escapeStyle)
                 }
@@ -126,6 +126,16 @@ public struct DoubleQuoteArgumentEscapeStyle: ArgumentEscapeStyle {
 
 public extension ArgumentEscapeStyle where Self == DoubleQuoteArgumentEscapeStyle {
     static var doubleQuotes: Self { Self() }
+}
+
+public struct DollarSingleQuoteArgumentEscapeStyle: ArgumentEscapeStyle {
+    public func escape(argument: String) -> String {
+        "$'\(argument)'"
+    }
+}
+
+public extension ArgumentEscapeStyle where Self == DollarSingleQuoteArgumentEscapeStyle {
+    static var dollarSingleQuotes: Self { Self() }
 }
 
 public struct BackslashArgumentEscapeStyle: ArgumentEscapeStyle {
