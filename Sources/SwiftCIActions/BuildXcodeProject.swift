@@ -44,6 +44,13 @@ public struct BuildXcodeProject: Action {
         xcodebuild.append("-scheme", ifLet: scheme)
         xcodebuild.append("-destination", ifLet: destination?.value)
         xcodebuild.append("-configuration", ifLet: configuration.map { "\($0.name)" })
+        xcodebuild.append("clean", if: cleanBuild)
+
+        if let archivePath {
+            xcodebuild.append("archive -archivePath \(archivePath)")
+        } else {
+            xcodebuild.append("build")
+        }
 
         if case let .manual(codeSignIdentity, developmentTeam, provisioningProfile) = codeSignStyle {
             // It seems like this happens when you have a swift package that has a target that has resources.
@@ -81,13 +88,6 @@ public struct BuildXcodeProject: Action {
         }
 
         xcodebuild.append("CURRENT_PROJECT_VERSION", "=", ifLet: projectVersion)
-        xcodebuild.append("clean", if: cleanBuild)
-
-        if let archivePath {
-            xcodebuild.append("archive -archivePath \(archivePath)")
-        } else {
-            xcodebuild.append("build")
-        }
 
         if xcbeautify {
             return try await xcbeautify(xcodebuild)
