@@ -112,7 +112,7 @@ public struct AddSSHKeys: Action {
 //            } else {
             if let github = (publicKey.lowercased().range(of: "github.com/") ?? publicKey.lowercased().range(of: "github.com:")),
                publicKey.rangeOfCharacter(from: CharacterSet(charactersIn: "/"), range: github.upperBound..<publicKey.endIndex) != nil {
-                ownerAndRepo = String(publicKey[publicKey.index(after: github.upperBound)...])
+                ownerAndRepo = String(publicKey[github.upperBound...])
             }
 //            }
 
