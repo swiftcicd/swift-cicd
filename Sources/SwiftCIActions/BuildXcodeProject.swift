@@ -45,10 +45,6 @@ public struct BuildXcodeProject: Action {
         xcodebuild.append("-destination", ifLet: destination?.value)
         xcodebuild.append("-configuration", ifLet: configuration.map { "\($0.name)" })
 
-        if let archivePath {
-            xcodebuild.append("archive -archivePath \(archivePath)")
-        }
-
         if case let .manual(codeSignIdentity, developmentTeam, provisioningProfile) = codeSignStyle {
             // It seems like this happens when you have a swift package that has a target that has resources.
             // Adding CODE_SIGNING_REQUIRED=Yes and CODE_SIGNING_ALLOWED=No because of this answer:
@@ -86,7 +82,12 @@ public struct BuildXcodeProject: Action {
 
         xcodebuild.append("CURRENT_PROJECT_VERSION", "=", ifLet: projectVersion)
         xcodebuild.append("clean", if: cleanBuild)
-        xcodebuild.append("build")
+
+        if let archivePath {
+            xcodebuild.append("archive -archivePath \(archivePath)")
+        } else {
+            xcodebuild.append("build")
+        }
 
         if xcbeautify {
             return try await xcbeautify(xcodebuild)
