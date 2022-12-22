@@ -37,6 +37,8 @@ public struct AddSSHKeys: Action {
 
         try context.fileManager.createDirectory(atPath: ssh, withIntermediateDirectories: true)
 
+        // TODO: Make this platform-agnostic. A platform should be able to supply its own knownHosts.
+
         // These are the known hosts for GitHub
         try await updateFile(knownHosts) { $0 += """
             github.com ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBEmKSENjQEezOmxkZMy7opKgwFB9nkt5YRrYMjNuG5N87uRgg6CLrbo5wAdT/y6v0mKV0U2w0WZ2YB/++Tpockg=
@@ -100,15 +102,18 @@ public struct AddSSHKeys: Action {
 
         let publicKeys = try context.shell("ssh-add -L", quiet: true).components(separatedBy: "\n")
         for publicKey in publicKeys {
+
+            // TODO: Make this platform-agnostic. A platform should be able to parse and convert an https://, ssh://, or git@ url of a git repository.
+
             var ownerAndRepo: String?
 //            if #available(macOS 13.0, *) {
 //                let match = publicKey.lowercased().firstMatch(of: #/\bgithub\.com[:/]([_.a-z0-9-]+\/[_.a-z0-9-]+)/#)
 //                ownerAndRepo = match.map { String($0.output.1) }
 //            } else {
-                if let githubSlash = publicKey.lowercased().range(of: "github.com/"),
-                   publicKey.rangeOfCharacter(from: CharacterSet(charactersIn: "/"), range: githubSlash.upperBound..<publicKey.endIndex) != nil {
-                    ownerAndRepo = String(publicKey[publicKey.index(after: githubSlash.upperBound)...])
-                }
+            if let github = (publicKey.lowercased().range(of: "github.com/") ?? publicKey.lowercased().range(of: "github.com:")),
+               publicKey.rangeOfCharacter(from: CharacterSet(charactersIn: "/"), range: github.upperBound..<publicKey.endIndex) != nil {
+                ownerAndRepo = String(publicKey[publicKey.index(after: github.upperBound)...])
+            }
 //            }
 
             guard var ownerAndRepo else {
@@ -146,6 +151,8 @@ public struct AddSSHKeys: Action {
 
             try await updateFile(sshConfig) {
                 if !$0.hasSuffix("\n") { $0 += "\n" }
+
+                // TODO: Make this platform-agnostic. A platform should be able to supply its own host, host name..
 
                 $0 += """
                 Host \(keyName).github.com
