@@ -12,7 +12,7 @@ public struct ImportSigningAssets: Action {
         public let keyIssuerID: String
 
         public init(
-            p8: Secret = .base64EncodedEnvironmentValue("APP_STORE_CONNECT_KEY_P8"),
+            p8: Secret = .environmentValue("APP_STORE_CONNECT_KEY_P8"),
             keyID: String,
             keyIssuerID: String
         ) {
