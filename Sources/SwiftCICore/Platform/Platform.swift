@@ -13,6 +13,9 @@ public protocol Platform: ContextAware {
     /// Whether the platform supports grouping log messages together.
     static var supportsLogGroups: Bool { get }
 
+    /// Whether the platform supports nested log groups.
+    static var supportsNestedLogGroups: Bool { get }
+
     /// If the platform supports log groups, call this method to start a new log group.
     static func startLogGroup(named groupName: String)
 

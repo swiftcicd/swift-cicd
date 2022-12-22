@@ -33,8 +33,23 @@ public extension Action {
                 }
             }
 
-            let output = try await context.withLogGroup(named: "Action: \(action.name)") {
-                try await action.run()
+            let output: A.Output
+
+            if try context.platform.supportsNestedLogGroups {
+                output = try await context.withLogGroup(named: "Action: \(action.name)") {
+                    try await action.run()
+                }
+            } else {
+                // Only start a log group if the action's parent (or the action itself) is a MainAction on platforms that don't support nested log groups.
+                if parent?.action is any MainAction || action is any MainAction {
+                    output = try await context.withLogGroup(named: "Action: \(action.name)") {
+                        try await action.run()
+                    }
+                } else {
+                    // Otherwise, just log the action without a log group.
+                    logger.info("Action: \(action.name)")
+                    output = try await action.run()
+                }
             }
 
             return output

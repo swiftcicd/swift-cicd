@@ -16,6 +16,8 @@ public enum GitHubPlatform: Platform {
     // https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#grouping-log-lines
     public static let supportsLogGroups = true
 
+    public static let supportsNestedLogGroups = false
+
     public static func startLogGroup(named groupName: String) {
         guard isRunningCI else { return }
         print("::group::\(groupName)")
