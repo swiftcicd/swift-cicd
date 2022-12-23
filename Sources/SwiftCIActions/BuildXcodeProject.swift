@@ -52,6 +52,8 @@ public struct BuildXcodeProject: Action {
             xcodebuild.append("build")
         }
 
+        xcodebuild.append("CURRENT_PROJECT_VERSION", "=", ifLet: projectVersion)
+
         if case let .manual(codeSignIdentity, developmentTeam, provisioningProfile) = codeSignStyle {
             // It seems like this happens when you have a swift package that has a target that has resources.
             // Adding CODE_SIGNING_REQUIRED=Yes and CODE_SIGNING_ALLOWED=No because of this answer:
@@ -86,8 +88,6 @@ public struct BuildXcodeProject: Action {
                 """
             )
         }
-
-        xcodebuild.append("CURRENT_PROJECT_VERSION", "=", ifLet: projectVersion)
 
         if xcbeautify {
             return try await xcbeautify(xcodebuild)
