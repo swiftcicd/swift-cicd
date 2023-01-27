@@ -42,8 +42,12 @@ public struct XcodeProjectBuildSettings {
         }
     }
 
-    public init(xcodeProject: String) throws {
-        let output = try ContextValues.current.shell("xcodebuild -project \(xcodeProject) -showBuildSettings", quiet: true)
+    public init(xcodeProject: String, scheme: String? = nil) throws {
+        var command = ShellCommand("xcodebuild")
+        command.append("-project \(xcodeProject)")
+        command.append("-scheme", ifLet: scheme)
+        command.append("-showBuildSettings")
+        let output = try ContextValues.current.shell(command, quiet: true)
         self.init(showBuildSettingsOutput: output)
     }
 
@@ -92,7 +96,7 @@ public extension XcodeProjectBuildSettings.BuildSetting {
 }
 
 public extension Action {
-    func getBuildSettings(fromXcodeProject xcodeProject: String) throws -> XcodeProjectBuildSettings {
-        try XcodeProjectBuildSettings(xcodeProject: xcodeProject)
+    func getBuildSettings(fromXcodeProject xcodeProject: String, scheme: String? = nil) throws -> XcodeProjectBuildSettings {
+        try XcodeProjectBuildSettings(xcodeProject: xcodeProject, scheme: scheme)
     }
 }

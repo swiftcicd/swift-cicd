@@ -5,8 +5,11 @@ public struct UploadToAppStoreConnect: Action {
     /// Path to .ipa file.
     let ipa: String
 
-    /// The xcode project the .ipa file was exported from.
+    /// The Xcode project the .ipa file was exported from.
     var xcodeProject: String?
+
+    /// The Xcode project scheme the .ipa file was exported from.
+    var scheme: String?
 
     /// The package type,
     var type: PackageType
@@ -43,6 +46,7 @@ public struct UploadToAppStoreConnect: Action {
     public init(
         ipa: String,
         xcodeProject: String? = nil,
+        scheme: String? = nil,
         type: PackageType = .iOS,
         appAppleID: String? = nil,
         bundleID: String? = nil,
@@ -53,6 +57,7 @@ public struct UploadToAppStoreConnect: Action {
     ) {
         self.ipa = ipa
         self.xcodeProject = xcodeProject
+        self.scheme = scheme
         self.type = type
         self.appAppleID = appAppleID
         self.bundleID = bundleID
@@ -81,7 +86,7 @@ public struct UploadToAppStoreConnect: Action {
                 break versions
             }
 
-            guard let buildSettings = try? getBuildSettings(fromXcodeProject: project) else {
+            guard let buildSettings = try? getBuildSettings(fromXcodeProject: project, scheme: scheme) else {
                 logger.debug("Couldn't detect bundle short version or bundle version because couldn't get build settings from Xcode project.")
                 break versions
             }
@@ -161,6 +166,7 @@ public extension Action {
     func uploadToAppStoreConnect(
         ipa: String,
         xcodeProject: String? = nil,
+        scheme: String? = nil,
         type: UploadToAppStoreConnect.PackageType = .iOS,
         appAppleID: String? = nil,
         bundleID: String? = nil,
@@ -172,6 +178,7 @@ public extension Action {
         try await action(UploadToAppStoreConnect(
             ipa: ipa,
             xcodeProject: xcodeProject,
+            scheme: scheme,
             type: type,
             appAppleID: appAppleID,
             bundleID: bundleID,

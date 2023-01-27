@@ -47,7 +47,7 @@ public struct ArchiveExportUploadXcodeProject: Action {
         }
 
         let temporaryDirectory = context.fileManager.temporaryDirectory.path
-        let buildSettings = try getBuildSettings(fromXcodeProject: xcodeProject)
+        let buildSettings = try getBuildSettings(fromXcodeProject: xcodeProject, scheme: scheme)
         let productName = try buildSettings.require(.productName)
         let archivePath = temporaryDirectory/"Archive/\(productName).xcarchive"
         let exportPath = temporaryDirectory/"Export"
