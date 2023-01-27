@@ -105,7 +105,7 @@ public struct ArchiveExportUploadXcodeProject: Action {
             try context.fileManager.changeCurrentDirectory(sourceRoot)
         }
 
-        // ???: Can this be skipped?
+        // Archive the build
         try await buildXcodeProject(
             xcodeProject,
             scheme: scheme,
@@ -117,9 +117,9 @@ public struct ArchiveExportUploadXcodeProject: Action {
             xcbeautify: xcbeautify
         )
 
+        // Export the archive
         try await exportXcodeProjectArchive(
             xcodeProject,
-            scheme: scheme,
             exportArchive: archivePath,
             to: exportPath,
             allowProvisioningUpdates: false,
