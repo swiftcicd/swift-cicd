@@ -83,7 +83,7 @@ public extension XcodeProjectBuildSettings.BuildSetting {
 
     /// `MARKETING_VERSION`
     /// The version string found in an Xcode target's Identity section under the General tab (in the Version field.)
-    /// Also known as CFBundleVersionShortString.
+    /// Also known as CFBundleShortVersionString.
     static let version: Self = "MARKETING_VERSION"
 
     /// `CURRENT_PROJECT_VERSION`

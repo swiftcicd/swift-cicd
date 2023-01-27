@@ -119,6 +119,7 @@ public struct ArchiveExportUploadXcodeProject: Action {
 
         try await exportXcodeProjectArchive(
             xcodeProject,
+            scheme: scheme,
             exportArchive: archivePath,
             to: exportPath,
             allowProvisioningUpdates: false,

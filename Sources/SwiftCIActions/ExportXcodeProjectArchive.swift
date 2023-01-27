@@ -8,6 +8,7 @@ public struct ExportXcodeProjectArchive: Action {
     public let name = "Export Archive"
 
     var xcodeProject: String?
+    var scheme: String?
     /// Specifies the directory where any created archives will be placed, or the archive that should be exported.
     let archivePath: String
     /// Specifies the destination for the product exported from an archive.
@@ -21,6 +22,7 @@ public struct ExportXcodeProjectArchive: Action {
 
     public init(
         xcodeProject: String? = nil,
+        scheme: String? = nil,
         archivePath: String,
         exportPath: String? = nil,
         exportOptionsPlist: String,
@@ -29,6 +31,7 @@ public struct ExportXcodeProjectArchive: Action {
         xcbeautify: Bool = false
     ) {
         self.xcodeProject = xcodeProject
+        self.scheme = scheme
         self.archivePath = archivePath
         self.exportPath = exportPath
         self.exportOptionsPlist = exportOptionsPlist
@@ -40,6 +43,7 @@ public struct ExportXcodeProjectArchive: Action {
 
     public init(
         xcodeProject: String? = nil,
+        scheme: String? = nil,
         archivePath: String,
         exportPath: String? = nil,
         exportOptions: Options,
@@ -53,6 +57,7 @@ public struct ExportXcodeProjectArchive: Action {
         Self.context.fileManager.createFile(atPath: plistPath, contents: plist)
         self.init(
             xcodeProject: xcodeProject,
+            scheme: scheme,
             archivePath: archivePath,
             exportPath: exportPath,
             exportOptionsPlist: plistPath,
@@ -71,6 +76,7 @@ public struct ExportXcodeProjectArchive: Action {
     public func run() async throws -> String {
         var xcodebuild = ShellCommand("xcodebuild -exportArchive -archivePath \(archivePath) -exportOptionsPlist \(exportOptionsPlist)")
         xcodebuild.append("-project", ifLet: xcodeProject)
+        xcodebuild.append("-scheme", ifLet: scheme)
         xcodebuild.append("-allowProvisioningUpdates", if: allowProvisioningUpdates)
         xcodebuild.append("-exportPath", ifLet: exportPath)
 
@@ -112,6 +118,7 @@ public extension Action {
     @discardableResult
     func exportXcodeProjectArchive(
         _ xcodeProject: String? = nil,
+        scheme: String? = nil,
         exportArchive archivePath: String,
         to exportPath: String? = nil,
         allowProvisioningUpdates: Bool,
@@ -121,6 +128,7 @@ public extension Action {
     ) async throws -> String {
         try await action(ExportXcodeProjectArchive(
             xcodeProject: xcodeProject,
+            scheme: scheme,
             archivePath: archivePath,
             exportPath: exportPath,
             exportOptionsPlist: optionsPlist,
@@ -133,6 +141,7 @@ public extension Action {
     @discardableResult
     func exportXcodeProjectArchive(
         _ xcodeProject: String? = nil,
+        scheme: String? = nil,
         exportArchive archivePath: String,
         to exportPath: String? = nil,
         allowProvisioningUpdates: Bool,
@@ -142,6 +151,7 @@ public extension Action {
     ) async throws -> String {
         try await action(ExportXcodeProjectArchive(
             xcodeProject: xcodeProject,
+            scheme: scheme,
             archivePath: archivePath,
             exportPath: exportPath,
             exportOptions: options,
