@@ -82,7 +82,7 @@ public struct UploadToAppStoreConnect: Action {
 
         versions: if bundleShortVersion == nil || bundleVersion == nil || bundleID == nil {
             guard let project = try xcodeProject ?? context.xcodeProject else {
-                logger.debug("Couldn't detect bundle short version or bundle version because xcode project wasn't specified explicitly or contextually.")
+                logger.debug("Couldn't detect bundle short version or bundle version because Xcode project wasn't specified explicitly or contextually.")
                 break versions
             }
 
@@ -94,7 +94,7 @@ public struct UploadToAppStoreConnect: Action {
             if bundleShortVersion == nil {
                 if let projectBundleShortVersion = buildSettings[.version] {
                     bundleShortVersion = projectBundleShortVersion
-                    logger.debug("Detected bundle short version from xcode project")
+                    logger.debug("Detected bundle short version from xcode project: \(projectBundleShortVersion)")
                 } else {
                     logger.debug("Couldn't detect bundle short version from Xcode project build settings.")
                 }
@@ -103,7 +103,7 @@ public struct UploadToAppStoreConnect: Action {
             if bundleVersion == nil {
                 if let projectBundleVersion = buildSettings[.build] {
                     bundleVersion = projectBundleVersion
-                    logger.debug("Detected bundle version from xcode project")
+                    logger.debug("Detected bundle version from xcode project: \(projectBundleVersion)")
                 } else {
                     logger.debug("Couldn't detect bundle version from Xcode project build settings.")
                 }
@@ -112,7 +112,7 @@ public struct UploadToAppStoreConnect: Action {
             if bundleID == nil {
                 if let projectBundleID = buildSettings[.bundleIdentifier] {
                     bundleID = projectBundleID
-                    logger.debug("Detected bundle id from xcode project")
+                    logger.debug("Detected bundle id from xcode project: \(projectBundleID)")
                 } else {
                     logger.debug("Couldn't detect bundle version from Xcode project build settings.")
                 }
@@ -130,7 +130,7 @@ public struct UploadToAppStoreConnect: Action {
 
         if appAppleID == nil {
             appAppleID = app.id
-            logger.debug("Detected app Apple ID from App Store Connect.")
+            logger.debug("Detected app Apple ID from App Store Connect: \(app.id)")
         }
 
         guard let appAppleID else { throw ActionError("Missing appAppleID") }
