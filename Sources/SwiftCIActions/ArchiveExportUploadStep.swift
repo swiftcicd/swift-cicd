@@ -138,6 +138,7 @@ public struct ArchiveExportUploadXcodeProject: Action {
 
         let uploadOutput = try await uploadToAppStoreConnect(
             ipa: exportPath/"\(productName).ipa",
+            scheme: scheme,
             bundleID: bundleID,
             bundleVersion: overrideProjectVersion,
             appStoreConnectKey: appStoreConnectKey
