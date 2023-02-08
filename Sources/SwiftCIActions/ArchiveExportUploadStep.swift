@@ -153,6 +153,7 @@ public struct ArchiveExportUploadXcodeProject: Action {
 }
 
 public extension Action {
+    @discardableResult
     func archiveExportUpload(
         xcodeProject: String? = nil,
         scheme: String? = nil,
