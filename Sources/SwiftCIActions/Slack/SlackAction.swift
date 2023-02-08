@@ -2,7 +2,7 @@ import Foundation
 import SwiftCICore
 
 public struct SlackAction: Action {
-    let message: SlackMessage
+    let message: LegacySlackMessage
     let webhook: URL
     let client: SlackClient
 
@@ -12,7 +12,7 @@ public struct SlackAction: Action {
 }
 
 public extension Action {
-    func sendSlackMessage(_ message: SlackMessage, to webhook: URL, using client: SlackClient = URLSession.shared) async throws {
+    func sendSlackMessage(_ message: LegacySlackMessage, to webhook: URL, using client: SlackClient = URLSession.shared) async throws {
         try await action(SlackAction(message: message, webhook: webhook, client: client))
     }
 }

@@ -1,6 +1,6 @@
 import Foundation
 
-public struct SlackMessage: Encodable, Equatable {
+public struct LegacySlackMessage: Encodable, Equatable {
     let channel: String?
     let username: String?
     let text: String?
@@ -8,7 +8,14 @@ public struct SlackMessage: Encodable, Equatable {
     let iconURL: URL?
     let attachments: [Attachment]
 
-    public init(channel: String? = nil, username: String? = nil, text: String? = nil, iconEmoji: String? = nil, iconURL: URL? = nil, attachments: [Attachment]) {
+    public init(
+        channel: String? = nil,
+        username: String? = nil,
+        text: String? = nil,
+        iconEmoji: String? = nil,
+        iconURL: URL? = nil,
+        attachments: [Attachment] = []
+    ) {
         self.channel = channel
         self.username = username
         self.text = text
@@ -19,16 +26,30 @@ public struct SlackMessage: Encodable, Equatable {
 }
 
 public struct Attachment: Encodable, Equatable {
+    let markdownIn: [String]
     let color: String?
-    let title: String
-    let text: String
+    let title: String?
+    let titleLink: String?
+    let text: String?
     let fields: [Field]
+    let footer: String?
 
-    public init(color: String? = nil, title: String, text: String, fields: [Field] = []) {
+    public init(
+        markdownIn: [String] = [],
+        color: String? = nil,
+        title: String? = nil,
+        titleLink: String? = nil,
+        text: String? = nil,
+        fields: [Field] = [],
+        footer: String? = nil
+    ) {
+        self.markdownIn = markdownIn
         self.color = color
         self.title = title
+        self.titleLink = titleLink
         self.text = text
         self.fields = fields
+        self.footer = footer
     }
 }
 
@@ -37,14 +58,14 @@ public struct Field: Encodable, Equatable {
     let value: String
     let short: Bool
 
-    public init(title: String, value: String, short: Bool) {
+    public init(title: String, value: String, short: Bool = false) {
         self.title = title
         self.value = value
         self.short = short
     }
 }
 
-extension SlackMessage {
+extension LegacySlackMessage {
     enum CodingKeys: String, CodingKey {
         case channel
         case username
@@ -52,5 +73,17 @@ extension SlackMessage {
         case iconEmoji = "icon_emoji"
         case iconURL = "icon_url"
         case attachments
+    }
+}
+
+extension Attachment {
+    enum CodingKeys: String, CodingKey {
+        case markdownIn = "mrkdwn_in"
+        case color
+        case title
+        case titleLink = "title_link"
+        case text
+        case fields
+        case footer
     }
 }

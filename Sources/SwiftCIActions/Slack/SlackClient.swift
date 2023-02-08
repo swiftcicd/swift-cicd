@@ -4,7 +4,7 @@ import FoundationNetworking
 #endif
 
 public protocol SlackClient {
-    func send(_ message: SlackMessage, to webhookURL: URL) async throws
+    func send(_ message: LegacySlackMessage, to webhookURL: URL) async throws
 }
 
 public enum SlackClientError: Error {
@@ -13,7 +13,7 @@ public enum SlackClientError: Error {
 }
 
 extension URLSession: SlackClient {
-    public func send(_ message: SlackMessage, to webhookURL: URL) async throws {
+    public func send(_ message: LegacySlackMessage, to webhookURL: URL) async throws {
         let encodedMessage = try JSONEncoder().encode(message)
         var request = URLRequest(url: webhookURL)
         request.httpMethod = "POST"
