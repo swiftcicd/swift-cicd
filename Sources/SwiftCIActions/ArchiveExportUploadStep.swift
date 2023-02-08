@@ -160,7 +160,7 @@ public extension Action {
         appStoreConnectKey: AppStoreConnect.Key,
         buildNumberStrategy: ArchiveExportUploadXcodeProject.BuildNumberStrategy = .autoIncrementingInteger,
         xcbeautify: Bool = false
-    ) async throws {
+    ) async throws -> ArchiveExportUploadXcodeProject.Output {
         try await action(ArchiveExportUploadXcodeProject(
             xcodeProject: xcodeProject,
             scheme: scheme,
