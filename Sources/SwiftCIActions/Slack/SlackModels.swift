@@ -1,89 +1,136 @@
 import Foundation
 
-public struct LegacySlackMessage: Encodable, Equatable {
-    let channel: String?
-    let username: String?
-    let text: String?
-    let iconEmoji: String?
-    let iconURL: URL?
-    let attachments: [Attachment]
+public struct SlackMessage: Encodable {
+    let blocks: [SlackMessageBlock]
 
-    public init(
-        channel: String? = nil,
-        username: String? = nil,
-        text: String? = nil,
-        iconEmoji: String? = nil,
-        iconURL: URL? = nil,
-        attachments: [Attachment] = []
-    ) {
-        self.channel = channel
-        self.username = username
+    public init(blocks: [SlackMessageBlock]) {
+        self.blocks = blocks
+    }
+}
+
+public enum SlackMessageBlock: Encodable {
+    public static func section(text: TextBlock) -> SlackMessageBlock {
+        .section(SectionBlock(text: text))
+    }
+
+    public static func context(elements: [TextBlock]) -> SlackMessageBlock {
+        .context(ContextBlock(elements: elements))
+    }
+
+    public static func actions(elements: [ButtonBlock]) -> SlackMessageBlock {
+        .actions(ActionsBlock(elements: elements))
+    }
+
+    case section(SectionBlock)
+    case context(ContextBlock)
+    case actions(ActionsBlock)
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        switch self {
+        case .section(let section): try container.encode(section)
+        case .context(let context): try container.encode(context)
+        case .actions(let actions): try container.encode(actions)
+        }
+    }
+}
+
+public struct SectionBlock: Encodable {
+    let type = "section"
+    let text: TextBlock
+
+    public init(text: TextBlock) {
         self.text = text
-        self.iconEmoji = iconEmoji
-        self.iconURL = iconURL
-        self.attachments = attachments
     }
 }
 
-public struct Attachment: Encodable, Equatable {
-    let markdownIn: [String]
-    let color: String?
-    let title: String?
-    let titleLink: String?
-    let text: String?
-    let fields: [Field]
-    let footer: String?
+public struct ContextBlock: Encodable {
+    let type = "context"
+    let elements: [TextBlock]
 
-    public init(
-        markdownIn: [String] = [],
-        color: String? = nil,
-        title: String? = nil,
-        titleLink: String? = nil,
-        text: String? = nil,
-        fields: [Field] = [],
-        footer: String? = nil
-    ) {
-        self.markdownIn = markdownIn
-        self.color = color
-        self.title = title
-        self.titleLink = titleLink
+    public init(elements: [TextBlock]) {
+        self.elements = elements
+    }
+}
+
+public struct ActionsBlock: Encodable {
+    let type = "actions"
+    let elements: [ButtonBlock]
+
+    public init(elements: [ButtonBlock]) {
+        self.elements = elements
+    }
+}
+
+public enum TextBlock: Encodable {
+    public static func plain(_ text: String, emoji: Bool = true) -> TextBlock {
+        .plain(PlainTextBlock(text, emoji: emoji))
+    }
+
+    public static func markdown(_ text: String) -> TextBlock {
+        .markdown(MarkdownTextBlock(text))
+    }
+
+    case plain(PlainTextBlock)
+    case markdown(MarkdownTextBlock)
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        switch self {
+        case .plain(let plain): try container.encode(plain)
+        case .markdown(let markdown): try container.encode(markdown)
+        }
+    }
+}
+
+extension TextBlock: ExpressibleByStringLiteral {
+    public init(stringLiteral value: String) {
+        self = .plain(value)
+    }
+}
+
+public struct PlainTextBlock: Encodable {
+    let type = "plain_text"
+    let text: String
+    let emoji: Bool
+
+    public init(_ text: String, emoji: Bool = true) {
         self.text = text
-        self.fields = fields
-        self.footer = footer
+        self.emoji = emoji
     }
 }
 
-public struct Field: Encodable, Equatable {
-    let title: String
-    let value: String
-    let short: Bool
+public struct MarkdownTextBlock: Encodable {
+    let type = "mrkdwn"
+    let text: String
 
-    public init(title: String, value: String, short: Bool = false) {
-        self.title = title
-        self.value = value
-        self.short = short
+    public init(_ text: String) {
+        self.text = text
     }
 }
 
-extension LegacySlackMessage {
-    enum CodingKeys: String, CodingKey {
-        case channel
-        case username
-        case text
-        case iconEmoji = "icon_emoji"
-        case iconURL = "icon_url"
-        case attachments
+public enum ButtonBlock: Encodable {
+    public static func link(text: TextBlock, url: URL) -> ButtonBlock {
+        .link(LinkButton(text: text, url: url))
+    }
+
+    case link(LinkButton)
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        switch self {
+        case .link(let link): try container.encode(link)
+        }
     }
 }
 
-extension Attachment {
-    enum CodingKeys: String, CodingKey {
-        case markdownIn = "mrkdwn_in"
-        case color
-        case title
-        case titleLink = "title_link"
-        case text
-        case fields
-        case footer
+public struct LinkButton: Encodable {
+    let type = "button"
+    let text: TextBlock
+    let url: URL
+
+    public init(text: TextBlock, url: URL) {
+        self.text = text
+        self.url = url
     }
 }
