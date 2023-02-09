@@ -1,9 +1,21 @@
-import Foundation
-
 public struct SlackMessage: Encodable {
+    let attachments: [Attachments]
+
+    public init(_ attachments: [Attachments]) {
+        self.attachments = attachments
+    }
+
+    public init(color: String? = nil, blocks: [SlackMessageBlock]) {
+        self.init([Attachments(color: color, blocks: blocks)])
+    }
+}
+
+public struct Attachments: Encodable {
+    let color: String?
     let blocks: [SlackMessageBlock]
 
-    public init(blocks: [SlackMessageBlock]) {
+    public init(color: String? = nil, blocks: [SlackMessageBlock]) {
+        self.color = color
         self.blocks = blocks
     }
 }
@@ -110,7 +122,7 @@ public struct MarkdownTextBlock: Encodable {
 }
 
 public enum ButtonBlock: Encodable {
-    public static func link(text: TextBlock, url: URL) -> ButtonBlock {
+    public static func link(text: TextBlock, url: String) -> ButtonBlock {
         .link(LinkButton(text: text, url: url))
     }
 
@@ -127,9 +139,9 @@ public enum ButtonBlock: Encodable {
 public struct LinkButton: Encodable {
     let type = "button"
     let text: TextBlock
-    let url: URL
+    let url: String
 
-    public init(text: TextBlock, url: URL) {
+    public init(text: TextBlock, url: String) {
         self.text = text
         self.url = url
     }
