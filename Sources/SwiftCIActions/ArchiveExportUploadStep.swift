@@ -36,6 +36,7 @@ public struct ArchiveExportUploadXcodeProject: Action {
     public struct Output {
         public let archive: String
         public let export: String
+        public let uploadedBuildVersion: String
         public let uploadedBuildNumber: String
     }
 
@@ -52,6 +53,7 @@ public struct ArchiveExportUploadXcodeProject: Action {
         let archivePath = temporaryDirectory/"Archive/\(productName).xcarchive"
         let exportPath = temporaryDirectory/"Export"
         let bundleID = try buildSettings.require(.bundleIdentifier)
+        let buildShortVersion = try buildSettings.require(.version)
 
         // Look up the app on App Store Connect early so this step can fail early without performing other steps just to fail.
         let apps = try await context.appStoreConnect.getApps(key: appStoreConnectKey)
@@ -147,6 +149,7 @@ public struct ArchiveExportUploadXcodeProject: Action {
         return Output(
             archive: archivePath,
             export: exportPath,
+            uploadedBuildVersion: buildShortVersion,
             uploadedBuildNumber: uploadOutput.buildNumber
         )
     }
