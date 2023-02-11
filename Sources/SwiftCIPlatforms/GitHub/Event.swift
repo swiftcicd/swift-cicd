@@ -95,6 +95,7 @@ public struct PullRequestEvent: Decodable {
         public let isMerged: Bool
         public let base: Ref
         public let head: Ref
+        public let htmlURL: String
 
         enum CodingKeys: String, CodingKey {
             case id
@@ -105,6 +106,7 @@ public struct PullRequestEvent: Decodable {
             case isMerged = "merged"
             case base
             case head
+            case htmlURL = "html_url"
         }
     }
 
