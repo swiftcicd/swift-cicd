@@ -21,8 +21,12 @@ public struct Attachments: Encodable {
 }
 
 public enum SlackMessageBlock: Encodable {
-    public static func section(text: TextBlock) -> SlackMessageBlock {
-        .section(SectionBlock(text: text))
+    public static func text(_ text: String, emoji: Bool = true) -> SlackMessageBlock {
+        .section(SectionBlock(text: .text(text, emoji: emoji)))
+    }
+
+    public static func markdown(_ text: String) -> SlackMessageBlock {
+        .section(SectionBlock(text: .markdown(text)))
     }
 
     public static func context(elements: [TextBlock]) -> SlackMessageBlock {
@@ -75,21 +79,21 @@ public struct ActionsBlock: Encodable {
 }
 
 public enum TextBlock: Encodable {
-    public static func plain(_ text: String, emoji: Bool = true) -> TextBlock {
-        .plain(PlainTextBlock(text, emoji: emoji))
+    public static func text(_ text: String, emoji: Bool = true) -> TextBlock {
+        .text(PlainTextBlock(text, emoji: emoji))
     }
 
     public static func markdown(_ text: String) -> TextBlock {
         .markdown(MarkdownTextBlock(text))
     }
 
-    case plain(PlainTextBlock)
+    case text(PlainTextBlock)
     case markdown(MarkdownTextBlock)
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
         switch self {
-        case .plain(let plain): try container.encode(plain)
+        case .text(let plain): try container.encode(plain)
         case .markdown(let markdown): try container.encode(markdown)
         }
     }
@@ -97,7 +101,7 @@ public enum TextBlock: Encodable {
 
 extension TextBlock: ExpressibleByStringLiteral {
     public init(stringLiteral value: String) {
-        self = .plain(value)
+        self = .text(value)
     }
 }
 
