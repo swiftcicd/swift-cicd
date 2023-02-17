@@ -143,6 +143,7 @@ public struct ArchiveExportUploadXcodeProject: Action {
             scheme: scheme,
             bundleID: bundleID,
             bundleVersion: overrideProjectVersion,
+            bundleShortVersion: buildShortVersion,
             appStoreConnectKey: appStoreConnectKey
         )
 
