@@ -32,7 +32,7 @@ open class Run: Codable {
     open internal(set) var id: Int = -1
     open var name: String
     open var status: Status?
-    open var pullRequests: [PullRequest]?
+    open var pullRequests: [PullRequestMinimal]?
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -40,6 +40,12 @@ open class Run: Codable {
         case status
         case pullRequests = "pull_requests"
     }
+}
+
+public struct PullRequestMinimal: Codable {
+    public let id: Int
+    public let number: Int
+    public let url: String
 }
 
 private struct ListRunsResponse: Codable {
