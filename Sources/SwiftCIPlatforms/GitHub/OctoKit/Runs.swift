@@ -111,7 +111,7 @@ enum RunsRouter: Router {
 public extension Action {
     func getCurrentWorkflowRuns(where predicate: (Run) -> Bool = { _ in true }) async throws -> [Run] {
         let (owner, repository) = try context.environment.github.requireOwnerRepository()
-        let workflow = try context.environment.github.$workflow.require()
+        let workflow = try context.environment.github.workflowFilename
         let runs = try await context.githubAPI.listRuns(owner: owner, repository: repository, workflow: workflow)
         return runs.filter(predicate)
     }
