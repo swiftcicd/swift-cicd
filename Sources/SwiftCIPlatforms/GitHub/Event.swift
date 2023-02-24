@@ -6,6 +6,13 @@ public extension ProcessEnvironment.GitHub {
     enum Event {
         case pullRequest(PullRequestEvent)
         case other(name: String, contents: Data)
+
+        public var pullRequest: PullRequestEvent? {
+            switch self {
+            case .pullRequest(let pullRequest): return pullRequest
+            default: return nil
+            }
+        }
     }
 
     static var event: Event? {
