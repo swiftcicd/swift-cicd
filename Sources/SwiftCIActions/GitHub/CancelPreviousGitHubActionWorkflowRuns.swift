@@ -10,7 +10,12 @@ public struct CancelGitHubActionWorkflowRuns: Action {
     }
 
     public func run() async throws {
-        let runsToCancel = try await getCurrentWorkflowRuns(where: predicate)
+        let currentRunID = try context.environment.github.$runID.require()
+        let runsToCancel = try await getCurrentWorkflowRuns(where: predicate).filter {
+            // Never cancel the current run
+            $0.id != currentRunID
+        }
+
         for run in runsToCancel {
             do {
                 logger.info("Cancelling existing workflow run \(run.id)")
