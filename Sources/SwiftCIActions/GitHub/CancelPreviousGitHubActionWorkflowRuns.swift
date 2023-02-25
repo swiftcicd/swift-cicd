@@ -38,7 +38,10 @@ public extension Action {
     }
 
     func cancelExistingGitHubActionWorkflowRunsForCurrentPullRequest(where predicate: @escaping (Run) -> Bool = { _ in true }) async throws {
-        let pullReuqestNumber = try context.environment.github.requirePullRequestNumber()
+        guard let pullReuqestNumber = context.environment.github.pullRequestNumber ?? context.environment.github.event?.pullRequest?.number else {
+            throw ActionError("Couldn't determine pull request number")
+        }
+
         try await cancelGitHubActionWorkflowRuns { run in
             run.pullRequests?.contains(where: { $0.number == pullReuqestNumber }) ?? false
                 && run.status == .queued || run.status == .inProgress
