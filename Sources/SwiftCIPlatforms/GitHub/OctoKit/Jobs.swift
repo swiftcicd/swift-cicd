@@ -34,7 +34,7 @@ public extension Octokit {
         _ session: RequestKitURLSession = URLSession.shared,
         owner: String,
         repository: String,
-        runID: String,
+        runID: Int,
         attemptNumber: Int
     ) async throws -> [Job] {
         let router = JobsRouter.listJobsForWorkflowRunAttempt(configuration, owner: owner, repository: repository, runID: runID, attemptNumber: attemptNumber)
@@ -45,7 +45,7 @@ public extension Octokit {
 // MARK: Router
 
 enum JobsRouter: Router {
-    case listJobsForWorkflowRunAttempt(Configuration, owner: String, repository: String, runID: String, attemptNumber: Int)
+    case listJobsForWorkflowRunAttempt(Configuration, owner: String, repository: String, runID: Int, attemptNumber: Int)
 
     var configuration: Configuration {
         switch self {
