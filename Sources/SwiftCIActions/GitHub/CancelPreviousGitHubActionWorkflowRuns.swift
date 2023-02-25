@@ -16,6 +16,11 @@ public struct CancelGitHubActionWorkflowRuns: Action {
             $0.id != currentRunID
         }
 
+        if runsToCancel.isEmpty {
+            logger.info("No existing workflow runs to cancel")
+            return
+        }
+
         for run in runsToCancel {
             do {
                 logger.info("Cancelling existing workflow run \(run.id)")
