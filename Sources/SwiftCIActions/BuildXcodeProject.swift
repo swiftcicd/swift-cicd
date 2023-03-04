@@ -130,4 +130,31 @@ public extension Action {
             )
         )
     }
+
+    @discardableResult
+    func archiveXcodeProject(
+        _ project: String? = nil,
+        scheme: String? = nil,
+        configuration: XcodeBuild.Configuration? = nil,
+        destination: XcodeBuild.Destination? = nil,
+        cleanBuild: Bool = false,
+        archivePath: String,
+        codeSignStyle: XcodeBuild.CodeSignStyle? = nil,
+        projectVersion: String? = nil,
+        xcbeautify: Bool = false
+    ) async throws -> String {
+        try await action(
+            BuildXcodeProject(
+                project: project,
+                scheme: scheme,
+                configuration: configuration,
+                destination: destination,
+                cleanBuild: cleanBuild,
+                archivePath: archivePath,
+                codeSignStyle: codeSignStyle,
+                projectVersion: projectVersion,
+                xcbeautify: xcbeautify
+            )
+        )
+    }
 }

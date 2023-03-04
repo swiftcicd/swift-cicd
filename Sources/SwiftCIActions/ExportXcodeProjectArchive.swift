@@ -131,9 +131,9 @@ public extension Action {
     }
 
     @discardableResult
-    func exportXcodeProjectArchive(
+    func exportXcodeProject(
         _ xcodeProject: String? = nil,
-        exportArchive archivePath: String,
+        archive archivePath: String,
         to exportPath: String? = nil,
         allowProvisioningUpdates: Bool,
         options: ExportXcodeProjectArchive.Options,
