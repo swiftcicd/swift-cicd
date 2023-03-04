@@ -2,8 +2,9 @@ import Foundation
 import SwiftCICore
 
 public struct ArchiveExportUploadXcodeProject: Action {
-    var xcodeProject: String?
-    var scheme: String?
+    let xcodeProject: String?
+    let scheme: String?
+    let destination: XcodeBuild.Destination?
     let profile: ProvisioningProfile
     let appStoreConnectKey: AppStoreConnect.Key
     let buildNumberStrategy: BuildNumberStrategy
@@ -20,6 +21,7 @@ public struct ArchiveExportUploadXcodeProject: Action {
     public init(
         xcodeProject: String? = nil,
         scheme: String? = nil,
+        destination: XcodeBuild.Destination? = .generic(platform: .iOS),
         profile: ProvisioningProfile,
         appStoreConnectKey: AppStoreConnect.Key,
         buildNumberStrategy: BuildNumberStrategy = .autoIncrementingInteger,
@@ -27,6 +29,7 @@ public struct ArchiveExportUploadXcodeProject: Action {
     ) {
         self.xcodeProject = xcodeProject
         self.scheme = scheme
+        self.destination = destination
         self.profile = profile
         self.appStoreConnectKey = appStoreConnectKey
         self.buildNumberStrategy = buildNumberStrategy
@@ -48,7 +51,7 @@ public struct ArchiveExportUploadXcodeProject: Action {
         }
 
         let temporaryDirectory = context.fileManager.temporaryDirectory.path
-        let buildSettings = try getBuildSettings(fromXcodeProject: xcodeProject, scheme: scheme)
+        let buildSettings = try getBuildSettings(fromXcodeProject: xcodeProject, scheme: scheme, destination: destination)
         let productName = try buildSettings.require(.productName)
         let archivePath = temporaryDirectory/"Archive/\(productName).xcarchive"
         let exportPath = temporaryDirectory/"Export"
@@ -108,11 +111,11 @@ public struct ArchiveExportUploadXcodeProject: Action {
         }
 
         // Archive the build
-        try await buildXcodeProject(
+        try await archiveXcodeProject(
             xcodeProject,
             scheme: scheme,
             configuration: .release,
-            destination: .generic(platform: .iOS),
+            destination: destination,
             archivePath: archivePath,
             codeSignStyle: .manual(profile: profile),
             projectVersion: overrideProjectVersion,
@@ -120,9 +123,9 @@ public struct ArchiveExportUploadXcodeProject: Action {
         )
 
         // Export the archive
-        try await exportXcodeProjectArchive(
+        try await exportXcodeProject(
             xcodeProject,
-            exportArchive: archivePath,
+            archive: archivePath,
             to: exportPath,
             allowProvisioningUpdates: false,
             options: .init(
