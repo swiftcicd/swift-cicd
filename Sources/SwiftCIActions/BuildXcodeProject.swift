@@ -13,6 +13,7 @@ public struct BuildXcodeProject: Action {
     var archivePath: String?
     var codeSignStyle: XcodeBuild.CodeSignStyle?
     var projectVersion: String?
+    var includeDSYMs: Bool
     let xcbeautify: Bool
 
     public init(
@@ -24,6 +25,7 @@ public struct BuildXcodeProject: Action {
         archivePath: String? = nil,
         codeSignStyle: XcodeBuild.CodeSignStyle? = nil,
         projectVersion: String? = nil,
+        includeDSYMs: Bool = false,
         xcbeautify: Bool = false
     ) {
         self.project = project
@@ -34,6 +36,7 @@ public struct BuildXcodeProject: Action {
         self.archivePath = archivePath
         self.codeSignStyle = codeSignStyle
         self.projectVersion = projectVersion
+        self.includeDSYMs = includeDSYMs
         self.xcbeautify = xcbeautify
     }
 
@@ -53,6 +56,8 @@ public struct BuildXcodeProject: Action {
         }
 
         xcodebuild.append("CURRENT_PROJECT_VERSION", "=", ifLet: projectVersion)
+        // TODO: Don't override the project setting if it's explicitly set?
+        xcodebuild.append("DEBUG_INFORMATION_FORMAT=dwarf-with-dsym", if: includeDSYMs)
 
         if case let .manual(codeSignIdentity, developmentTeam, provisioningProfile) = codeSignStyle {
             // It seems like this happens when you have a swift package that has a target that has resources.
@@ -114,6 +119,7 @@ public extension Action {
         archivePath: String? = nil,
         codeSignStyle: XcodeBuild.CodeSignStyle? = nil,
         projectVersion: String? = nil,
+        includeDSYMs: Bool = false,
         xcbeautify: Bool = false
     ) async throws -> String {
         try await action(
@@ -126,6 +132,7 @@ public extension Action {
                 archivePath: archivePath,
                 codeSignStyle: codeSignStyle,
                 projectVersion: projectVersion,
+                includeDSYMs: includeDSYMs,
                 xcbeautify: xcbeautify
             )
         )
@@ -141,6 +148,7 @@ public extension Action {
         archivePath: String,
         codeSignStyle: XcodeBuild.CodeSignStyle? = nil,
         projectVersion: String? = nil,
+        includeDSYMs: Bool = false,
         xcbeautify: Bool = false
     ) async throws -> String {
         try await action(
@@ -153,6 +161,7 @@ public extension Action {
                 archivePath: archivePath,
                 codeSignStyle: codeSignStyle,
                 projectVersion: projectVersion,
+                includeDSYMs: includeDSYMs,
                 xcbeautify: xcbeautify
             )
         )

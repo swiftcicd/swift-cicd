@@ -8,6 +8,7 @@ public struct ArchiveExportUploadXcodeProject: Action {
     let profile: ProvisioningProfile
     let appStoreConnectKey: AppStoreConnect.Key
     let buildNumberStrategy: BuildNumberStrategy
+    let includeDSYMs: Bool
     let xcbeautify: Bool
 
     public enum BuildNumberStrategy {
@@ -25,6 +26,7 @@ public struct ArchiveExportUploadXcodeProject: Action {
         profile: ProvisioningProfile,
         appStoreConnectKey: AppStoreConnect.Key,
         buildNumberStrategy: BuildNumberStrategy = .autoIncrementingInteger,
+        includeDSYMs: Bool = false,
         xcbeautify: Bool = false
     ) {
         self.xcodeProject = xcodeProject
@@ -33,6 +35,7 @@ public struct ArchiveExportUploadXcodeProject: Action {
         self.profile = profile
         self.appStoreConnectKey = appStoreConnectKey
         self.buildNumberStrategy = buildNumberStrategy
+        self.includeDSYMs = includeDSYMs
         self.xcbeautify = xcbeautify
     }
 
@@ -119,6 +122,7 @@ public struct ArchiveExportUploadXcodeProject: Action {
             archivePath: archivePath,
             codeSignStyle: .manual(profile: profile),
             projectVersion: overrideProjectVersion,
+            includeDSYMs: includeDSYMs,
             xcbeautify: xcbeautify
         )
 
@@ -167,6 +171,7 @@ public extension Action {
         profile: ProvisioningProfile,
         appStoreConnectKey: AppStoreConnect.Key,
         buildNumberStrategy: ArchiveExportUploadXcodeProject.BuildNumberStrategy = .autoIncrementingInteger,
+        includeDSYMs: Bool = false,
         xcbeautify: Bool = false
     ) async throws -> ArchiveExportUploadXcodeProject.Output {
         try await action(ArchiveExportUploadXcodeProject(
@@ -175,6 +180,7 @@ public extension Action {
             profile: profile,
             appStoreConnectKey: appStoreConnectKey,
             buildNumberStrategy: buildNumberStrategy,
+            includeDSYMs: includeDSYMs,
             xcbeautify: xcbeautify
         ))
     }
