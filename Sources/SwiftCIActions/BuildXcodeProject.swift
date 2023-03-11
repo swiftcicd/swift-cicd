@@ -13,7 +13,7 @@ public struct BuildXcodeProject: Action {
     var archivePath: String?
     var codeSignStyle: XcodeBuild.CodeSignStyle?
     var projectVersion: String?
-    var includeDSYMs: Bool
+    var includeDSYMs: Bool?
     let xcbeautify: Bool
 
     public init(
@@ -25,7 +25,7 @@ public struct BuildXcodeProject: Action {
         archivePath: String? = nil,
         codeSignStyle: XcodeBuild.CodeSignStyle? = nil,
         projectVersion: String? = nil,
-        includeDSYMs: Bool = false,
+        includeDSYMs: Bool? = nil,
         xcbeautify: Bool = false
     ) {
         self.project = project
@@ -56,8 +56,11 @@ public struct BuildXcodeProject: Action {
         }
 
         xcodebuild.append("CURRENT_PROJECT_VERSION", "=", ifLet: projectVersion)
-        // TODO: Don't override the project setting if it's explicitly set?
-        xcodebuild.append("DEBUG_INFORMATION_FORMAT=dwarf-with-dsym", if: includeDSYMs)
+
+        // Only override the debug information format if the flag was explicitly passed.
+        if let includeDSYMs {
+            xcodebuild.append("DEBUG_INFORMATION_FORMAT=\(includeDSYMs ? "dwarf-with-dsym" : "dwarf")")
+        }
 
         if case let .manual(codeSignIdentity, developmentTeam, provisioningProfile) = codeSignStyle {
             // It seems like this happens when you have a swift package that has a target that has resources.
@@ -119,7 +122,7 @@ public extension Action {
         archivePath: String? = nil,
         codeSignStyle: XcodeBuild.CodeSignStyle? = nil,
         projectVersion: String? = nil,
-        includeDSYMs: Bool = false,
+        includeDSYMs: Bool? = nil,
         xcbeautify: Bool = false
     ) async throws -> String {
         try await action(
@@ -148,7 +151,7 @@ public extension Action {
         archivePath: String,
         codeSignStyle: XcodeBuild.CodeSignStyle? = nil,
         projectVersion: String? = nil,
-        includeDSYMs: Bool = false,
+        includeDSYMs: Bool? = nil,
         xcbeautify: Bool = false
     ) async throws -> String {
         try await action(
