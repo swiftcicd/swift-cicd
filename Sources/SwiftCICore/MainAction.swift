@@ -72,17 +72,17 @@ extension MainAction {
 
         var errorLines = [String]()
         for lineIndex in lines.indices {
-            let line = errorLines[lineIndex]
+            let line = lines[lineIndex]
             // If the line line starts with the error marker and we don't already have that error captured (in case the
             // localized error description and the interpolated error description are the same.)
             if line.trimmingCharacters(in: .whitespaces).hasPrefix("❌"), !errorLines.contains(line) {
                 errorLines.append(line)
                 // Look ahead two lines for an annotated line
-                if let lookAheadIndex = errorLines.index(lineIndex, offsetBy: 2, limitedBy: errorLines.endIndex) {
-                    let lookAheadLine = errorLines[lookAheadIndex]
+                if let lookAheadIndex = lines.index(lineIndex, offsetBy: 2, limitedBy: lines.endIndex) {
+                    let lookAheadLine = lines[lookAheadIndex]
                     if lookAheadLine.contains("^~") {
-                        errorLines.append(errorLines[lineIndex + 1])
-                        errorLines.append(errorLines[lineIndex + 2])
+                        errorLines.append(lines[lineIndex + 1])
+                        errorLines.append(lines[lineIndex + 2])
                     }
                 }
             }
