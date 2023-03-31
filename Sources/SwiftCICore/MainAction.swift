@@ -89,7 +89,7 @@ extension MainAction {
         }
 
         guard !errorLines.isEmpty else {
-            return nil
+            return "No error preview"
         }
 
         return errorLines.joined(separator: "\n")
