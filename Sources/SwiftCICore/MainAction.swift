@@ -29,7 +29,12 @@ extension MainAction {
                 if let trace {
                     logger.error("\n❌ An error occurred while running action: \(trace)")
                     if let errorLines = errorPreview(from: error) {
-                        logger.error("\n\(errorLines)")
+                        logger.error("""
+                            ...
+                            \(errorLines)
+                            ... (See full error in context by expanding the \(trace.frames.last?.action.name ?? "last") action)
+                            """
+                        )
                     }
                 }
                 exit(1)
