@@ -71,7 +71,7 @@ extension MainAction {
             .components(separatedBy: "\n")
 
         var errorLines = [String]()
-        for lineIndex in errorLines.indices {
+        for lineIndex in lines.indices {
             let line = errorLines[lineIndex]
             // If the line line starts with the error marker and we don't already have that error captured (in case the
             // localized error description and the interpolated error description are the same.)
@@ -89,7 +89,7 @@ extension MainAction {
         }
 
         guard !errorLines.isEmpty else {
-            return "No error preview"
+            return nil
         }
 
         return errorLines.joined(separator: "\n")
