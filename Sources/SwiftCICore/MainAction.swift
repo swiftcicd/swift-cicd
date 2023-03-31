@@ -28,7 +28,7 @@ extension MainAction {
                 try? context.endLogGroup()
                 if let trace {
                     logger.error("\n❌ An error occurred while running action: \(trace)")
-                    if let errorLines = errorLines(from: error) {
+                    if let errorLines = errorPreview(from: error) {
                         logger.error("\n\(errorLines)")
                     }
                 }
@@ -62,20 +62,37 @@ extension MainAction {
         return errorMessage
     }
 
-    static func errorLines(from error: Error) -> String? {
+    static func errorPreview(from error: Error) -> String? {
         let errorLocalizedDescription = error.localizedDescription
         let interpolatedError = "\(error)"
-        let errorLines = [errorLocalizedDescription, interpolatedError]
+
+        let lines = [errorLocalizedDescription, interpolatedError]
             .joined(separator: "\n")
             .components(separatedBy: "\n")
-            .filter { $0.trimmingCharacters(in: .whitespaces).hasPrefix("❌") }
-            .joined(separator: "\n")
+
+        var errorLines = [String]()
+        for lineIndex in errorLines.indices {
+            let line = errorLines[lineIndex]
+            // If the line line starts with the error marker and we don't already have that error captured (in case the
+            // localized error description and the interpolated error description are the same.)
+            if line.trimmingCharacters(in: .whitespaces).hasPrefix("❌"), !errorLines.contains(line) {
+                errorLines.append(line)
+                // Look ahead two lines for an annotated line
+                if let lookAheadIndex = errorLines.index(lineIndex, offsetBy: 2, limitedBy: errorLines.endIndex) {
+                    let lookAheadLine = errorLines[lookAheadIndex]
+                    if lookAheadLine.contains("^~") {
+                        errorLines.append(errorLines[lineIndex + 1])
+                        errorLines.append(errorLines[lineIndex + 2])
+                    }
+                }
+            }
+        }
 
         guard !errorLines.isEmpty else {
             return nil
         }
 
-        return errorLines
+        return errorLines.joined(separator: "\n")
     }
 
     static func cleanUp(error: Error?) async {
