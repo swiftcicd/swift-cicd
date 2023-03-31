@@ -23,11 +23,14 @@ extension MainAction {
                 exit(0)
             } catch {
                 let trace = context.stack.traceLastFrame()
-                logger.error("\n❌ \(errorMessage(error: error))")
+                logger.error("\n❌ \(errorMessage(from: error))")
                 await cleanUp(error: error)
                 try? context.endLogGroup()
                 if let trace {
                     logger.error("\n❌ An error occurred while running action: \(trace)")
+                    if let errorLines = errorLines(from: error) {
+                        logger.error("\n\(errorLines)")
+                    }
                 }
                 exit(1)
             }
@@ -44,7 +47,7 @@ extension MainAction {
         }
     }
 
-    static func errorMessage(error: Error) -> String {
+    static func errorMessage(from error: Error) -> String {
         var errorMessage = "Exiting on error:\n"
         let errorLocalizedDescription = error.localizedDescription
         let interpolatedError = "\(error)"
@@ -57,6 +60,22 @@ extension MainAction {
             errorMessage += errorLocalizedDescription
         }
         return errorMessage
+    }
+
+    static func errorLines(from error: Error) -> String? {
+        let errorLocalizedDescription = error.localizedDescription
+        let interpolatedError = "\(error)"
+        let errorLines = [errorLocalizedDescription, interpolatedError]
+            .joined(separator: "\n")
+            .components(separatedBy: "\n")
+            .filter { $0.trimmingCharacters(in: .whitespaces).hasPrefix("❌") }
+            .joined(separator: "\n")
+
+        guard !errorLines.isEmpty else {
+            return nil
+        }
+
+        return errorLines
     }
 
     static func cleanUp(error: Error?) async {
