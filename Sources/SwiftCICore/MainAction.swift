@@ -75,12 +75,14 @@ extension MainAction {
             .joined(separator: "\n")
             .components(separatedBy: "\n")
 
+        let errorPrefixes = ["❌", "error: "]
+
         var errorLines = [String]()
         for lineIndex in lines.indices {
             let line = lines[lineIndex]
-            // If the line line starts with the error marker and we don't already have that error captured (in case the
+            // If the line line starts with any of the error prefixes and we don't already have that error captured (in case the
             // localized error description and the interpolated error description are the same.)
-            if line.trimmingCharacters(in: .whitespaces).hasPrefix("❌"), !errorLines.contains(line) {
+            if errorPrefixes.contains(where: { line.trimmingCharacters(in: .whitespaces).hasPrefix($0) }), !errorLines.contains(line) {
                 errorLines.append(line)
                 // Look ahead two lines for an annotated line
                 if let lookAheadIndex = lines.index(lineIndex, offsetBy: 2, limitedBy: lines.endIndex) {
