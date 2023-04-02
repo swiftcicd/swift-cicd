@@ -1,8 +1,18 @@
+import Foundation
 import OctoKit
 import SwiftCICore
 import SwiftCIPlatforms
 
-public struct GitHubActionWorkflowRunCancelled: Error {}
+public struct GitHubActionWorkflowRunCancelled: LocalizedError {
+    let cancelledRunNumber: Int
+    let newerRunNumber: Int
+
+    public var errorDescription: String? {
+        // NOTE: Using one of the error prefixes that will cause this error to be picked up as an error preview.
+        // It would be nice to have a static property that can be referenced though.
+        "error: Cancelling run \(cancelledRunNumber) in favor of run \(newerRunNumber)."
+    }
+}
 
 public struct CancelGitHubActionWorkflowRuns: Action {
     let runsToCancel: [Int]
@@ -62,7 +72,7 @@ public extension Action {
         if let newerRun = newerRuns.first {
             logger.info("A newer run (\(newerRun.runNumber)) was detected. Cancelling the current run (\(currentRunNumber)).")
             try await cancelWorkflowRun(id: currentRunID)
-            throw GitHubActionWorkflowRunCancelled()
+            throw GitHubActionWorkflowRunCancelled(cancelledRunNumber: currentRunNumber, newerRunNumber: newerRun.runNumber)
         }
     }
 }
