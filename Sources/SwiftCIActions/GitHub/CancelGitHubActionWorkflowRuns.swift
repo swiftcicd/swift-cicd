@@ -53,14 +53,14 @@ public extension Action {
         let currentRunID = try context.environment.github.$runID.require()
         let currentRunNumber = try context.environment.github.$runNumber.require()
 
-        let shouldCancelCurrentRun = try await getWorkflowRunsForCurrentPullRequest().contains(where: { otherRun in
+        let newerRuns = try await getWorkflowRunsForCurrentPullRequest().filter { otherRun in
             otherRun.id != currentRunID
                 && otherRun.runNumber > currentRunNumber
-                && otherRun.status == .queued || otherRun.status == .inProgress
-        })
+                && (otherRun.status == .queued || otherRun.status == .inProgress)
+        }
 
-        if shouldCancelCurrentRun {
-            logger.info("A newer run was detected. Cancelling the current run.")
+        if let newerRun = newerRuns.first {
+            logger.info("A newer run (\(newerRun.runNumber)) was detected. Cancelling the current run (\(currentRunNumber)).")
             try await cancelWorkflowRun(id: currentRunID)
             throw GitHubActionWorkflowRunCancelled()
         }
