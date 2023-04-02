@@ -10,6 +10,7 @@ public struct GitHubActionWorkflowRunCancelled: LocalizedError {
     public var errorDescription: String? {
         // NOTE: Using one of the error prefixes that will cause this error to be picked up as an error preview.
         // It would be nice to have a static property that can be referenced though.
+        // FIXME: The error isn't getting picked up for previewing even though it has the right prefix.
         "error: Cancelling run \(cancelledRunNumber) in favor of run \(newerRunNumber)."
     }
 }
