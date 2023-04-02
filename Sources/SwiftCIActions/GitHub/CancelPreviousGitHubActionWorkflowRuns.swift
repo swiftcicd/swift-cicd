@@ -2,50 +2,63 @@ import OctoKit
 import SwiftCICore
 import SwiftCIPlatforms
 
-public struct CancelGitHubActionWorkflowRuns: Action {
-    let predicate: (Run) -> Bool
+public struct GitHubActionWorkflowRunCancelled: Error {}
 
-    init(where predicate: @escaping (Run) -> Bool) {
-        self.predicate = predicate
+public struct CancelGitHubActionWorkflowRuns: Action {
+    let runsToCancel: [Int]
+
+    init(runs: [Run]) {
+        self.runsToCancel = runs.map(\.id)
+    }
+
+    init(runIDs: [Int]) {
+        self.runsToCancel = runIDs
     }
 
     public func run() async throws {
-        let currentRunID = try context.environment.github.$runID.require()
-        let runsToCancel = try await getCurrentWorkflowRuns(where: predicate).filter {
-            // Never cancel the current run
-            $0.id != currentRunID
-        }
-
         if runsToCancel.isEmpty {
             logger.info("No existing workflow runs to cancel")
             return
         }
 
-        for run in runsToCancel {
+        for runID in runsToCancel {
             do {
-                logger.info("Cancelling existing workflow run \(run.id)")
-                try await cancelWorkflowRun(id: run.id)
+                logger.info("Cancelling existing workflow run \(runID)")
+                try await cancelWorkflowRun(id: runID)
             } catch {
-                logger.error("Failed to cancel workflow run: \(run.id)")
+                logger.error("Failed to cancel workflow run: \(runID)")
             }
         }
     }
 }
 
 public extension Action {
-    func cancelGitHubActionWorkflowRuns(where predicate: @escaping (Run) -> Bool = { _ in true }) async throws {
-        try await action(CancelGitHubActionWorkflowRuns(where: predicate))
+    func cancelGitHubActionWorkflowRuns(where predicate: (Run) -> Bool = { _ in true }) async throws {
+        let runs = try await getWorkflowRuns(where: predicate)
+        try await action(CancelGitHubActionWorkflowRuns(runs: runs))
     }
 
-    func cancelExistingGitHubActionWorkflowRunsForCurrentPullRequest(where predicate: @escaping (Run) -> Bool = { _ in true }) async throws {
-        guard let pullReuqestNumber = context.environment.github.pullRequestNumber ?? context.environment.github.event?.pullRequest?.number else {
-            throw ActionError("Couldn't determine pull request number")
+    func cancelOtherExistingGitHubActionWorkflowRunsForCurrentPullRequest(where predicate: (Run) -> Bool = { _ in true }) async throws {
+        let currentRunID = try context.environment.github.$runID.require()
+        let runs = try await getWorkflowRunsForCurrentPullRequest().filter {
+            $0.id != currentRunID
+                && $0.status == .queued || $0.status == .inProgress
+                && predicate($0)
         }
+        return try await action(CancelGitHubActionWorkflowRuns(runs: runs))
+    }
 
-        try await cancelGitHubActionWorkflowRuns { run in
-            run.pullRequests?.contains(where: { $0.number == pullReuqestNumber }) ?? false
-                && run.status == .queued || run.status == .inProgress
-                && predicate(run)
+    /// Cancels the current GitHub action workflow run if another action is queued and then throws an error to stop the execution.
+    func cancelGitHubActionWorkflowRunIfAnotherForCurrentPullRequestIsQueuedOrInProgress() async throws {
+        let currentRunID = try context.environment.github.$runID.require()
+
+        let shouldCancelCurrentRun = try await getWorkflowRunsForCurrentPullRequest().contains(where: { otherRun in
+            otherRun.id != currentRunID && otherRun.status == .queued || otherRun.status == .inProgress
+        })
+
+        if shouldCancelCurrentRun {
+            try await cancelWorkflowRun(id: currentRunID)
+            throw GitHubActionWorkflowRunCancelled()
         }
     }
 }
