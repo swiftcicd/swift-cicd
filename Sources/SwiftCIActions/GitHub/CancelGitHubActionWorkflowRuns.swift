@@ -49,14 +49,18 @@ public extension Action {
     }
 
     /// Cancels the current GitHub action workflow run if another action is queued and then throws an error to stop the execution.
-    func cancelGitHubActionWorkflowRunIfAnotherForCurrentPullRequestIsQueuedOrInProgress() async throws {
+    func cancelGitHubActionWorkflowRunIfNewerRunForCurrentPullRequestIsQueuedOrInProgress() async throws {
         let currentRunID = try context.environment.github.$runID.require()
+        let currentRunNumber = try context.environment.github.$runNumber.require()
 
         let shouldCancelCurrentRun = try await getWorkflowRunsForCurrentPullRequest().contains(where: { otherRun in
-            otherRun.id != currentRunID && otherRun.status == .queued || otherRun.status == .inProgress
+            otherRun.id != currentRunID
+                && otherRun.runNumber > currentRunNumber
+                && otherRun.status == .queued || otherRun.status == .inProgress
         })
 
         if shouldCancelCurrentRun {
+            logger.info("A newer run was detected. Cancelling the current run.")
             try await cancelWorkflowRun(id: currentRunID)
             throw GitHubActionWorkflowRunCancelled()
         }

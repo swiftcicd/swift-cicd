@@ -33,12 +33,14 @@ open class Run: Codable {
     open var name: String
     open var status: Status?
     open var pullRequests: [PullRequestMinimal]?
+    open var runNumber: Int
 
     enum CodingKeys: String, CodingKey {
         case id
         case name
         case status
         case pullRequests = "pull_requests"
+        case runNumber = "run_number"
     }
 }
 
