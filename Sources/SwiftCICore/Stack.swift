@@ -22,6 +22,10 @@ final class ActionStack {
 
     private var stack = [Frame]()
 
+    var root: (any Action)? {
+        stack.first?.action
+    }
+
     func push(_ frame: Frame) {
         stack.append(frame)
     }

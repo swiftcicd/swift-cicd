@@ -10,7 +10,15 @@ public protocol Action<Output>: ContextAware {
 
 public extension Action {
     var name: String { "\(Self.self)" }
-    func cleanUp(error: Error?) async throws {}
+    func cleanUp(error: Error?) async throws {
+        // Default is no-op.
+    }
+}
+
+extension Action {
+    var rootMainAction: (any MainAction)? {
+        context.stack.root as? any MainAction
+    }
 }
 
 public extension Action {
@@ -21,6 +29,12 @@ public extension Action {
         let parent = context.currentStackFrame
         let frame = ActionStack.Frame(action: action, parent: parent)
         context.stack.push(frame)
+
+        if !context.isRunningBeforeAction, let rootMainAction {
+            try await ContextValues.withValue(\.isRunningBeforeAction, true) {
+                try await rootMainAction.before()
+            }
+        }
 
         return try await ContextValues.withValue(\.currentStackFrame, frame) {
             // Restore current working directory after the action runs.

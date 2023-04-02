@@ -5,7 +5,13 @@ import SwiftCICore
 struct Demo: MainAction {
     static let logLevel = Logger.Level.debug
 
-    func run() async throws -> () {
+    func before() async throws {
+        logger.info("Running before")
+//        struct Cancel: Error {}
+//        throw Cancel()
+    }
+
+    func run() async throws {
         logger.debug("Hello!")
         logger.info("Wow!")
         try await action(First())
