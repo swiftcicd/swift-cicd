@@ -27,8 +27,8 @@ public protocol Platform: ContextAware {
 }
 
 private let supportedPlatforms: [any Platform.Type] = [
-    GitHubPlatform.self,
-    LocalPlatform.self
+    LocalPlatform.self,
+    GitHubPlatform.self
 ]
 
 private func detectPlatform() throws -> Platform.Type {
