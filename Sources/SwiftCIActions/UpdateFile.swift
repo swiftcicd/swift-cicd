@@ -5,15 +5,18 @@ public struct UpdateFile: Action {
     @State var previousFileContents: Data?
 
     let filePath: String
+    let createFile: Bool
     let update: (inout Data) -> Void
 
-    public init(filePath: String, update: @escaping (inout Data) -> Void) {
+    public init(filePath: String, createFile: Bool, update: @escaping (inout Data) -> Void) {
         self.filePath = filePath
+        self.createFile = createFile
         self.update = update
     }
 
-    public init(filePath: String, update: @escaping (inout String) -> Void) {
+    public init(filePath: String, createFile: Bool, update: @escaping (inout String) -> Void) {
         self.filePath = filePath
+        self.createFile = createFile
         self.update = { data in
             var string = data.string
             update(&string)
@@ -22,7 +25,13 @@ public struct UpdateFile: Action {
     }
 
     public func run() async throws {
-        guard var contents = context.fileManager.contents(atPath: filePath) else {
+        var contents = Data()
+
+        if let fileContents = context.fileManager.contents(atPath: filePath) {
+            contents = fileContents
+        } else if createFile {
+            context.fileManager.createFile(atPath: filePath, contents: nil)
+        } else {
             throw ActionError("Failed to read contents of \(filePath)")
         }
 
@@ -35,21 +44,22 @@ public struct UpdateFile: Action {
     }
 
     public func cleanUp(error: Error?) async throws {
-        guard let previousFileContents,
-              context.fileManager.createFile(atPath: filePath, contents: previousFileContents) else {
-            throw ActionError("Failed to restore file \(filePath)")
+        if createFile {
+            try context.fileManager.removeItem(atPath: filePath)
+            logger.debug("Deleted \(filePath)")
+        } else if let previousFileContents {
+            context.fileManager.createFile(atPath: filePath, contents: previousFileContents)
+            logger.debug("Restored \(filePath) to its previous state")
         }
-        logger.debug("Restored \(filePath) to its previous state")
-        logger.trace("\(previousFileContents.string))")
     }
 }
 
 public extension Action {
-    func updateFile(_ filePath: String, _ update: @escaping (inout Data) -> Void) async throws {
-        try await action(UpdateFile(filePath: filePath, update: update))
+    func updateFile(_ filePath: String, createFile: Bool = true, _ update: @escaping (inout Data) -> Void) async throws {
+        try await action(UpdateFile(filePath: filePath, createFile: createFile, update: update))
     }
 
-    func updateFile(_ filePath: String, _ update: @escaping (inout String) -> Void) async throws {
-        try await action(UpdateFile(filePath: filePath, update: update))
+    func updateFile(_ filePath: String, createFile: Bool = true, _ update: @escaping (inout String) -> Void) async throws {
+        try await action(UpdateFile(filePath: filePath, createFile: createFile, update: update))
     }
 }
