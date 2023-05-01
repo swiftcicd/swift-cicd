@@ -18,6 +18,7 @@ public struct SlackAction: Action {
         case .blocks(let message): encodedMessage = try encoder.encode(message)
         case .legacy(let message): encodedMessage = try encoder.encode(message)
         }
+        logger.info("Sending Slack message:\n\(encodedMessage.string)")
         var request = URLRequest(url: webhook)
         request.httpMethod = "POST"
         request.httpBody = encodedMessage

@@ -5,8 +5,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/vapor/jwt-kit",
       "state" : {
-        "revision" : "87ce13a1df913ba4d51cf00606df7ef24d455571",
-        "version" : "4.7.0"
+        "revision" : "ef12bdfa557cd9d9f0c53396e0a9908f773bcd7b",
+        "version" : "4.9.0"
       }
     },
     {
@@ -15,7 +15,7 @@
       "location" : "https://github.com/nerdishbynature/octokit.swift",
       "state" : {
         "branch" : "main",
-        "revision" : "c73dd980e225f4da3cff964dd81be53636ee2d70"
+        "revision" : "3cd42d664b675dce9cf83818cc115ebfcdf6b6e6"
       }
     },
     {
@@ -50,8 +50,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-crypto.git",
       "state" : {
-        "revision" : "f652300628eb2003449e627f1f394a27ea2af9a8",
-        "version" : "2.2.0"
+        "revision" : "33a20e650c33f6d72d822d558333f2085effa3dc",
+        "version" : "2.5.0"
       }
     },
     {
@@ -68,8 +68,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-log",
       "state" : {
-        "revision" : "6fe203dc33195667ce1759bf0182975e4653ba1c",
-        "version" : "1.4.4"
+        "revision" : "32e8d724467f8fe623624570367e3d50c5638e46",
+        "version" : "1.5.2"
       }
     },
     {
