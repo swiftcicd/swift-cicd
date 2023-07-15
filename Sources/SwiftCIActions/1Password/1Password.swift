@@ -25,18 +25,6 @@ public enum OnePassword: Tool {
         try context.shell("\(brew) uninstall 1password-cli")
     }
 
-    public static func addAccount(address: String, email: String, secretKey: String) async throws {
-        var addAccount = ShellCommand("\(Self.path) account add")
-        addAccount.append("--address \(address)")
-        addAccount.append("--email \(email)")
-        addAccount.append("--secret-key \(secretKey)")
-        try context.shell(addAccount)
-    }
-
-    public static func signIn(password: String) async throws {
-        try context.shell("eval $(\(Self.path) signin)")
-    }
-
     public static func read(reference: String, serviceAccountToken: String) async throws -> String {
         try context.shell("OP_SERVICE_ACCOUNT_TOKEN=\(serviceAccountToken) \(Self.path) read \(reference)", log: false, quiet: true)
     }
