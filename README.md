@@ -1,4 +1,4 @@
-# SwiftCI
+# SwiftCICD
 
 > Note: This project is in its very early stages. Feel free to use it and submit issues with questions or ideas. Pull requests may or may not be accepted while the basic infrastructure is still under active development. 
 
