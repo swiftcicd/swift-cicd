@@ -22,12 +22,14 @@ extension MainAction {
                 let mainAction = self.init()
                 try await mainAction.action(mainAction)
                 await cleanUp(error: nil)
+                await uninstallTools()
                 try? context.endLogGroup()
                 exit(0)
             } catch {
                 let trace = context.stack.traceLastFrame()
                 logger.error("\n❌ \(errorMessage(from: error))")
                 await cleanUp(error: error)
+                await uninstallTools()
                 try? context.endLogGroup()
                 if let trace {
                     logger.error("\n❌ An error occurred while running action: \(trace)")
@@ -119,6 +121,16 @@ extension MainAction {
             }
         } catch {
             logger.error("Failed to clean up: \(error)")
+        }
+    }
+
+    static func uninstallTools() async {
+        do {
+            try await context.withLogGroup(named: "Uninstalling tools...") {
+                await context.tools.uninstall()
+            }
+        } catch {
+            logger.error("Failed to uninstall tools: \(error)")
         }
     }
 }

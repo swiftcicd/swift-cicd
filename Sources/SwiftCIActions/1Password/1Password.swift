@@ -1,92 +1,75 @@
 import Foundation
 import SwiftCICore
 
-public struct OnePassword: Action {
-    let address: String
-    let email: String
-    let secretKey: String
-    let password: String
-    let reference: String
+// TODO: Make `brew` a Tool
 
-    public init(address: String, email: String, secretKey: String, password: String, reference: String) {
-        self.address = address
-        self.email = email
-        self.secretKey = secretKey
-        self.password = password
-        self.reference = reference
-    }
+public enum OnePassword: Tool {
+    static let brew = "/opt/homebrew/bin/brew"
+    static let path = "/usr/local/bin/op"
 
-    let brew = "/opt/homebrew/bin/brew"
-    let op = "/usr/local/bin/op"
-
-    var isInstalled: Bool {
+    public static var isInstalled: Bool {
         get async {
             do {
-                return try await !shell("\(op) --version", log: false, quiet: true).isEmpty
+                return try !context.shell("\(path) --version", log: false, quiet: true).isEmpty
             } catch {
                 return false
             }
         }
     }
 
-    func install() async throws {
-        try await shell("\(brew) install --cask 1password/tap/1password-cli")
+    public static func install() async throws {
+        try context.shell("\(brew) install --cask 1password/tap/1password-cli")
     }
 
-    func uninstall() async throws {
-        guard await isInstalled else {
-            return
-        }
-
-        try await shell("\(brew) uninstall 1password-cli")
+    public static func uninstall() async throws {
+        try context.shell("\(brew) uninstall 1password-cli")
     }
 
-    func addAccount() async throws {
-        var addAccount = ShellCommand("\(op) account add")
+    public static func addAccount(address: String, email: String, secretKey: String) async throws {
+        var addAccount = ShellCommand("\(Self.path) account add")
         addAccount.append("--address \(address)")
         addAccount.append("--email \(email)")
         addAccount.append("--secret-key \(secretKey)")
-        try await shell(addAccount)
+        try context.shell(addAccount)
     }
 
-    func signIn() async throws {
-        try await shell("eval $(\(op) signin)")
+    public static func signIn(password: String) async throws {
+        try context.shell("eval $(\(Self.path) signin)")
     }
 
-    public func run() async throws -> String {
-        if await !isInstalled {
-            try await install()
-        }
-
-        try await addAccount()
-        try await signIn()
-        let secret = try await shell("\(op) read \(reference)", quiet: true)
-        return secret
-    }
-
-    public func tearDown(error: Error?) async throws {
-        try await uninstall()
+    public static func read(reference: String, serviceAccountToken: String) async throws -> String {
+        try context.shell("OP_SERVICE_ACCOUNT_TOKEN=\(serviceAccountToken) \(Self.path) read \(reference)", log: false, quiet: true)
     }
 }
 
-public extension Action {
-    func get1PasswordSecret(address: String, email: String, secretKey: String, password: String, reference: String) async throws -> String {
-        try await action(OnePassword(address: address, email: email, secretKey: secretKey, password: password, reference: reference))
+public extension Tools {
+    var onePassword: OnePassword.Type {
+        get async throws {
+            try await self[OnePassword.self]
+        }
     }
 }
 
 public struct OnePasswordSecret: Secret {
+    let reference: String
+    let serviceAccountToken: Secret
 
+    public init(reference: String, serviceAccountToken: Secret) {
+        self.reference = reference
+        self.serviceAccountToken = serviceAccountToken
+    }
 
     public func get() async throws -> Data {
-        // This secret needs to install the 1password-cli in order for it to be accessed. But that means that it also needs to be cleaned up.
-        // This secret could be run several times though, so it wouldn't make sense to install and uninstall the cli each time that `get` is run.
-        // This means there needs to be some sort of lifecycle for secrets, or for the tools that they access.
-        // Ideas:
-        // - Make a SecretAction hybrid (since Actions already have a lifecycle)
-        // - Make a `Tool` protocol — (static func install, static func uninstall, installed/uninstalled by MainAction, accessed via `context.tools`)
-        // -
+        let onePassword = try await context.tools.onePassword
+        let token = try await serviceAccountToken.get().string
+        let secret = try await onePassword.read(reference: reference, serviceAccountToken: token)
+        try context.platform.obfuscate(secret: secret)
+        return secret.data
+    }
+}
 
-        return Data()
+public extension Secret where Self == OnePasswordSecret {
+    static func onePassword(reference: String, serviceAccountToken: Secret) -> OnePasswordSecret {
+        OnePasswordSecret(reference: reference, serviceAccountToken: serviceAccountToken)
     }
 }

@@ -1,6 +1,6 @@
 import Foundation
 
-public protocol Secret {
+public protocol Secret: ContextAware {
     func get() async throws -> Data
 }
 
@@ -38,6 +38,8 @@ public struct EnvironmentSecret: Secret {
 
         var data = value.data
         try await processValue(&data)
+        let string = data.string
+        try context.platform.obfuscate(secret: string)
         return data
     }
 }
@@ -49,5 +51,13 @@ public extension Secret where Self == EnvironmentSecret {
 
     static func base64EncodedEnvironmentValue(_ key: String) -> EnvironmentSecret {
         .base64EncodedValue(key)
+    }
+}
+
+public extension Action {
+    func getSecret(_ secret: Secret) async throws -> Data {
+        let value = try await secret.get()
+        try context.platform.obfuscate(secret: value.string)
+        return value
     }
 }
