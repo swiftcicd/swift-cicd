@@ -75,7 +75,7 @@ public struct InstallCertificate: Action {
         logger.debug("Successfully imported certificate")
     }
 
-    public func cleanUp(error: Error?) async throws {
+    public func tearDown(error: Error?) async throws {
         if let certificateCommonName {
             try context.shell("security delete-certificate -c \(certificateCommonName) \(keychain)")
         }

@@ -32,7 +32,7 @@ public struct SearchAndReplace: Action {
         return Output(updatedFiles: updatedFiles)
     }
 
-    public func cleanUp(error: Error?) async throws {
+    public func tearDown(error: Error?) async throws {
         // No-op. We're using the updateFile action which will automatically
         // clean up and revert any changes to the files.
     }

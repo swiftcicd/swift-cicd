@@ -111,7 +111,7 @@ extension MainAction {
                 while let action = context.stack.pop()?.action {
                     do {
                         logger.info("Cleaning up after action: \(action.name).")
-                        try await action.cleanUp(error: error)
+                        try await action.tearDown(error: error)
                     } catch {
                         logger.error("Failed to clean up after action: \(action.name). Error: \(error)")
                     }

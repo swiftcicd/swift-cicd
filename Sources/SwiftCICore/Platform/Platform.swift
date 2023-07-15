@@ -24,6 +24,14 @@ public protocol Platform: ContextAware {
 
     /// Returns whether this platform is detected as the current platform or not.
     static func detect() -> Bool
+
+    /// Whether the platform supports obfuscating secrets.
+    static var supportsSecretObfuscation: Bool { get }
+
+    /// If the platform supports secret obfuscation (see: ``supportsSecretObfuscation``),
+    /// the `secret` should be obfuscated when logging via the built-in `logger`.
+    /// - Parameter secret: The secret to obfuscate.
+    static func obfuscate(secret: String)
 }
 
 private let supportedPlatforms: [any Platform.Type] = [

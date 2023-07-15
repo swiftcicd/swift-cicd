@@ -70,8 +70,12 @@ public struct Xcbeautify: Action {
         return try context.shell(xcbeautify)
     }
 
-    public func cleanUp(error: Error?) async throws {
-        try uninstall()
+    public func tearDown(error: Error?) async {
+        do {
+            try uninstall()
+        } catch {
+            logger.error("Failed to uninstall xcbeautify")
+        }
     }
 
     func isInstalled() throws -> Bool {
@@ -104,8 +108,8 @@ public struct Xcbeautify: Action {
             try context.fileManager.removeItem(atPath: xcbeautify)
         }
 
-//        try context.shell("git clone https://github.com/tuist/xcbeautify.git")
-        try context.shell("git clone --branch export-localizations-warnings-support --single-branch https://github.com/clayellis/xcbeautify.git")
+        try context.shell("git clone https://github.com/tuist/xcbeautify.git")
+//        try context.shell("git clone --branch export-localizations-warnings-support --single-branch https://github.com/clayellis/xcbeautify.git")
         xcbeautifyDirectory = xcbeautify
 
         // 'make install' needs sudo permissions to copy into /usr/local/bin/

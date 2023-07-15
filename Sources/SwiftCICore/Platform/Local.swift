@@ -15,6 +15,8 @@ public enum LocalPlatform: Platform {
 
     public static let supportsNestedLogGroups = false
 
+    public static let supportsSecretObfuscation = false
+
     public static func startLogGroup(named groupName: String) {}
 
     public static func endLogGroup() {}
@@ -22,6 +24,8 @@ public enum LocalPlatform: Platform {
     public static func detect() -> Bool {
         CommandLine.arguments.contains("local")
     }
+
+    public static func obfuscate(secret: String) {}
 }
 
 public extension Platform {

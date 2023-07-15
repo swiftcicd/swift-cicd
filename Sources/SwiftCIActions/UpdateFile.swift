@@ -43,7 +43,7 @@ public struct UpdateFile: Action {
         }
     }
 
-    public func cleanUp(error: Error?) async throws {
+    public func tearDown(error: Error?) async throws {
         if createFile {
             try context.fileManager.removeItem(atPath: filePath)
             logger.debug("Deleted \(filePath)")

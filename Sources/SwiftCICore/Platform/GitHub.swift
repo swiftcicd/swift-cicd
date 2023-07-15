@@ -18,6 +18,8 @@ public enum GitHubPlatform: Platform {
 
     public static let supportsNestedLogGroups = false
 
+    public static let supportsSecretObfuscation = true
+
     public static func startLogGroup(named groupName: String) {
         guard isRunningCI else { return }
         print("::group::\(groupName)")
@@ -30,6 +32,10 @@ public enum GitHubPlatform: Platform {
 
     public static func detect() -> Bool {
         context.environment.github.actions ?? false
+    }
+
+    public static func obfuscate(secret: String) {
+        print("::add-mask::\(secret)")
     }
 }
 

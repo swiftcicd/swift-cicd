@@ -61,6 +61,12 @@ let package = Package(
             name: "SwiftCITests",
             dependencies: ["SwiftCI"]
         ),
-        .executableTarget(name: "Demo", dependencies: ["SwiftCICore"])
+        .executableTarget(
+            name: "Demo",
+            dependencies: [
+                .target(name: "SwiftCI"),
+                .product(name: "Logging", package: "swift-log")
+            ]
+        )
     ]
 )

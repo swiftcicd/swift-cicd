@@ -99,7 +99,7 @@ public struct ExportXcodeProjectArchive: Action {
         }
     }
 
-    public func cleanUp(error: Error?) async throws {
+    public func tearDown(error: Error?) async throws {
         if isExportOptionsSynthesized {
             try context.fileManager.removeItem(atPath: exportOptionsPlist)
         }
