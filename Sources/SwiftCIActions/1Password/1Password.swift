@@ -4,7 +4,7 @@ import SwiftCICore
 // TODO: Make `brew` a Tool
 
 public enum OnePassword: Tool {
-    static let brew = "/opt/homebrew/bin/brew"
+    static let brew = "brew"///opt/homebrew/bin/brew"
     static let path = "/usr/local/bin/op"
 
     public static var isInstalled: Bool {
