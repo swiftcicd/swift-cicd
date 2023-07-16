@@ -61,3 +61,17 @@ public extension Secret where Self == OnePasswordSecret {
         OnePasswordSecret(reference: reference, serviceAccountToken: serviceAccountToken)
     }
 }
+
+public struct OnePasswordVault {
+    let vault: String
+    let serviceAccountToken: Secret
+
+    public init(vault: String, serviceAccountToken: Secret) {
+        self.vault = vault
+        self.serviceAccountToken = serviceAccountToken
+    }
+
+    public func secret(_ shortenedReference: String) -> Secret {
+        OnePasswordSecret(reference: "op://\(vault)/\(shortenedReference)", serviceAccountToken: serviceAccountToken)
+    }
+}
