@@ -57,7 +57,11 @@ public extension Secret where Self == EnvironmentSecret {
 public extension Action {
     func getSecret(_ secret: Secret) async throws -> Data {
         let value = try await secret.get()
-        try context.platform.obfuscate(secret: value.string)
+        // Only obfuscate the value if it's a String.
+        // Some values could be raw file data.
+        if let stringValue = String(data: value, encoding: .utf8) {
+            try context.platform.obfuscate(secret: stringValue)
+        }
         return value
     }
 }

@@ -1,11 +1,13 @@
+import Foundation
 import ShellOut
 
 public struct Shell {
     @Context(\.fileManager) var fileManager
     @Context(\.logger) var logger
 
+    @_disfavoredOverload
     @discardableResult
-    public func callAsFunction(_ command: ShellCommand, log: Bool = true, quiet: Bool = false) throws -> String {
+    public func callAsFunction(_ command: ShellCommand, log: Bool = true, quiet: Bool = false) throws -> Data {
         let currentDirectory = fileManager.currentDirectoryPath
         // Always log trace level
         if logger.logLevel == .trace {
@@ -14,14 +16,20 @@ public struct Shell {
             logger.debug("$ \(command)")
         }
 
-        let output = try shellOut(to: command.command, at: currentDirectory)
+        return try shellOut(to: command.command, at: currentDirectory)
+    }
+
+    @discardableResult
+    public func callAsFunction(_ command: ShellCommand, log: Bool = true, quiet: Bool = false) throws -> String {
+        let output: Data = try callAsFunction(command, log: log, quiet: quiet)
+        let stringOutput = String(decoding: output, as: UTF8.self)
 
         // TODO: Make output destination customizable via handles
         if !quiet {
-            print(output)
+            print(stringOutput)
         }
 
-        return output
+        return stringOutput
     }
 }
 

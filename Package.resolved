@@ -30,10 +30,10 @@
     {
       "identity" : "shellout",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/JohnSundell/ShellOut",
+      "location" : "https://github.com/clayellis/ShellOut",
       "state" : {
-        "revision" : "e1577acf2b6e90086d01a6d5e2b8efdaae033568",
-        "version" : "2.3.0"
+        "branch" : "master",
+        "revision" : "c44f9ead6d968f911797a6452457cbef7e13638c"
       }
     },
     {
