@@ -32,11 +32,6 @@ public extension ProcessEnvironment.GitHub {
 
             func decodeEvent<E: Decodable>(_ event: (E) -> Event) -> Event? {
                 do {
-                    context.logger.debug("""
-                        Decoding GitHub event payload \(E.self):
-                        \(contents.string.indented())
-                        """
-                    )
                     let payload = try JSONDecoder().decode(E.self, from: contents)
                     return event(payload)
                 } catch {
