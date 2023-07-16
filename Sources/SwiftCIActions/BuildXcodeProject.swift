@@ -104,7 +104,7 @@ public struct BuildXcodeProject: Action {
         }
     }
 
-    public func tearDown(error: Error?) async throws {
+    public func cleanUp(error: Error?) async throws {
         if let archivePath {
             try context.fileManager.removeItem(atPath: archivePath)
         }

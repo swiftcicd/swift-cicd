@@ -31,15 +31,25 @@ public final class Tools: ContextAware {
     }
 
     internal func uninstall() async {
-        for tool in tools.values {
-            do {
-                if await tool.isInstalled {
-                    context.logger.info("Uninstalling \(tool.id)...")
-                    try await tool.uninstall()
+        guard !tools.isEmpty else {
+            return
+        }
+
+        do {
+            try await context.withLogGroup(named: "Uninstalling tools...") {
+                for tool in tools.values {
+                    do {
+                        if await tool.isInstalled {
+                            context.logger.info("Uninstalling \(tool.id)...")
+                            try await tool.uninstall()
+                        }
+                    } catch {
+                        context.logger.error("Failed to uninstall tool: \(tool.id)")
+                    }
                 }
-            } catch {
-                context.logger.error("Failed to uninstall tool: \(tool.id)")
             }
+        } catch {
+            context.logger.error("Failed to uninstall tools: \(error)")
         }
     }
 }

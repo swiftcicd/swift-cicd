@@ -70,7 +70,7 @@ public struct Xcbeautify: Action {
         return try context.shell(xcbeautify)
     }
 
-    public func tearDown(error: Error?) async {
+    public func cleanUp(error: Error?) async {
         do {
             try uninstall()
         } catch {
