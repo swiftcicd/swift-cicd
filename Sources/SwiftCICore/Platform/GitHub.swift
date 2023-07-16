@@ -35,6 +35,9 @@ public enum GitHubPlatform: Platform {
     }
 
     public static func obfuscate(secret: String) {
+        // TODO: Maybe we should percent-escape the secret at the OnePasswordSecret level instead of at the platform level.
+
+        // Reference:
         // https://github.com/1Password/load-secrets-action/blob/d1a4e73495bde3551cf63f6c048588b8f734e21d/entrypoint.sh#L101
         // Register a mask for the secret to prevent accidental log exposure.
         // To support multiline secrets, escape percent signs and add a mask per line.
