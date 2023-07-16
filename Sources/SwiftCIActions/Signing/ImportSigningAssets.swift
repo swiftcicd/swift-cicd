@@ -12,7 +12,7 @@ public struct ImportSigningAssets: Action {
         public let keyIssuerID: String
 
         public init(
-            p8: Secret,// = .environmentValue("APP_STORE_CONNECT_KEY_P8"),
+            p8: Secret,
             keyID: String,
             keyIssuerID: String
         ) {
@@ -27,8 +27,8 @@ public struct ImportSigningAssets: Action {
         public let password: Secret
 
         public init(
-            p12: Secret,// = .base64EncodedEnvironmentValue("CERTIFICATE_P12"),
-            password: Secret// = .environmentValue("CERTIFICATE_PASSWORD")
+            p12: Secret,
+            password: Secret
         ) {
             self.p12 = p12
             self.password = password
@@ -78,8 +78,8 @@ public extension Action {
     @discardableResult
     func importSigningAssets(
         appStoreConnectKeySecret: ImportSigningAssets.AppStoreConnectKeySecret,
-        certificateSecret: ImportSigningAssets.CertificateSecret,// = .init(),
-        profileSecret: Secret// = .base64EncodedEnvironmentValue("PROVISIONING_PROFILE")
+        certificateSecret: ImportSigningAssets.CertificateSecret,
+        profileSecret: Secret
     ) async throws -> ImportSigningAssets.Output {
         try await action(ImportSigningAssets(
             appStoreConnectKeySecret: appStoreConnectKeySecret,
