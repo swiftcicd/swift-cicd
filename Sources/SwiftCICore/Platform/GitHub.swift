@@ -35,7 +35,17 @@ public enum GitHubPlatform: Platform {
     }
 
     public static func obfuscate(secret: String) {
-        print("::add-mask::\(secret)")
+        // https://github.com/1Password/load-secrets-action/blob/d1a4e73495bde3551cf63f6c048588b8f734e21d/entrypoint.sh#L101
+        // Register a mask for the secret to prevent accidental log exposure.
+        // To support multiline secrets, escape percent signs and add a mask per line.
+        let escapedSecret = secret.replacingOccurrences(of: "%", with: "%25")
+        for line in escapedSecret.components(separatedBy: "\n") {
+            if line.count < 3 {
+                // To avoid false positives and unreadable logs, omit mask for lines that are too short.
+                continue
+            }
+            print("::add-mask::\(line)")
+        }
     }
 }
 
