@@ -7,10 +7,10 @@ struct Demo: MainAction {
 
     func run() async throws {
         let secret = try await getSecret(.onePassword(
-            reference: "op://thdjmad6w45caxqbkdzxwayzdu/nvv6zhv4y24dlfudmi24x5nzue/text",
+            reference: "op://thdjmad6w45caxqbkdzxwayzdu/Certificate.p12/Certificates.p12",
             serviceAccountToken: .environmentValue("op_token")
         ))
 
-        logger.info("Got 1Password secret:\n\(secret.string)")
+        print("SECRET:\n\(secret)")
     }
 }

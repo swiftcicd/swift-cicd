@@ -33,7 +33,7 @@ public struct SaveFile: Action {
         return Output(filePath: filePath)
     }
 
-    public func tearDown(error: Error?) async throws {
+    public func cleanUp(error: Error?) async throws {
         if let savedFilePath {
             try context.fileManager.removeItem(atPath: savedFilePath)
         }

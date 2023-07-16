@@ -167,7 +167,7 @@ public struct AddSSHKeys: Action {
         }
     }
 
-    public func tearDown(error: Error?) async throws {
+    public func cleanUp(error: Error?) async throws {
         for file in createdFiles {
             try context.fileManager.removeItem(atPath: file)
         }

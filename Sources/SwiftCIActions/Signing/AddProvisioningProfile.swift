@@ -37,7 +37,7 @@ public struct AddProvisioningProfile: Action {
         return profile
     }
 
-    public func tearDown(error: Error?) async throws {
+    public func cleanUp(error: Error?) async throws {
         if let addedProfilePath {
             try context.fileManager.removeItem(atPath: addedProfilePath)
         }

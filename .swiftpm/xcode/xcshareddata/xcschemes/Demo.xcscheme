@@ -68,6 +68,11 @@
             isEnabled = "YES">
          </EnvironmentVariable>
          <EnvironmentVariable
+            key = "op_token"
+            value = "ops_eyJzaWduSW5BZGRyZXNzIjoibHVtaW9oeC4xcGFzc3dvcmQuY29tIiwidXNlckF1dGgiOnsibWV0aG9kIjoiU1JQZy00MDk2IiwiYWxnIjoiUEJFUzJnLUhTMjU2IiwiaXRlcmF0aW9ucyI6NjUwMDAwLCJzYWx0IjoiSWhwSE96X3F0bnlfUnBWUlRYcUNSUSJ9LCJlbWFpbCI6InJlbHV2ZWh5a2lkNGNAMXBhc3N3b3Jkc2VydmljZWFjY291bnRzLmNvbSIsInNycFgiOiI4MDFiM2I5NzMzNzA0M2Q0YTAwMzQ3M2I4ZDY3OWJmMmQ4YzY3NGVhNjRiZDk2ZGYzNjk1MDZjMjk2N2EwN2NkIiwibXVrIjp7ImFsZyI6IkEyNTZHQ00iLCJleHQiOnRydWUsImsiOiIzM1NUb21mX1RFa1VVSWlvZG1US2dWMWFyMmUxSE9helhHYUh3RThLUjNNIiwia2V5X29wcyI6WyJlbmNyeXB0IiwiZGVjcnlwdCJdLCJrdHkiOiJvY3QiLCJraWQiOiJtcCJ9LCJzZWNyZXRLZXkiOiJBMy1WNFgyVzktQ0IyWEdFLTdQNEFXLVZXQk1LLUxEWUQ3LVBZRTdUIiwidGhyb3R0bGVTZWNyZXQiOnsic2VlZCI6IjczMTg0NmVjNjhmMzJlODcxOGU1YjQ0YjA1OTQ2YzA1YzY1NjBhOTMwNjg4NWJkMDJhZDg5MzVmNjNkNjcxNDQiLCJ1dWlkIjoiTjRZREJGUU5WQkhNSkZMQ1U0SERORVdZMkEifSwiZGV2aWNlVXVpZCI6InZyenFvMzV2Nm0yb2J0azJwd2hubmU1Ymg0In0"
+            isEnabled = "YES">
+         </EnvironmentVariable>
+         <EnvironmentVariable
             key = "CI"
             value = "true"
             isEnabled = "YES">

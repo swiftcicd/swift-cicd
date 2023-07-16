@@ -17,35 +17,21 @@ public protocol Action<Output>: ContextAware {
     /// - Returns: The resulting output of running this action.
     func run() async throws -> Output
 
-    /// A lifecycle hook where the action can optionally tear itself down.
+    /// A lifecycle hook where the action can optionally clean itself up.
     ///
     /// If the action installed any tools, they should be uninstalled; if the action modified the
     /// file system, it should restore it to its previous state; etc..
     ///
-    /// - Parameter error: If the action is tearing-down because an error was thrown in the
-    /// pipeline, this value will be non-nil. Otherwise, if the action is tearing-down after a successful run,
+    /// - Parameter error: If the action is cleaning up because an error was thrown in the
+    /// pipeline, this value will be non-nil. Otherwise, if the action is cleaning up after a successful run,
     /// this value will be `nil`.
-    func tearDown(error: Error?) async throws
-
-    /// Runs only the first time
-    static func setUp() async throws
-
-    /// Runs after all of the
-    static func tearDown() async
+    func cleanUp(error: Error?) async throws
 }
 
 public extension Action {
     var name: String { "\(Self.self)" }
 
-    static func setUp() async throws {
-        // Default is no-op.
-    }
-
-    func tearDown(error: Error?) async throws {
-        // Default is no-op.
-    }
-
-    static func tearDown() async {
+    func cleanUp(error: Error?) async throws {
         // Default is no-op.
     }
 }
