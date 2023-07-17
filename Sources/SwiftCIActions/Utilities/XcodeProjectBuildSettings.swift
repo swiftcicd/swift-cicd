@@ -45,15 +45,15 @@ public struct XcodeProjectBuildSettings {
     public init(
         xcodeProject: String? = nil,
         scheme: String? = nil,
-        destination: XcodeBuild.Destination? = nil,
-        configuration: XcodeBuild.Configuration? = nil
+        configuration: XcodeBuild.Configuration? = nil,
+        destination: XcodeBuild.Destination? = nil
     ) throws {
         let xcodeProject = try xcodeProject ?? ContextValues.current.xcodeProject
         var command = ShellCommand("xcodebuild")
         command.append("-project", ifLet: xcodeProject)
         command.append("-scheme", ifLet: scheme)
-        command.append("-destination", ifLet: destination?.value)
         command.append("-configuration", ifLet: configuration?.name)
+        command.append("-destination", ifLet: destination?.value)
         command.append("-showBuildSettings")
         let output = try ContextValues.current.shell(command, quiet: true)
         self.init(showBuildSettingsOutput: output)
@@ -113,28 +113,28 @@ public extension Action {
     func getBuildSettings(
         fromXcodeProject xcodeProject: String,
         scheme: String? = nil,
-        destination: XcodeBuild.Destination? = nil,
-        configuration: XcodeBuild.Configuration? = nil
+        configuration: XcodeBuild.Configuration? = nil,
+        destination: XcodeBuild.Destination? = nil
     ) throws -> XcodeProjectBuildSettings {
         try XcodeProjectBuildSettings(
             xcodeProject: xcodeProject,
             scheme: scheme,
-            destination: destination,
-            configuration: configuration
+            configuration: configuration,
+            destination: destination
         )
     }
 
     func getXcodeProjectBuildSettings(
         xcodeProject: String? = nil,
         scheme: String? = nil,
-        destination: XcodeBuild.Destination? = nil,
-        configuration: XcodeBuild.Configuration? = nil
+        configuration: XcodeBuild.Configuration? = nil,
+        destination: XcodeBuild.Destination? = nil
     ) throws -> XcodeProjectBuildSettings {
         try XcodeProjectBuildSettings(
             xcodeProject: xcodeProject,
             scheme: scheme,
-            destination: destination,
-            configuration: configuration
+            configuration: configuration,
+            destination: destination
         )
     }
 }

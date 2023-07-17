@@ -14,6 +14,9 @@ import SwiftCIPlatforms
 // - Step 3: Followed by a PATCH call to finalize the artifact upload:
 //  https://github.com/actions/toolkit/blob/03eca1b0c77c26d3eaa0a4e9c1583d6e32b87f6f/packages/artifact/src/internal/upload-http-client.ts#L542
 
+// TODO: Mimic the logic outlined in this diagram:
+// https://github.com/actions/toolkit/blob/main/packages/artifact/docs/implementation-details.md#uploadcompression-flow
+
 public struct UploadGitHubArtifact: Action {
 
     let artifactURL: URL
