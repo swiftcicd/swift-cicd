@@ -42,11 +42,18 @@ public struct XcodeProjectBuildSettings {
         }
     }
 
-    public init(xcodeProject: String, scheme: String? = nil, destination: XcodeBuild.Destination? = nil) throws {
+    public init(
+        xcodeProject: String? = nil,
+        scheme: String? = nil,
+        destination: XcodeBuild.Destination? = nil,
+        configuration: XcodeBuild.Configuration? = nil
+    ) throws {
+        let xcodeProject = try xcodeProject ?? ContextValues.current.xcodeProject
         var command = ShellCommand("xcodebuild")
-        command.append("-project \(xcodeProject)")
+        command.append("-project", ifLet: xcodeProject)
         command.append("-scheme", ifLet: scheme)
         command.append("-destination", ifLet: destination?.value)
+        command.append("-configuration", ifLet: configuration?.name)
         command.append("-showBuildSettings")
         let output = try ContextValues.current.shell(command, quiet: true)
         self.init(showBuildSettingsOutput: output)
@@ -94,10 +101,37 @@ public extension XcodeProjectBuildSettings.BuildSetting {
 
     /// `SOURCE_ROOT`
     static let sourceRoot: Self = "SOURCE_ROOT"
+
+    /// `CONFIGURATION_BUILD_DIR`
+    static let configurationBuildDirectory: Self = "CONFIGURATION_BUILD_DIR"
 }
 
 public extension Action {
-    func getBuildSettings(fromXcodeProject xcodeProject: String, scheme: String? = nil, destination: XcodeBuild.Destination? = nil) throws -> XcodeProjectBuildSettings {
-        try XcodeProjectBuildSettings(xcodeProject: xcodeProject, scheme: scheme, destination: destination)
+    func getBuildSettings(
+        fromXcodeProject xcodeProject: String,
+        scheme: String? = nil,
+        destination: XcodeBuild.Destination? = nil,
+        configuration: XcodeBuild.Configuration? = nil
+    ) throws -> XcodeProjectBuildSettings {
+        try XcodeProjectBuildSettings(
+            xcodeProject: xcodeProject,
+            scheme: scheme,
+            destination: destination,
+            configuration: configuration
+        )
+    }
+
+    func getXcodeProjectBuildSettings(
+        xcodeProject: String? = nil,
+        scheme: String? = nil,
+        destination: XcodeBuild.Destination? = nil,
+        configuration: XcodeBuild.Configuration? = nil
+    ) throws -> XcodeProjectBuildSettings {
+        try XcodeProjectBuildSettings(
+            xcodeProject: xcodeProject,
+            scheme: scheme,
+            destination: destination,
+            configuration: configuration
+        )
     }
 }
