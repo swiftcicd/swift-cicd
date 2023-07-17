@@ -42,6 +42,7 @@ public struct ArchiveExportUploadXcodeProject: Action {
     public struct Output {
         public let archive: String
         public let export: String
+        public let ipa: String
         public let uploadedBuildVersion: String
         public let uploadedBuildNumber: String
     }
@@ -145,8 +146,10 @@ public struct ArchiveExportUploadXcodeProject: Action {
             xcbeautify: xcbeautify
         )
 
+        let ipa = exportPath/"\(productName).ipa"
+
         let uploadOutput = try await uploadToAppStoreConnect(
-            ipa: exportPath/"\(productName).ipa",
+            ipa: ipa,
             scheme: scheme,
             bundleID: bundleID,
             bundleVersion: overrideProjectVersion,
@@ -157,6 +160,7 @@ public struct ArchiveExportUploadXcodeProject: Action {
         return Output(
             archive: archivePath,
             export: exportPath,
+            ipa: ipa,
             uploadedBuildVersion: buildShortVersion,
             uploadedBuildNumber: uploadOutput.buildNumber
         )
