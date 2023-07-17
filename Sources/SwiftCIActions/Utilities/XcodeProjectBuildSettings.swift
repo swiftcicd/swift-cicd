@@ -86,6 +86,9 @@ public extension XcodeProjectBuildSettings.BuildSetting {
     /// `PRODUCT_NAME`
     static let productName: Self = "PRODUCT_NAME"
 
+    /// `FULL_PRODUCT_NAME`
+    static let fullProductName: Self = "FULL_PRODUCT_NAME"
+
     /// `PRODUCT_BUNDLE_IDENTIFIER`
     static let bundleIdentifier: Self = "PRODUCT_BUNDLE_IDENTIFIER"
 
