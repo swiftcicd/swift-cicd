@@ -132,25 +132,8 @@ public struct UploadGitHubArtifact: Action {
 
     private var artifactsBaseURL: URL {
         get throws {
-
-
-
             // FIXME: ACTIONS_RUNTIME_URL is missing
             // FIXME: ACTIONS_RUNTIME_TOKEN is missing
-
-            if let runtimeURL = context.environment.github.runtimeURL {
-                logger.info("Optional runtime url: \(runtimeURL)")
-            } else {
-                logger.error("Optional runtime url not found")
-            }
-
-            if let runtimeToken = context.environment.github.runtimeToken {
-                logger.info("Optional runtime token: \(runtimeToken)")
-            } else {
-                logger.error("Optional runtime token not found")
-            }
-
-
             let url = try context.environment.github.$runtimeURL.require()
             let runID = try context.environment.github.$runID.require()
             return url.appending("_apis/pipelines/workflows/\(runID)/artifacts?api-version=6.0-preview")
