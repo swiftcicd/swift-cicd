@@ -17,6 +17,112 @@ import SwiftCIPlatforms
 // TODO: Mimic the logic outlined in this diagram:
 // https://github.com/actions/toolkit/blob/main/packages/artifact/docs/implementation-details.md#uploadcompression-flow
 
+/*
+
+ https://github.com/actions/toolkit/blob/03eca1b0c77c26d3eaa0a4e9c1583d6e32b87f6f/packages/artifact/src/internal/contracts.ts
+ export interface ArtifactResponse {
+   containerId: string
+   size: number
+   signedContent: string
+   fileContainerResourceUrl: string
+   type: string
+   name: string
+   url: string
+ }
+
+ export interface CreateArtifactParameters {
+   Type: string
+   Name: string
+   RetentionDays?: number
+ }
+
+ export interface PatchArtifactSize {
+   Size: number
+ }
+
+ export interface PatchArtifactSizeSuccessResponse {
+   containerId: number
+   size: number
+   signedContent: string
+   type: string
+   name: string
+   url: string
+   uploadUrl: string
+ }
+
+ export interface UploadResults {
+   /**
+    * The size in bytes of data that was transferred during the upload process to the actions backend service. This takes into account possible
+    * gzip compression to reduce the amount of data that needs to be transferred
+    */
+   uploadSize: number
+
+   /**
+    * The raw size of the files that were specified for upload
+    */
+   totalSize: number
+
+   /**
+    * An array of files that failed to upload
+    */
+   failedItems: string[]
+ }
+
+ export interface ListArtifactsResponse {
+   count: number
+   value: ArtifactResponse[]
+ }
+
+ export interface QueryArtifactResponse {
+   count: number
+   value: ContainerEntry[]
+ }
+
+ export interface ContainerEntry {
+   containerId: number
+   scopeIdentifier: string
+   path: string
+   itemType: string
+   status: string
+   fileLength?: number
+   fileEncoding?: number
+   fileType?: number
+   dateCreated: string
+   dateLastModified: string
+   createdBy: string
+   lastModifiedBy: string
+   itemLocation: string
+   contentLocation: string
+   fileId?: number
+   contentId: string
+ }
+
+ https://github.com/actions/toolkit/blob/03eca1b0c77c26d3eaa0a4e9c1583d6e32b87f6f/packages/artifact/src/internal/upload-response.ts
+ export interface UploadResponse {
+   /**
+    * The name of the artifact that was uploaded
+    */
+   artifactName: string
+
+   /**
+    * A list of all items that are meant to be uploaded as part of the artifact
+    */
+   artifactItems: string[]
+
+   /**
+    * Total size of the artifact in bytes that was uploaded
+    */
+   size: number
+
+   /**
+    * A list of items that were not uploaded as part of the artifact (includes queued items that were not uploaded if
+    * continueOnError is set to false). This is a subset of artifactItems.
+    */
+   failedItems: string[]
+ }
+ */
+
+
 public struct UploadGitHubArtifact: Action {
 
     let artifactURL: URL
@@ -26,6 +132,25 @@ public struct UploadGitHubArtifact: Action {
 
     private var artifactsBaseURL: URL {
         get throws {
+
+
+
+            // FIXME: ACTIONS_RUNTIME_URL is missing
+            // FIXME: ACTIONS_RUNTIME_TOKEN is missing
+
+            if let runtimeURL = context.environment.github.runtimeURL {
+                logger.info("Optional runtime url: \(runtimeURL)")
+            } else {
+                logger.error("Optional runtime url not found")
+            }
+
+            if let runtimeToken = context.environment.github.runtimeToken {
+                logger.info("Optional runtime token: \(runtimeToken)")
+            } else {
+                logger.error("Optional runtime token not found")
+            }
+
+
             let url = try context.environment.github.$runtimeURL.require()
             let runID = try context.environment.github.$runID.require()
             return url.appending("_apis/pipelines/workflows/\(runID)/artifacts?api-version=6.0-preview")
@@ -44,6 +169,18 @@ public struct UploadGitHubArtifact: Action {
         let totalBytes: Int
 
         var contentRange: String {
+//        https://github.com/actions/toolkit/blob/03eca1b0c77c26d3eaa0a4e9c1583d6e32b87f6f/packages/artifact/src/internal/utils.ts#L118
+//            export function getContentRange(
+//              start: number,
+//              end: number,
+//              total: number
+//            ): string {
+//              // Format: `bytes start-end/fileSize
+//              // start and end are inclusive
+//              // For a 200 byte chunk starting at byte 0:
+//              // Content-Range: bytes 0-199/200
+//              return `bytes ${start}-${end}/${total}`
+//            }
             "bytes \(byteRange.lowerBound)-\(byteRange.upperBound)/\(totalBytes)"
         }
     }
@@ -57,6 +194,12 @@ public struct UploadGitHubArtifact: Action {
             let zip = try context.fileManager.zip(artifactURL)
             zippedArtifactURL = zip
             artifactURL = zip
+
+            // TODO: Add these headers to the request
+//            if (isGzip) {
+//                requestOptions['Content-Encoding'] = 'gzip'
+//                requestOptions['x-tfs-filelength'] = uncompressedLength
+//              }
         }
 
         guard let totalBytes = try context.fileManager.attributesOfItem(atPath: artifactURL.filePath)[.size] as? Int else {
