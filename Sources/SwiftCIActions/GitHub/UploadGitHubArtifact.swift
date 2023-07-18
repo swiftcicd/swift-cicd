@@ -63,14 +63,18 @@ public struct UploadGitHubArtifact: Action {
             throw ActionError("Couldn't determine the size of the artifact at: \(artifactURL.filePath)")
         }
 
+        logger.info("Artifact is \(totalBytes) bytes large")
+
         guard let stream = InputStream(url: artifactURL) else {
             throw ActionError("Failed to open InputStream to artifact at: \(artifactURL.filePath)")
         }
 
         // Step 1: Create the artifact container
+        logger.info("Creating artifact container")
         let fileContainerResourceURL = try await createArtifactContainer()
 
         // Step 2: Chunk up the artifact into 4MB pieces and upload them
+        logger.info("Chunking artifact")
         // The GitHub @actions/upload-artifact action uploads in chunks of 4MB
         // https://github.com/actions/toolkit/blob/main/packages/artifact/docs/implementation-details.md#uploadcompression-flow
         let chunkSizeInBytes = Int(Measurement(value: 4, unit: UnitInformationStorage.megabytes).converted(to: .bytes).value)
@@ -78,24 +82,30 @@ public struct UploadGitHubArtifact: Action {
         var offset = 0
         stream.open()
         streamLoop: while true {
+            logger.info("Reading next chunk")
             let amount = stream.read(&buffer, maxLength: chunkSizeInBytes)
             switch amount {
             case 0:
                 // End of stream
+                logger.info("Read to end of artifact stream")
                 break streamLoop
             case -1:
                 // An error occurred
+                logger.error("An error occurred while reading artifact stream")
                 throw ActionError("An error occurred while reading the artifact at: \(artifactURL)", error: stream.streamError)
             default:
                 // Read bytes
+                logger.info("Read chunk: \(amount) bytes")
                 let chunk = Chunk(data: Data(buffer[..<amount]), byteRange: offset..<offset+amount, totalBytes: totalBytes)
                 offset += amount
+                logger.info("Uploading chunk: \(chunk)")
                 try await uploadChunk(chunk, toArtifactContainer: fileContainerResourceURL, itemPath: itemPath)
             }
         }
         stream.close()
 
         // Step 3: Finalize the artifact upload
+        logger.info("Finalizing artifact upload")
         try await finalizeArtifactUpload(totalBytes: totalBytes)
     }
 
