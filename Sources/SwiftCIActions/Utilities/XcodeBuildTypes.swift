@@ -58,4 +58,15 @@ public enum XcodeBuild {
             }
         }
     }
+
+    public enum SDK {
+        case iPhoneSimulator
+
+        public var value: ShellCommand.Component {
+            switch self {
+            case .iPhoneSimulator:
+                return "iphonesimulator"
+            }
+        }
+    }
 }
