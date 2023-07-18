@@ -22,10 +22,11 @@ public struct UploadGitHubArtifact: Action {
     let artifactURL: URL
     let artifactName: String
     let itemPath: String
+    @State var zippedArtifactURL: URL?
 
     private var artifactsBaseURL: URL {
         get throws {
-            var url = try context.environment.github.$runtimeURL.require()
+            let url = try context.environment.github.$runtimeURL.require()
             let runID = try context.environment.github.$runID.require()
             return url.appending("_apis/pipelines/workflows/\(runID)/artifacts?api-version=6.0-preview")
         }
@@ -48,12 +49,22 @@ public struct UploadGitHubArtifact: Action {
     }
 
     public func run() async throws -> Void {
-        guard let totalBytes = try context.fileManager.attributesOfItem(atPath: artifactURL.absoluteString)[.size] as? Int else {
-            throw ActionError("Couldn't determine the size of the artifact at: \(artifactURL.absoluteString)")
+        var artifactURL = self.artifactURL
+
+        var isDirectory = ObjCBool(false)
+        if context.fileManager.fileExists(atPath: artifactURL.filePath, isDirectory: &isDirectory), isDirectory.boolValue {
+            logger.info("Artifact is a directory. Zipping...")
+            let zip = try context.fileManager.zip(artifactURL)
+            zippedArtifactURL = zip
+            artifactURL = zip
+        }
+
+        guard let totalBytes = try context.fileManager.attributesOfItem(atPath: artifactURL.filePath)[.size] as? Int else {
+            throw ActionError("Couldn't determine the size of the artifact at: \(artifactURL.filePath)")
         }
 
         guard let stream = InputStream(url: artifactURL) else {
-            throw ActionError("Failed to open InputStream to artifact at: \(artifactURL.absoluteString)")
+            throw ActionError("Failed to open InputStream to artifact at: \(artifactURL.filePath)")
         }
 
         // Step 1: Create the artifact container
@@ -115,7 +126,7 @@ public struct UploadGitHubArtifact: Action {
         }
 
         let body = Body(name: "'\"\(artifactName)\"'")
-        var request = try request(method: "POST", url: artifactsBaseURL, contentType: "application/json", body: body)
+        let request = try request(method: "POST", url: artifactsBaseURL, contentType: "application/json", body: body)
         let (data, urlResponse) = try await URLSession.shared.data(for: request)
         let response = try JSONDecoder().decode(Response.self, from: data)
         try validate(response: urlResponse)
@@ -137,7 +148,7 @@ public struct UploadGitHubArtifact: Action {
 
         let url = try artifactsBaseURL.appendingQueryItems([URLQueryItem(name: "artifactName", value: artifactName)])
         let body = Body(size: totalBytes)
-        var request = try request(method: "PATCH", url: url, contentType: "application/json", body: body)
+        let request = try request(method: "PATCH", url: url, contentType: "application/json", body: body)
         let (_, response) = try await URLSession.shared.data(for: request)
         try validate(response: response)
     }
@@ -152,6 +163,14 @@ public struct UploadGitHubArtifact: Action {
         guard validRange.contains(httpResponse.statusCode) else {
             throw InvalidStatusCode(statusCode: httpResponse.statusCode, expectedRange: validRange)
         }
+    }
+
+    public func cleanUp(error: Error?) async throws {
+        guard let zippedArtifactURL else {
+            return
+        }
+
+        try context.fileManager.removeItem(at: zippedArtifactURL)
     }
 }
 
@@ -180,7 +199,7 @@ fileprivate extension URL {
         if #available(macOS 13.0, *) {
             self.append(queryItems: items)
         } else {
-            var components = URLComponents(url: self, resolvingAgainstBaseURL: false)!
+            let components = URLComponents(url: self, resolvingAgainstBaseURL: false)!
             var queryItems = components.queryItems ?? []
             queryItems.append(contentsOf: items)
             self = components.url!
@@ -192,7 +211,83 @@ fileprivate extension URL {
         copy.appendQueryItems(items)
         return copy
     }
+
+    var fileURL: URL {
+        guard !isFileURL else {
+            return self
+        }
+
+        if #available(macOS 13.0, *) {
+            return URL(filePath: self.path(), directoryHint: .checkFileSystem, relativeTo: nil)
+        } else {
+            return URL(fileURLWithPath: self.path)
+        }
+    }
+
+    var filePath: String {
+        if #available(macOS 13.0, *) {
+            return self.path()
+        } else {
+            return self.path
+        }
+    }
 }
+
+extension FileManager {
+    func zip(_ source: URL, into outputDirectory: URL? = nil) throws -> URL {
+        let source = source.fileURL
+        let output = (outputDirectory ?? temporaryDirectory)
+            .appending(source.lastPathComponent)
+            .appendingPathExtension("zip")
+            .fileURL
+
+        if fileExists(atPath: output.filePath) {
+            try removeItem(at: output)
+        }
+
+        let readURL: URL
+        let isReadURLTemporary: Bool
+        var isDir: ObjCBool = false
+        if fileExists(atPath: source.path, isDirectory: &isDir), isDir.boolValue {
+            readURL = source.fileURL
+            isReadURLTemporary = false
+        } else {
+            let temp = temporaryDirectory.appending(UUID().uuidString)
+            try createDirectory(at: temp, withIntermediateDirectories: true)
+            let copy = temp.appending(source.lastPathComponent).fileURL
+            try copyItem(at: source, to: copy)
+            readURL = copy
+            isReadURLTemporary = true
+        }
+
+        let coordinator = NSFileCoordinator()
+        var readError: NSError?
+        var copyError: NSError?
+
+        coordinator.coordinate(readingItemAt: readURL, options: .forUploading, error: &readError) { zip in
+            do {
+                try copyItem(at: zip, to: output)
+            } catch {
+                copyError = error as NSError
+            }
+        }
+
+        if let readError {
+            throw ActionError("Failed to read item at \(source.path)", error: readError)
+        }
+
+        if let copyError {
+            throw ActionError("Failed to copy zipped output into destination", error: copyError)
+        }
+
+        if isReadURLTemporary {
+            try removeItem(at: readURL)
+        }
+
+        return output
+    }
+}
+
 
 /*
 

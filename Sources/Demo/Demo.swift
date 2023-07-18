@@ -1,3 +1,4 @@
+import Foundation
 import Logging
 import SwiftCI
 
@@ -6,11 +7,32 @@ struct Demo: MainAction {
     static let logLevel = Logger.Level.debug
 
     func run() async throws {
-        let secret = try await getSecret(.onePassword(
-            reference: "op://thdjmad6w45caxqbkdzxwayzdu/Certificate.p12/Certificates.p12",
-            serviceAccountToken: .environmentValue("op_token")
-        ))
+        let project = "/Users/clayellis/Documents/Projects/hx-ios/HX.xcodeproj"
+        let simulator = XcodeBuild.Destination.platform(.iOSSimulator, name: "iPhone 14")
 
-        print("SECRET:\n\(secret)")
+        try await buildXcodeProject(
+            project,
+            scheme: "HX App",
+            configuration: .debug,
+            destination: simulator,
+            xcbeautify: true
+        )
+
+        let settings = try getXcodeProjectBuildSettings(
+            xcodeProject: project,
+            configuration: .debug,
+            destination: simulator,
+            sdk: .iPhoneSimulator
+        )
+
+        let buildDirectory = try settings.require(.configurationBuildDirectory)
+        let fullProductName = try settings.require(.fullProductName)
+        let artifactName = "Simulator Build"
+        let artifactURL = URL(string: "\(buildDirectory)/\(fullProductName)")!
+        try await uploadGitHubArtifact(
+            at: artifactURL,
+            named: artifactName,
+            itemPath: "\(artifactName)/\(fullProductName)"
+        )
     }
 }
