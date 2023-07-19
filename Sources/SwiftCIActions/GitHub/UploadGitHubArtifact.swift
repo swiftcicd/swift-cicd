@@ -165,7 +165,7 @@ public struct UploadGitHubArtifact: Action {
 //              // Content-Range: bytes 0-199/200
 //              return `bytes ${start}-${end}/${total}`
 //            }
-            "bytes \(byteRange.lowerBound)-\(byteRange.upperBound)/\(totalBytes)"
+            "bytes \(byteRange.lowerBound)-\(byteRange.upperBound - 1)/\(totalBytes)"
         }
 
 //        var debugDescription: String {
