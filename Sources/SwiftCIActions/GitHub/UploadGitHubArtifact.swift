@@ -18,8 +18,8 @@ public struct UploadGitHubArtifact: Action {
 
     public init(artifact: URL, name: String? = nil) throws {
         self.artifactURL = artifact
-        self.artifactName = name ?? artifact.deletingPathExtension().lastPathComponent
-        self.itemPath = "\(self.artifactName)/\(self.artifactURL.lastPathComponent)"
+        self.artifactName = name ?? artifact.lastPathComponent
+        self.itemPath = "\(self.artifactName)/\(artifact.lastPathComponent)"
     }
 
     public struct Output {
