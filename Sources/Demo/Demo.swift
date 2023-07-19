@@ -27,12 +27,7 @@ struct Demo: MainAction {
 
         let buildDirectory = try settings.require(.configurationBuildDirectory)
         let fullProductName = try settings.require(.fullProductName)
-        let artifactName = "Simulator Build"
         let artifactURL = URL(string: "\(buildDirectory)/\(fullProductName)")!
-        try await uploadGitHubArtifact(
-            at: artifactURL,
-            named: artifactName,
-            itemPath: "\(artifactName)/\(fullProductName)"
-        )
+        try await uploadGitHubArtifact(artifactURL, named: "Simulator Build")
     }
 }
