@@ -122,9 +122,7 @@ import SwiftCIPlatforms
  }
  */
 
-
 public struct UploadGitHubArtifact: Action {
-
     let artifactURL: URL
     let artifactName: String
     let itemPath: String
@@ -132,8 +130,6 @@ public struct UploadGitHubArtifact: Action {
 
     private var artifactsBaseURL: URL {
         get throws {
-            // FIXME: ACTIONS_RUNTIME_URL is missing
-            // FIXME: ACTIONS_RUNTIME_TOKEN is missing
             let url = try context.environment.github.$runtimeURL.require()
             let runID = try context.environment.github.$runID.require()
             return url.appending("_apis/pipelines/workflows/\(runID)/artifacts?api-version=6.0-preview")
@@ -146,35 +142,26 @@ public struct UploadGitHubArtifact: Action {
         self.itemPath = itemPath
     }
 
-    private struct Chunk {//}: CustomDebugStringConvertible {
+    public struct Output {
+        let containerID: Int
+        let name: String
+        let url: URL
+    }
+
+    private struct Chunk {
         let data: Data
-//        let isZipped: Bool
         let byteRange: Range<Int>
         let totalBytes: Int
 
         var contentRange: String {
-//        https://github.com/actions/toolkit/blob/03eca1b0c77c26d3eaa0a4e9c1583d6e32b87f6f/packages/artifact/src/internal/utils.ts#L118
-//            export function getContentRange(
-//              start: number,
-//              end: number,
-//              total: number
-//            ): string {
-//              // Format: `bytes start-end/fileSize
-//              // start and end are inclusive
-//              // For a 200 byte chunk starting at byte 0:
-//              // Content-Range: bytes 0-199/200
-//              return `bytes ${start}-${end}/${total}`
-//            }
+            // https://github.com/actions/toolkit/blob/03eca1b0c77c26d3eaa0a4e9c1583d6e32b87f6f/packages/artifact/src/internal/utils.ts#L118
             "bytes \(byteRange.lowerBound)-\(byteRange.upperBound - 1)/\(totalBytes)"
         }
-
-//        var debugDescription: String {
-//            "\(self) - (Content-Range: \(contentRange))"
-//        }
     }
 
-    public func run() async throws -> Void {
+    public func run() async throws -> Output {
         var artifactURL = self.artifactURL
+        var itemPath = self.itemPath
 
         var isZipped = false
         var isDirectory = ObjCBool(false)
@@ -183,6 +170,7 @@ public struct UploadGitHubArtifact: Action {
             let zip = try context.fileManager.zip(artifactURL)
             zippedArtifactURL = zip
             artifactURL = zip
+            itemPath = itemPath + ".zip"
             isZipped = true
         }
 
@@ -190,7 +178,7 @@ public struct UploadGitHubArtifact: Action {
             throw ActionError("Couldn't determine the size of the artifact at: \(artifactURL.filePath)")
         }
 
-        logger.info("Artifact is \(totalBytes) bytes large")
+        logger.info("Artifact size is \(totalBytes) bytes")
 
         guard let stream = InputStream(url: artifactURL) else {
             throw ActionError("Failed to open InputStream to artifact at: \(artifactURL.filePath)")
@@ -198,7 +186,7 @@ public struct UploadGitHubArtifact: Action {
 
         // Step 1: Create the artifact container
         logger.info("Creating artifact container")
-        let fileContainerResourceURL = try await createArtifactContainer()
+        let fileContainerResourceURL = try await createArtifactContainer(named: artifactName)
 
         // Step 2: Chunk up the artifact into 4MB pieces and upload them
         logger.info("Chunking artifact")
@@ -223,24 +211,23 @@ public struct UploadGitHubArtifact: Action {
             default:
                 // Read bytes
                 logger.info("Read chunk: \(amount) bytes")
-
-
-                // This worked a couple times until I added isZipped to chunk and the debugDescription
-
-
-//                Data(buffer[..<amount])
-//                Data(bytes: buffer, count: buffer.count)
                 let chunk = Chunk(data: Data(buffer[..<amount]), byteRange: offset..<offset+amount, totalBytes: totalBytes)
                 offset += amount
                 logger.info("Uploading chunk: \(chunk.contentRange)")
-                try await uploadChunk(chunk, toArtifactContainer: fileContainerResourceURL, itemPath: itemPath)
+                try await uploadChunk(chunk, isZipped: isZipped, toArtifactContainer: fileContainerResourceURL, itemPath: itemPath)
             }
         }
         stream.close()
 
         // Step 3: Finalize the artifact upload
         logger.info("Finalizing artifact upload")
-        try await finalizeArtifactUpload(totalBytes: totalBytes)
+        let upload = try await finalizeArtifactUpload(named: artifactName, totalBytes: totalBytes)
+
+        return Output(
+            containerID: upload.containerId,
+            name: upload.name,
+            url: upload.url
+        )
     }
 
     private func request(method: String, url: URL, contentType: String, bodyData: Data?) throws -> URLRequest {
@@ -259,7 +246,7 @@ public struct UploadGitHubArtifact: Action {
         return try request(method: method, url: url, contentType: contentType, bodyData: data)
     }
 
-    private func createArtifactContainer() async throws -> URL {
+    private func createArtifactContainer(named name: String) async throws -> URL {
         struct Body: Encodable {
             let type = "actions_storage"
             let name: String
@@ -269,26 +256,32 @@ public struct UploadGitHubArtifact: Action {
             let fileContainerResourceUrl: URL
         }
 
-        let body = Body(name: artifactName)
+        let body = Body(name: name)
         let request = try request(method: "POST", url: artifactsBaseURL, contentType: "application/json", body: body)
         let data = try await validate(URLSession.shared.data(for: request))
         let response = try JSONDecoder().decode(Response.self, from: data)
         return response.fileContainerResourceUrl
     }
 
-    private func uploadChunk(_ chunk: Chunk, toArtifactContainer url: URL, itemPath: String) async throws {
+    private func uploadChunk(_ chunk: Chunk, isZipped: Bool, toArtifactContainer url: URL, itemPath: String) async throws {
         let url = url.appendingQueryItems([URLQueryItem(name: "itemPath", value: itemPath)])
         var request = try request(method: "PUT", url: url, contentType: "application/octet-stream", bodyData: nil)
         request.addValue(chunk.contentRange, forHTTPHeaderField: "Content-Range")
-//        if chunk.isZipped {
-//            request.addValue("zip", forHTTPHeaderField: "Content-Encoding")
+        if isZipped {
+            request.addValue("zip", forHTTPHeaderField: "Content-Encoding")
 //            // TODO: Do we need to add this header?
-////            requestOptions['x-tfs-filelength'] = uncompressedLength
-//        }
+//            requestOptions['x-tfs-filelength'] = uncompressedLength
+        }
         try await validate(URLSession.shared.upload(for: request, from: chunk.data))
     }
 
-    private func finalizeArtifactUpload(totalBytes: Int) async throws {
+    private struct FinalizeArtifactUploadResponse: Decodable {
+        let containerId: Int
+        let name: String
+        let url: URL
+    }
+
+    private func finalizeArtifactUpload(named artifactName: String, totalBytes: Int) async throws -> FinalizeArtifactUploadResponse {
         struct Body: Encodable {
             let size: Int
         }
@@ -296,7 +289,9 @@ public struct UploadGitHubArtifact: Action {
         let url = try artifactsBaseURL.appendingQueryItems([URLQueryItem(name: "artifactName", value: artifactName)])
         let body = Body(size: totalBytes)
         let request = try request(method: "PATCH", url: url, contentType: "application/json", body: body)
-        try await validate(URLSession.shared.data(for: request))
+        let data = try await validate(URLSession.shared.data(for: request))
+        let response = try JSONDecoder().decode(FinalizeArtifactUploadResponse.self, from: data)
+        return response
     }
 
     private struct InvalidStatusCode: Error {
@@ -329,6 +324,13 @@ public struct UploadGitHubArtifact: Action {
 }
 
 public extension Action {
+
+    // TODO: change the api to this:
+    // uploadGitHubArtifact(_ url: URL, name: String? = nil)
+    // if name is nil, use the last path component: /build/ios.app -> ios.app
+    // if name is provided, use it: "iOS App"
+    // always use the path of the item: iOS App/ios.app
+
     func uploadGitHubArtifact(at artifactURL: URL, named artifactName: String? = nil, itemPath: String) async throws {
         try await action(UploadGitHubArtifact(artifact: artifactURL, name: artifactName, itemPath: itemPath))
     }
