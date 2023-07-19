@@ -269,7 +269,7 @@ public struct UploadGitHubArtifact: Action {
             let fileContainerResourceUrl: URL
         }
 
-        let body = Body(name: "'\"\(artifactName)\"'")
+        let body = Body(name: artifactName)
         let request = try request(method: "POST", url: artifactsBaseURL, contentType: "application/json", body: body)
         let data = try await validate(URLSession.shared.data(for: request))
         let response = try JSONDecoder().decode(Response.self, from: data)
