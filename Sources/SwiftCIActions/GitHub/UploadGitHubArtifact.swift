@@ -146,8 +146,9 @@ public struct UploadGitHubArtifact: Action {
         self.itemPath = itemPath
     }
 
-    private struct Chunk {
+    private struct Chunk: CustomDebugStringConvertible {
         let data: Data
+        let isZipped: Bool
         let byteRange: Range<Int>
         let totalBytes: Int
 
@@ -166,23 +167,23 @@ public struct UploadGitHubArtifact: Action {
 //            }
             "bytes \(byteRange.lowerBound)-\(byteRange.upperBound)/\(totalBytes)"
         }
+
+        var debugDescription: String {
+            "\(self) - (Content-Range: \(contentRange))"
+        }
     }
 
     public func run() async throws -> Void {
         var artifactURL = self.artifactURL
 
+        var isZipped = false
         var isDirectory = ObjCBool(false)
         if context.fileManager.fileExists(atPath: artifactURL.filePath, isDirectory: &isDirectory), isDirectory.boolValue {
             logger.info("Artifact is a directory. Zipping...")
             let zip = try context.fileManager.zip(artifactURL)
             zippedArtifactURL = zip
             artifactURL = zip
-
-            // TODO: Add these headers to the request
-//            if (isGzip) {
-//                requestOptions['Content-Encoding'] = 'gzip'
-//                requestOptions['x-tfs-filelength'] = uncompressedLength
-//              }
+            isZipped = true
         }
 
         guard let totalBytes = try context.fileManager.attributesOfItem(atPath: artifactURL.filePath)[.size] as? Int else {
@@ -222,9 +223,9 @@ public struct UploadGitHubArtifact: Action {
             default:
                 // Read bytes
                 logger.info("Read chunk: \(amount) bytes")
-                let chunk = Chunk(data: Data(buffer[..<amount]), byteRange: offset..<offset+amount, totalBytes: totalBytes)
+                let chunk = Chunk(data: Data(buffer[..<amount]), isZipped: isZipped, byteRange: offset..<offset+amount, totalBytes: totalBytes)
                 offset += amount
-                logger.info("Uploading chunk: \(chunk)")
+                logger.info("Uploading chunk: \(chunk.debugDescription)")
                 try await uploadChunk(chunk, toArtifactContainer: fileContainerResourceURL, itemPath: itemPath)
             }
         }
@@ -272,6 +273,11 @@ public struct UploadGitHubArtifact: Action {
         let url = url.appendingQueryItems([URLQueryItem(name: "itemPath", value: itemPath)])
         var request = try request(method: "PUT", url: url, contentType: "application/octet-stream", bodyData: nil)
         request.addValue(chunk.contentRange, forHTTPHeaderField: "Content-Range")
+        if chunk.isZipped {
+            request.addValue("zip", forHTTPHeaderField: "Content-Encoding")
+            // TODO: Do we need to add this header?
+//            requestOptions['x-tfs-filelength'] = uncompressedLength
+        }
         try await validate(URLSession.shared.upload(for: request, from: chunk.data))
     }
 
