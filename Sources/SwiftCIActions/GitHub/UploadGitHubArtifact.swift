@@ -331,7 +331,7 @@ public extension Action {
     // if name is provided, use it: "iOS App"
     // always use the path of the item: iOS App/ios.app
 
-    func uploadGitHubArtifact(at artifactURL: URL, named artifactName: String? = nil, itemPath: String) async throws {
+    func uploadGitHubArtifact(at artifactURL: URL, named artifactName: String? = nil, itemPath: String) async throws -> UploadGitHubArtifact.Output {
         try await action(UploadGitHubArtifact(artifact: artifactURL, name: artifactName, itemPath: itemPath))
     }
 }
