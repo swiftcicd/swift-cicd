@@ -263,9 +263,8 @@ public struct UploadGitHubArtifact: Action {
 
         let body = Body(name: "'\"\(artifactName)\"'")
         let request = try request(method: "POST", url: artifactsBaseURL, contentType: "application/json", body: body)
-        let (data, urlResponse) = try await URLSession.shared.data(for: request)
+        let data = try await validate(URLSession.shared.data(for: request))
         let response = try JSONDecoder().decode(Response.self, from: data)
-        try validate(response: urlResponse)
         return response.fileContainerResourceUrl
     }
 
@@ -273,8 +272,7 @@ public struct UploadGitHubArtifact: Action {
         let url = url.appendingQueryItems([URLQueryItem(name: "itemPath", value: itemPath)])
         var request = try request(method: "PUT", url: url, contentType: "application/octet-stream", bodyData: nil)
         request.addValue(chunk.contentRange, forHTTPHeaderField: "Content-Range")
-        let (_, response) = try await URLSession.shared.upload(for: request, from: chunk.data)
-        try validate(response: response)
+        try await validate(URLSession.shared.upload(for: request, from: chunk.data))
     }
 
     private func finalizeArtifactUpload(totalBytes: Int) async throws {
@@ -285,8 +283,7 @@ public struct UploadGitHubArtifact: Action {
         let url = try artifactsBaseURL.appendingQueryItems([URLQueryItem(name: "artifactName", value: artifactName)])
         let body = Body(size: totalBytes)
         let request = try request(method: "PATCH", url: url, contentType: "application/json", body: body)
-        let (_, response) = try await URLSession.shared.data(for: request)
-        try validate(response: response)
+        try await validate(URLSession.shared.data(for: request))
     }
 
     private struct InvalidStatusCode: Error {
@@ -294,11 +291,19 @@ public struct UploadGitHubArtifact: Action {
         let expectedRange: ClosedRange<Int>
     }
 
-    private func validate(response: URLResponse, statusCodeIn validRange: ClosedRange<Int> = 200...299) throws {
+    private func validate(data: Data, response: URLResponse, statusCodeIn validRange: ClosedRange<Int> = 200...299) throws -> Data {
         let httpResponse = response as! HTTPURLResponse
         guard validRange.contains(httpResponse.statusCode) else {
+            logger.error("Invalid status code \(httpResponse.statusCode), expected \(validRange.lowerBound)...\(validRange.upperBound).")
+            logger.error("Response body:\n\(data.string)")
             throw InvalidStatusCode(statusCode: httpResponse.statusCode, expectedRange: validRange)
         }
+        return data
+    }
+
+    @discardableResult
+    private func validate(_ tuple: (data: Data, response: URLResponse)) throws -> Data {
+        try validate(data: tuple.data, response: tuple.response, statusCodeIn: 200...299)
     }
 
     public func cleanUp(error: Error?) async throws {
