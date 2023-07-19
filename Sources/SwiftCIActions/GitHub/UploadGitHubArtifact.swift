@@ -204,7 +204,7 @@ public struct UploadGitHubArtifact: Action {
         logger.info("Chunking artifact")
         // The GitHub @actions/upload-artifact action uploads in chunks of 4MB
         // https://github.com/actions/toolkit/blob/main/packages/artifact/docs/implementation-details.md#uploadcompression-flow
-        let chunkSizeInBytes = Int(Measurement(value: 4, unit: UnitInformationStorage.megabytes).converted(to: .bytes).value)
+        let chunkSizeInBytes = Int(Measurement(value: 2, unit: UnitInformationStorage.megabytes).converted(to: .bytes).value)
         var buffer = [UInt8](repeating: 0, count: chunkSizeInBytes)
         var offset = 0
         stream.open()
