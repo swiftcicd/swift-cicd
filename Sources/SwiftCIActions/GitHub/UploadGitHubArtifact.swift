@@ -223,7 +223,8 @@ public struct UploadGitHubArtifact: Action {
             default:
                 // Read bytes
                 logger.info("Read chunk: \(amount) bytes")
-                let chunk = Chunk(data: Data(buffer[..<amount]), isZipped: isZipped, byteRange: offset..<offset+amount, totalBytes: totalBytes)
+                //  Data(buffer[..<amount])
+                let chunk = Chunk(data: Data(bytes: buffer, count: buffer.count), isZipped: isZipped, byteRange: offset..<offset+amount, totalBytes: totalBytes)
                 offset += amount
                 logger.info("Uploading chunk: \(chunk.debugDescription)")
                 try await uploadChunk(chunk, toArtifactContainer: fileContainerResourceURL, itemPath: itemPath)
