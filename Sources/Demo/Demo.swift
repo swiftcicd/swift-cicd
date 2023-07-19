@@ -28,6 +28,6 @@ struct Demo: MainAction {
         let buildDirectory = try settings.require(.configurationBuildDirectory)
         let fullProductName = try settings.require(.fullProductName)
         let artifactURL = URL(string: "\(buildDirectory)/\(fullProductName)")!
-        try await uploadGitHubArtifact(artifactURL, named: "Simulator Build")
+        try await uploadGitHubActionArtifact(artifactURL, named: "Simulator Build")
     }
 }

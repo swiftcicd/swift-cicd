@@ -2,7 +2,7 @@ import Foundation
 import SwiftCICore
 import SwiftCIPlatforms
 
-public struct UploadGitHubArtifact: Action {
+public struct UploadGitHubActionArtifact: Action {
     let artifactURL: URL
     let artifactName: String
     let itemPath: String
@@ -21,6 +21,8 @@ public struct UploadGitHubArtifact: Action {
         self.artifactName = name ?? artifact.lastPathComponent
         self.itemPath = "\(self.artifactName)/\(artifact.lastPathComponent)"
     }
+
+    // TODO: Determine what useful output would be. The returned url isn't suitable for downloads, and access permission is denied.
 
     public struct Output {
         let containerID: Int
@@ -217,8 +219,8 @@ public struct UploadGitHubArtifact: Action {
 
 public extension Action {
     @discardableResult
-    func uploadGitHubArtifact(_ artifactURL: URL, named artifactName: String? = nil) async throws -> UploadGitHubArtifact.Output {
-        try await action(UploadGitHubArtifact(artifact: artifactURL, name: artifactName))
+    func uploadGitHubActionArtifact(_ artifactURL: URL, named artifactName: String? = nil) async throws -> UploadGitHubActionArtifact.Output {
+        try await action(UploadGitHubActionArtifact(artifact: artifactURL, name: artifactName))
     }
 }
 
