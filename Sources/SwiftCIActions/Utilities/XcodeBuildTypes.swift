@@ -31,6 +31,16 @@ public enum XcodeBuild {
         public enum Platform: String {
             case iOSSimulator = "iOS Simulator"
             case macOS = "OS X"
+
+            public var sdk: SDK? {
+                switch self {
+                case .iOSSimulator:
+                    return .iPhoneSimulator
+                case .macOS:
+                    // TODO: Is there an SDK value we should be returning here?
+                    return nil
+                }
+            }
         }
 
         public enum GenericPlatform: String {
@@ -47,6 +57,16 @@ public enum XcodeBuild {
 
         public static func generic(platform: GenericPlatform) -> Destination {
             .generic(platform: platform.rawValue)
+        }
+
+        public var sdk: SDK? {
+            switch self {
+            case .generic(let platformString):
+                return Platform(rawValue: platformString)?.sdk
+
+            case .platform(let platformString, _, _):
+                return Platform(rawValue: platformString)?.sdk
+            }
         }
 
         public var value: ShellCommand.Component {

@@ -129,6 +129,7 @@ public struct Xcbeautify: Action {
 }
 
 public extension Action {
+    @discardableResult
     func xcbeautify(_ command: ShellCommand, options: Xcbeautify.Options = .init()) async throws -> String {
         try await action(Xcbeautify(command: command, options: options))
     }

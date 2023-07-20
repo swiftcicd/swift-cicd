@@ -1,14 +1,19 @@
+import Foundation
 import SwiftCICore
 
 public struct BuildXcodeProject: Action {
     public let name = "Build Xcode Project"
 
-//    @Context(\.xcodeProject) var xcodeProject
+    public struct Output {
+        public let product: URL
+        public let productName: String
+    }
 
     var project: String?
     var scheme: String?
     var configuration: XcodeBuild.Configuration?
     let destination: XcodeBuild.Destination?
+    let sdk: XcodeBuild.SDK?
     var cleanBuild: Bool
     var archivePath: String?
     var codeSignStyle: XcodeBuild.CodeSignStyle?
@@ -21,6 +26,7 @@ public struct BuildXcodeProject: Action {
         scheme: String? = nil,
         configuration: XcodeBuild.Configuration? = nil,
         destination: XcodeBuild.Destination? = nil,
+        sdk: XcodeBuild.SDK? = nil,
         cleanBuild: Bool = false,
         archivePath: String? = nil,
         codeSignStyle: XcodeBuild.CodeSignStyle? = nil,
@@ -32,6 +38,7 @@ public struct BuildXcodeProject: Action {
         self.scheme = scheme
         self.configuration = configuration
         self.destination = destination
+        self.sdk = sdk ?? destination?.sdk
         self.cleanBuild = cleanBuild
         self.archivePath = archivePath
         self.codeSignStyle = codeSignStyle
@@ -40,13 +47,14 @@ public struct BuildXcodeProject: Action {
         self.xcbeautify = xcbeautify
     }
 
-    public func run() async throws -> String {
+    public func run() async throws -> Output {
         var xcodebuild = ShellCommand("xcodebuild")
         let project = try self.project ?? context.xcodeProject
         xcodebuild.append("-project", ifLet: project)
         xcodebuild.append("-scheme", ifLet: scheme)
         xcodebuild.append("-destination", ifLet: destination?.value)
-        xcodebuild.append("-configuration", ifLet: configuration.map { "\($0.name)" })
+        xcodebuild.append("-configuration", ifLet: configuration?.name)
+        xcodebuild.append("-sdk", ifLet: sdk?.value)
         xcodebuild.append("clean", if: cleanBuild)
 
         if let archivePath {
@@ -98,10 +106,30 @@ public struct BuildXcodeProject: Action {
         }
 
         if xcbeautify {
-            return try await xcbeautify(xcodebuild)
+            try await xcbeautify(xcodebuild)
         } else {
-            return try context.shell(xcodebuild)
+            try context.shell(xcodebuild)
         }
+
+        let settings = try getXcodeProjectBuildSettings(
+            xcodeProject: project,
+            scheme: scheme,
+            configuration: configuration,
+            destination: destination,
+            sdk: sdk
+        )
+
+        let buildDirectory = try settings.require(.configurationBuildDirectory)
+        let fullProductName = try settings.require(.fullProductName)
+        let productPath = "\(buildDirectory)/\(fullProductName)"
+        guard let productURL = URL(string: productPath) else {
+            throw ActionError("Failed to create product URL from \(productPath)")
+        }
+
+        return Output(
+            product: productURL,
+            productName: fullProductName
+        )
     }
 
     public func cleanUp(error: Error?) async throws {
@@ -124,7 +152,7 @@ public extension Action {
         projectVersion: String? = nil,
         includeDSYMs: Bool? = nil,
         xcbeautify: Bool = false
-    ) async throws -> String {
+    ) async throws -> BuildXcodeProject.Output {
         try await action(
             BuildXcodeProject(
                 project: project,
@@ -153,7 +181,7 @@ public extension Action {
         projectVersion: String? = nil,
         includeDSYMs: Bool? = nil,
         xcbeautify: Bool = false
-    ) async throws -> String {
+    ) async throws -> BuildXcodeProject.Output {
         try await action(
             BuildXcodeProject(
                 project: project,
