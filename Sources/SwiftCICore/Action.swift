@@ -44,6 +44,11 @@ extension Action {
 
 public extension Action {
     @discardableResult
+    func action<A: Action>(_ action: A) async throws -> A.Output {
+        try await self.action(nil, action)
+    }
+
+    @discardableResult
     func action<A: Action>(_ name: String? = nil, _ action: A) async throws -> A.Output {
         let name = name ?? action.name
         let parent = context.currentStackFrame
@@ -98,7 +103,7 @@ public extension Action {
             }
 
             logger.info("Selected: \(action.name)")
-            try await self.action(nil, action)
+            try await self.action(action)
         }
     }
 }
