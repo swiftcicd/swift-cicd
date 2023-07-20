@@ -6,11 +6,11 @@ public struct BuildXcodeProject: Action {
 
     public struct Output {
         public struct Product {
-            let url: URL
-            let name: String
+            public let url: URL
+            public let name: String
         }
 
-        let product: Product?
+        public let product: Product?
     }
 
     var project: String?
