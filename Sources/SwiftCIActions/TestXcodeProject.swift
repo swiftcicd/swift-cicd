@@ -1,8 +1,6 @@
 import SwiftCICore
 
 public struct TestXcodeProject: Action {
-    public let name = "Test Xcode Project"
-
     var xcodeProject: String?
     var scheme: String?
     var destination: XcodeBuild.Destination?

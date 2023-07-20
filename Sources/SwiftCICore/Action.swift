@@ -29,7 +29,9 @@ public protocol Action<Output>: ContextAware {
 }
 
 public extension Action {
-    var name: String { "\(Self.self)" }
+    var name: String {
+        "\(Self.self)".addingSpacesBetweenWords
+    }
 
     func cleanUp(error: Error?) async throws {
         // Default is no-op.
@@ -105,5 +107,14 @@ public extension Action {
             logger.info("Selected: \(action.name)")
             try await self.action(action)
         }
+    }
+}
+
+extension String {
+    var addingSpacesBetweenWords: String {
+        let regex = try! NSRegularExpression(pattern: "([a-z])([A-Z])", options: [])
+        let range = NSRange(location: 0, length: self.count)
+        let result = regex.stringByReplacingMatches(in: self, options: [], range: range, withTemplate: "$1 $2")
+        return result
     }
 }

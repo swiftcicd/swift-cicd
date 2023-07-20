@@ -2,8 +2,6 @@ import Foundation
 import SwiftCICore
 
 public struct BuildXcodeProject: Action {
-    public let name = "Build Xcode Project"
-
     public struct Output {
         public struct Product {
             public let url: URL

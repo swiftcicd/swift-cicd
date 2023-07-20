@@ -4,8 +4,6 @@ import SwiftCICore
 // Reference: https://github.com/stefanzweifel/git-auto-commit-action/blob/master/entrypoint.sh
 
 public struct GitCommit: Action {
-    public let name = "Git Commit"
-
     let flags: [String]
     let message: String
     var author: String?

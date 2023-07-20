@@ -1,8 +1,6 @@
 import SwiftCICore
 
 public struct GitPush: Action {
-    public let name = "Git Push"
-
     public func run() async throws -> String {
         let push = ShellCommand("git push")
         return try context.shell(push)

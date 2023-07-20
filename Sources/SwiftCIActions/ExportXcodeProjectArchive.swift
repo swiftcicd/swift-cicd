@@ -5,8 +5,6 @@ import SwiftCICore
 // TODO: Automatically detect project, schemes, etc.
 
 public struct ExportXcodeProjectArchive: Action {
-    public let name = "Export Archive"
-
     var xcodeProject: String?
     /// Specifies the directory where any created archives will be placed, or the archive that should be exported.
     let archivePath: String
