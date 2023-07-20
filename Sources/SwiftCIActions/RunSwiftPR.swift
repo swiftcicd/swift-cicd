@@ -14,8 +14,8 @@ public struct RunSwiftPR: Action {
     }
 
     public struct Output {
-        public let status: Status.State
-        public let comment: Comment
+        public let status: OctoKit.Status.State
+        public let comment: OctoKit.Comment
     }
 
     public func run() async throws -> Output {

@@ -5,8 +5,12 @@ public struct BuildXcodeProject: Action {
     public let name = "Build Xcode Project"
 
     public struct Output {
-        public let product: URL
-        public let productName: String
+        public struct Product {
+            let url: URL
+            let name: String
+        }
+
+        let product: Product?
     }
 
     var project: String?
@@ -119,16 +123,18 @@ public struct BuildXcodeProject: Action {
             sdk: sdk
         )
 
-        let buildDirectory = try settings.require(.configurationBuildDirectory)
-        let fullProductName = try settings.require(.fullProductName)
-        let productPath = "\(buildDirectory)/\(fullProductName)"
-        guard let productURL = URL(string: productPath) else {
-            throw ActionError("Failed to create product URL from \(productPath)")
+        var product: Output.Product?
+        if let buildDirectory = settings[.configurationBuildDirectory], let fullProductName = settings[.fullProductName] {
+            let productPath = "\(buildDirectory)/\(fullProductName)"
+            guard let productURL = URL(string: productPath) else {
+                throw ActionError("Failed to create product URL from \(productPath)")
+            }
+
+            product = Output.Product(url: productURL, name: fullProductName)
         }
 
         return Output(
-            product: productURL,
-            productName: fullProductName
+            product: product
         )
     }
 
