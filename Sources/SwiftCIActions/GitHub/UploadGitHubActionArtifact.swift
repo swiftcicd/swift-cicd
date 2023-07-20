@@ -42,7 +42,7 @@ public struct UploadGitHubActionArtifact: Action {
     }
 
     public func run() async throws -> Output {
-        logger.info("Upload \(artifactURL.filePath) as GitHub artifact named \(artifactName)")
+        logger.info("Preparing to upload \(artifactURL.filePath) as GitHub artifact named \(artifactName)")
 
         var artifactURL = self.artifactURL
         var itemPath = self.itemPath
@@ -57,8 +57,7 @@ public struct UploadGitHubActionArtifact: Action {
             isZipped = true
         }
 
-        logger.info("Artifact will be place at \(itemPath)")
-
+        logger.info("Artifact will be placed at \(itemPath)")
         guard let totalBytes = try context.fileManager.attributesOfItem(atPath: artifactURL.filePath)[.size] as? Int else {
             throw ActionError("Couldn't determine the size of the artifact at: \(artifactURL.filePath)")
         }
