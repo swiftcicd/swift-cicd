@@ -95,6 +95,11 @@ public extension Action {
             return output
         }
     }
+    
+    @discardableResult
+    func action<A: Action>(_ name: String, _ action: () throws -> A) async throws -> A.Output {
+        try await self.action(name, action())
+    }
 
     @discardableResult
     func action<T>(_ name: String, _ actionCaller: () async throws -> T) async throws -> T {
