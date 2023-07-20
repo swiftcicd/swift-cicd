@@ -1,3 +1,5 @@
+import Foundation
+
 public extension String {
     static func / (lhs: String, rhs: String) -> String {
         if lhs.hasSuffix("/") {
@@ -21,5 +23,12 @@ public extension String {
         self.components(separatedBy: "/")
             .dropLast()
             .joined(separator: "/")
+    }
+
+    var addingSpacesBetweenWords: String {
+        let regex = try! NSRegularExpression(pattern: "([a-z])([A-Z])", options: [])
+        let range = NSRange(location: 0, length: self.count)
+        let result = regex.stringByReplacingMatches(in: self, options: [], range: range, withTemplate: "$1 $2")
+        return result
     }
 }
