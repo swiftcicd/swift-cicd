@@ -9,6 +9,10 @@ import SwiftPR
 public struct RunSwiftPR: Action {
     let prCheck: PRCheck.Type
 
+    public var name: String {
+        "Run SwiftPR Check: \(prCheck.name)"
+    }
+
     public init(prCheck: PRCheck.Type) {
         self.prCheck = prCheck
     }
