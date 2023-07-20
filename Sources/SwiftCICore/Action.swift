@@ -51,7 +51,7 @@ public extension Action {
 
     @discardableResult
     func action<A: Action>(_ name: String? = nil, _ action: A) async throws -> A.Output {
-        let name = name ?? action.name
+        let name = name ?? context.actionNameOverride ?? action.name
         let parent = context.currentStackFrame
         let frame = ActionStack.Frame(action: action, parent: parent)
         context.stack.push(frame)
@@ -93,6 +93,13 @@ public extension Action {
             }
 
             return output
+        }
+    }
+
+    @discardableResult
+    func action<T>(_ name: String, _ actionCaller: () async throws -> T) async throws -> T {
+        try await ContextValues.withValue(\.actionNameOverride, name) {
+            try await actionCaller()
         }
     }
 

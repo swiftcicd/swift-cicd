@@ -10,13 +10,15 @@ struct Demo: MainAction {
         let project = "/Users/clayellis/Documents/Projects/hx-ios/HX.xcodeproj"
         let simulator = XcodeBuild.Destination.platform(.iOSSimulator, name: "iPhone 14")
 
-        try await buildXcodeProject(
-            project,
-            scheme: "HX App",
-            configuration: .debug,
-            destination: simulator,
-            xcbeautify: true
-        )
+        try await action("Build HX App") {
+            try await buildXcodeProject(
+                project,
+                scheme: "HX App",
+                configuration: .debug,
+                destination: simulator,
+                xcbeautify: true
+            )
+        }
 
         let settings = try getXcodeProjectBuildSettings(
             xcodeProject: project,
