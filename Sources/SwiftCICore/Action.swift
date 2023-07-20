@@ -43,10 +43,9 @@ extension Action {
 }
 
 public extension Action {
-    // TODO: Allow the action's name to be overridden by the caller
-
     @discardableResult
-    func action<A: Action>(_ action: A) async throws -> A.Output {
+    func action<A: Action>(_ name: String? = nil, _ action: A) async throws -> A.Output {
+        let name = name ?? action.name
         let parent = context.currentStackFrame
         let frame = ActionStack.Frame(action: action, parent: parent)
         context.stack.push(frame)
@@ -71,18 +70,18 @@ public extension Action {
             let output: A.Output
 
             if try context.platform.supportsNestedLogGroups {
-                output = try await context.withLogGroup(named: "Action: \(action.name)") {
+                output = try await context.withLogGroup(named: "Action: \(name)") {
                     try await action.run()
                 }
             } else {
                 // Only start a log group if the action's parent (or the action itself) is a MainAction on platforms that don't support nested log groups.
                 if parent?.action is any MainAction || action is any MainAction {
-                    output = try await context.withLogGroup(named: "Action: \(action.name)") {
+                    output = try await context.withLogGroup(named: "Action: \(name)") {
                         try await action.run()
                     }
                 } else {
                     // Otherwise, just log the action without a log group.
-                    logger.info("Action: \(action.name)")
+                    logger.info("Action: \(name)")
                     output = try await action.run()
                 }
             }
@@ -99,7 +98,7 @@ public extension Action {
             }
 
             logger.info("Selected: \(action.name)")
-            try await self.action(action)
+            try await self.action(nil, action)
         }
     }
 }
