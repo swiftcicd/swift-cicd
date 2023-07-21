@@ -12,7 +12,7 @@ public struct UploadGitHubActionArtifact: Action {
         get throws {
             let url = try context.environment.github.$runtimeURL.require()
             let runID = try context.environment.github.$runID.require()
-            return url.appending("_apis/pipelines/workflows/\(runID)/artifacts?api-version=6.0-preview")
+            return url.appendingCompat("_apis/pipelines/workflows/\(runID)/artifacts?api-version=6.0-preview")
         }
     }
 
@@ -22,12 +22,12 @@ public struct UploadGitHubActionArtifact: Action {
         self.itemPath = "\(self.artifactName)/\(artifact.lastPathComponent)"
     }
 
-    // TODO: Determine what useful output would be. The returned url isn't suitable for downloads, and access permission is denied.
+    // TODO: Determine what useful output would be. The returned url isn't suitable for downloads (access permission is denied.)
 
     public struct Output {
-        let containerID: Int
-        let name: String
-        let url: URL
+        public let containerID: Int
+        public let name: String
+        public let url: URL
     }
 
     private struct Chunk {
@@ -156,7 +156,7 @@ public struct UploadGitHubActionArtifact: Action {
 
     /// Reference: https://github.com/actions/toolkit/blob/03eca1b0c77c26d3eaa0a4e9c1583d6e32b87f6f/packages/artifact/src/internal/upload-http-client.ts#L421
     private func uploadChunk(_ chunk: Chunk, isZipped: Bool, toArtifactContainer url: URL, itemPath: String) async throws {
-        let url = url.appendingQueryItems([URLQueryItem(name: "itemPath", value: itemPath)])
+        let url = url.appendingQueryItemsCompat([URLQueryItem(name: "itemPath", value: itemPath)])
         var request = try request(method: "PUT", url: url, contentType: "application/octet-stream", bodyData: nil)
         request.addValue(chunk.contentRange, forHTTPHeaderField: "Content-Range")
         if isZipped {
@@ -179,7 +179,7 @@ public struct UploadGitHubActionArtifact: Action {
             let size: Int
         }
 
-        let url = try artifactsBaseURL.appendingQueryItems([URLQueryItem(name: "artifactName", value: artifactName)])
+        let url = try artifactsBaseURL.appendingQueryItemsCompat([URLQueryItem(name: "artifactName", value: artifactName)])
         let body = Body(size: totalBytes)
         let request = try request(method: "PATCH", url: url, contentType: "application/json", body: body)
         let data = try await validate(URLSession.shared.data(for: request))
@@ -223,64 +223,11 @@ public extension Action {
     }
 }
 
-fileprivate extension URL {
-    mutating func append(_ path: String) {
-        if #available(macOS 13.0, *) {
-            self.append(path: path)
-        } else {
-            self.appendPathComponent(path)
-        }
-    }
-
-    func appending(_ path: String) -> URL {
-        var copy = self
-        copy.append(path)
-        return copy
-    }
-
-    mutating func appendQueryItems(_ items: [URLQueryItem]) {
-        if #available(macOS 13.0, *) {
-            self.append(queryItems: items)
-        } else {
-            let components = URLComponents(url: self, resolvingAgainstBaseURL: false)!
-            var queryItems = components.queryItems ?? []
-            queryItems.append(contentsOf: items)
-            self = components.url!
-        }
-    }
-
-    func appendingQueryItems(_ items: [URLQueryItem]) -> URL {
-        var copy = self
-        copy.appendQueryItems(items)
-        return copy
-    }
-
-    var fileURL: URL {
-        guard !isFileURL else {
-            return self
-        }
-
-        if #available(macOS 13.0, *) {
-            return URL(filePath: self.path(), directoryHint: .checkFileSystem, relativeTo: nil)
-        } else {
-            return URL(fileURLWithPath: self.path)
-        }
-    }
-
-    var filePath: String {
-        if #available(macOS 13.0, *) {
-            return self.path()
-        } else {
-            return self.path
-        }
-    }
-}
-
 extension FileManager {
     func zip(_ source: URL, into outputDirectory: URL? = nil) throws -> URL {
         let source = source.fileURL
         let output = (outputDirectory ?? temporaryDirectory)
-            .appending(source.lastPathComponent)
+            .appendingCompat(source.lastPathComponent)
             .appendingPathExtension("zip")
             .fileURL
 
@@ -295,9 +242,9 @@ extension FileManager {
             readURL = source.fileURL
             isReadURLTemporary = false
         } else {
-            let temp = temporaryDirectory.appending(UUID().uuidString)
+            let temp = temporaryDirectory.appendingCompat(UUID().uuidString)
             try createDirectory(at: temp, withIntermediateDirectories: true)
-            let copy = temp.appending(source.lastPathComponent).fileURL
+            let copy = temp.appendingCompat(source.lastPathComponent).fileURL
             try copyItem(at: source, to: copy)
             readURL = copy
             isReadURLTemporary = true

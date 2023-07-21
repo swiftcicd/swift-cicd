@@ -24,7 +24,7 @@ struct Demo: MainAction {
             xcodeProject: project,
             configuration: .debug,
             destination: simulator,
-            sdk: .iPhoneSimulator
+            sdk: .iOSSimulator
         )
 
         let buildDirectory = try settings.require(.configurationBuildDirectory)

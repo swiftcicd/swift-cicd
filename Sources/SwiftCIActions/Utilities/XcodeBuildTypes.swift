@@ -32,13 +32,15 @@ public enum XcodeBuild {
             case iOSSimulator = "iOS Simulator"
             case macOS = "OS X"
 
+            /// Alias for ``Platform/macOS``.
+            public static let osx = Platform.macOS
+
             public var sdk: SDK? {
                 switch self {
                 case .iOSSimulator:
-                    return .iPhoneSimulator
+                    return .iOSSimulator
                 case .macOS:
-                    // TODO: Is there an SDK value we should be returning here?
-                    return nil
+                    return .macOS
                 }
             }
         }
@@ -79,14 +81,18 @@ public enum XcodeBuild {
         }
     }
 
-    public enum SDK {
-        case iPhoneSimulator
+    public enum SDK: String {
+        case driverKit = "driverkit"
+        case iOS = "iphoneos"
+        case iOSSimulator = "iphonesimulator"
+        case macOS = "macosx"
+        case tvOS = "appletvos"
+        case tvOSSimulator = "appletvsimulator"
+        case watchOS = "watchos"
+        case watchOSSimulator = "watchsimulator"
 
         public var value: ShellCommand.Component {
-            switch self {
-            case .iPhoneSimulator:
-                return "iphonesimulator"
-            }
+            "\(rawValue)"
         }
     }
 }

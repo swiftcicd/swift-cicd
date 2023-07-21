@@ -3,21 +3,21 @@ import SwiftCICore
 public struct Xcbeautify: Action {
     public struct Options {
         /// Only print tasks that have warnings or errors.
-        let quiet: Bool
+        public var quiet: Bool
         /// Only print tasks that have errors.
-        let quieter: Bool
+        public var quieter: Bool
         /// Preserves unbeautified output lines.
-        let preserveUnbeautified: Bool
+        public var preserveUnbeautified: Bool
         /// Print test result too under quiet/quieter flag.
-        let isCI: Bool
+        public var isCI: Bool
         /// Disable the colored output.
-        let disableColoredOutput: Bool
+        public var disableColoredOutput: Bool
         /// Generate the specified reports.
-        let report: String?
+        public var report: String?
         /// The path to use when generating reports (default: build/reports)
-        let reportPath: String?
+        public var reportPath: String?
         /// The name of JUnit report file name (default: junit.xml)
-        let jUnitReportFileName: String?
+        public var jUnitReportFileName: String?
 
         public init(
             quiet: Bool = false,
