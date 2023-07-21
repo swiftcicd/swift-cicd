@@ -125,11 +125,9 @@ public struct BuildXcodeProject: Action {
         if let buildDirectory = settings[.configurationBuildDirectory], let fullProductName = settings[.fullProductName] {
             let productPath = "\(buildDirectory)/\(fullProductName)"
             let productURL = URL(filePathCompat: productPath)
-            guard context.fileManager.fileExists(atPath: productPath) else {
-                throw ActionError("\(productPath) doesn't exist")
+            if context.fileManager.fileExists(atPath: productPath) {
+                product = Output.Product(url: productURL, name: fullProductName)
             }
-
-            product = Output.Product(url: productURL, name: fullProductName)
         }
 
         return Output(
