@@ -55,25 +55,31 @@ public struct Shell {
             task.standardError = errorPipe
 
             let outputTask = Task {
+                logger.info("DEBUG: Await output data.")
                 var outputData = Data()
                 for try await byte in outputPipe.fileHandleForReading.bytes {
                     // TODO: It would be nice if we could reconstruct the newline-separated lines of output as they come in and print them as they come in
                     outputData.append(contentsOf: [byte])
                 }
+                logger.info("DEBUG: Output data done.")
                 return outputData
             }
 
             let errorTask = Task {
+                logger.info("DEBUG: Await error data.")
                 var errorData = Data()
                 for try await byte in errorPipe.fileHandleForReading.bytes {
                     errorData.append(contentsOf: [byte])
                 }
+                logger.info("DEBUG: Error data done.")
                 return errorData
             }
 
+            logger.info("DEBUG: Running task")
             try task.run()
             task.waitUntilExit()
 
+            logger.info("DEBUG: Task exit. Awaiting output/error data.")
             let outputData = try await outputTask.value.removingTrailingNewline
             let errorData = try await errorTask.value.removingTrailingNewline
 
