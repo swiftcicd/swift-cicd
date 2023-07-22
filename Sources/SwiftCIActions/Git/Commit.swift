@@ -29,15 +29,15 @@ public struct GitCommit: Action {
     }
 
     public func run() async throws -> Output {
-        guard try !context.shell("git status -s").isEmpty else {
+        guard try await !shell("git status -s").isEmpty else {
             return Output(commitSHA: nil)
         }
 
         // FIXME: Get the headRef in a platform-agnostic way
         let branch = try context.environment.github.$headRef.require()
-        try context.shell("git fetch --depth=1")
+        try await shell("git fetch --depth=1")
         // TODO: If the branch already exists, just check it out, don't create it (-B)
-        try context.shell("git checkout \(branch)")
+        try await shell("git checkout \(branch)")
 
         let actor = try context.environment.github.$actor.require()
         let userName = userName ?? "github-actions[bot]"
@@ -63,14 +63,14 @@ public struct GitCommit: Action {
         // FIXME: Make platform-agnostic
         commit.append("--dry-run", if: !context.environment.github.isCI)
 
-        try context.shell(commit)
+        try await shell(commit)
 
-        let sha = try context.shell("git rev-parse HEAD")
+        let sha = try await shell("git rev-parse HEAD")
 
         if pushChanges {
             var push = ShellCommand("git push --set-upstream origin HEAD:\(branch) --atomic")
             push.append("--dry-run", if: !context.environment.github.isCI)
-            try context.shell(push)
+            try await shell(push)
         }
 
         return Output(commitSHA: sha)
@@ -140,14 +140,14 @@ public extension Action {
 
     @discardableResult
     func commitAllChanges(message: String, flags: [String] = []) async throws -> GitCommit.Output {
-        try context.shell("git add -A")
+        try await shell("git add -A")
         return try await commit(flags: flags, message: message)
     }
 
     @discardableResult
     func commit(files: String..., message: String, flags: [String] = []) async throws -> GitCommit.Output {
         for file in files {
-            try context.shell("git add \(file)")
+            try await shell("git add \(file)")
         }
 
         return try await commit(flags: flags, message: message)
@@ -158,7 +158,7 @@ public extension Action {
         try await context.withLogGroup(named: "Step: Commit Files Matching Predicate") {
             context.logger.info("Committing files matching predicate.")
 
-            let status = try context.shell("git status --short")
+            let status = try await shell("git status --short")
             let files = status
                 .components(separatedBy: "\n")
                 .compactMap(GitCommit.File.init(line:))
@@ -175,9 +175,9 @@ public extension Action {
 
             for file in filesToCommit {
                 if file.status.contains(.deleted) {
-                    try context.shell("git rm --cached \(file.path)")
+                    try await shell("git rm --cached \(file.path)")
                 } else {
-                    try context.shell("git add \(file.path)")
+                    try await shell("git add \(file.path)")
                 }
             }
 

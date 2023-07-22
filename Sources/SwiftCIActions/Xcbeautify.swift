@@ -40,10 +40,12 @@ public struct Xcbeautify: Tool {
         }
     }
 
+    public static let name = "xcbeautify"
+
     public static var isInstalled: Bool {
         get async {
             do {
-                let output = try context.shell("which xcbeautify", quiet: true)
+                let output = try await context.shell("which xcbeautify", quiet: true)
                 return !output.contains("not found")
             } catch {
                 return false
@@ -52,11 +54,13 @@ public struct Xcbeautify: Tool {
     }
 
     public static func install() async throws {
-        try context.shell("brew install xcbeautify")
+        try await context.shell("brew install xcbeautify")
+//        try await context.shell("/opt/homebrew/bin/brew install xcbeautify")
     }
 
     public static func uninstall() async throws {
-        try context.shell("brew uninstall xcbeautify")
+//        try await context.shell("/opt/homebrew/bin/brew uninstall xcbeautify")
+        try await context.shell("brew uninstall xcbeautify")
     }
 
     public static func beautify(_ command: ShellCommand, options: Options = .init()) async throws -> String {
@@ -69,7 +73,7 @@ public struct Xcbeautify: Tool {
         xcbeautify.append("--report", ifLet: options.report)
         xcbeautify.append("--report-path", ifLet: options.reportPath)
         xcbeautify.append("--junit-report-filename", ifLet: options.jUnitReportFileName)
-        return try context.shell(xcbeautify)
+        return try await context.shell(xcbeautify)
     }
 }
 

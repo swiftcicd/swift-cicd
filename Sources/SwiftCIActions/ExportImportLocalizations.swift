@@ -19,7 +19,7 @@ public struct ImportLocalizations: Action {
         if xcbeautify {
             return try await xcbeautify(xcodebuild)
         } else {
-            return try context.shell(xcodebuild)
+            return try await shell(xcodebuild)
         }
     }
 }
@@ -67,7 +67,7 @@ public struct ExportLocalizations: Action {
         if xcbeautify {
             commandOutput = try await xcbeautify(xcodebuild)
         } else {
-            commandOutput = try context.shell(xcodebuild)
+            commandOutput = try await shell(xcodebuild)
         }
 
         var output = Output()

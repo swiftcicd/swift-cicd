@@ -52,7 +52,7 @@ public struct AddSSHKeys: Action {
 
         var sshAgent = ShellCommand("ssh-agent")
         sshAgent.append("-a ", ifLet: sshAuthSocket)
-        let sshAgentOutput = try context.shell(sshAgent)
+        let sshAgentOutput = try await shell(sshAgent)
 
         for line in sshAgentOutput.components(separatedBy: "\n") {
             let key: String
@@ -92,15 +92,15 @@ public struct AddSSHKeys: Action {
 
         for sshPrivateKey in sshPrivateKeys {
             let key = try await sshPrivateKey.get().string
-            try context.shell("ssh-add - <<< \(key, escapingWith: .singleQuotes)")
+            try await shell("ssh-add - <<< \(key, escapingWith: .singleQuotes)")
         }
 
-        let keys = try context.shell("ssh-add -l", quiet: true)
+        let keys = try await shell("ssh-add -l", quiet: true)
         logger.info("Key(s) added:\n\(keys)")
 
         logger.info("Configuring deployment key(s)")
 
-        let publicKeys = try context.shell("ssh-add -L", quiet: true).components(separatedBy: "\n")
+        let publicKeys = try await shell("ssh-add -L", quiet: true).components(separatedBy: "\n")
         for publicKey in publicKeys {
 
             // TODO: Make this platform-agnostic. A platform should be able to parse and convert an https://, ssh://, or git@ url of a git repository.
@@ -144,9 +144,9 @@ public struct AddSSHKeys: Action {
             // with: git@key-hash.pub.github.com:owner/repo
             let section = "url.\"git@\(keyName).github.com:\(ownerAndRepo)\""
             let sectionInsteadOf = "\(section).insteadOf"
-            try context.shell("git config --global --replace-all \(sectionInsteadOf) https://github.com/\(ownerAndRepo)")
-            try context.shell("git config --global --add \(sectionInsteadOf) git@github.com:\(ownerAndRepo)")
-            try context.shell("git config --global --add \(sectionInsteadOf) ssh://github.com/\(ownerAndRepo)")
+            try await shell("git config --global --replace-all \(sectionInsteadOf) https://github.com/\(ownerAndRepo)")
+            try await shell("git config --global --add \(sectionInsteadOf) git@github.com:\(ownerAndRepo)")
+            try await shell("git config --global --add \(sectionInsteadOf) ssh://github.com/\(ownerAndRepo)")
             addedSections.append(section)
 
             try await updateFile(sshConfig) {
@@ -173,14 +173,14 @@ public struct AddSSHKeys: Action {
         }
 
         for section in addedSections {
-            try context.shell("git config --global --remove-section \(section)")
+            try await shell("git config --global --remove-section \(section)")
         }
 
         var command = ShellCommand("env")
         command.append("SSH_AGENT_PID", "=", ifLet: sshAgentPID)
         command.append("SSH_AUTH_SOCK", "=", ifLet: sshAgentAuthSocket)
         command.append("ssh-agent -k")
-        try context.shell(command)
+        try await shell(command)
     }
 
     func setenv(_ key: String, _ value: String) {

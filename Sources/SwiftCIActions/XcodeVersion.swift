@@ -17,7 +17,7 @@ public struct XcodeVersion: Action {
     let command: Command
 
     public func run() async throws {
-        try context.shell("xcversion \(command.command)")
+        try await shell("xcversion \(command.command)")
     }
 }
 

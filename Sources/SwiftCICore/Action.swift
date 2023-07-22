@@ -50,6 +50,30 @@ public extension Action {
     }
 
     @discardableResult
+    func action<A: Action>(_ name: String, _ action: () throws -> A) async throws -> A.Output {
+        try await self.action(name, action())
+    }
+
+    @discardableResult
+    func action<T>(_ name: String, _ actionCaller: () async throws -> T) async throws -> T {
+        try await ContextValues.withValue(\.actionNameOverride, name) {
+            try await actionCaller()
+        }
+    }
+
+    func action(_ selection: () async throws -> (any Action<Void>)?) async throws {
+        try await context.withLogGroup(named: "Selecting which action to run next...") {
+            guard let action = try await selection() else {
+                logger.info("No action selected")
+                return
+            }
+
+            logger.info("Selected: \(action.name)")
+            try await self.action(action)
+        }
+    }
+
+    @discardableResult
     func action<A: Action>(_ name: String? = nil, _ action: A) async throws -> A.Output {
         let name = name ?? context.actionNameOverride ?? action.name
         let parent = context.currentStackFrame
@@ -96,27 +120,4 @@ public extension Action {
         }
     }
 
-    @discardableResult
-    func action<A: Action>(_ name: String, _ action: () throws -> A) async throws -> A.Output {
-        try await self.action(name, action())
-    }
-
-    @discardableResult
-    func action<T>(_ name: String, _ actionCaller: () async throws -> T) async throws -> T {
-        try await ContextValues.withValue(\.actionNameOverride, name) {
-            try await actionCaller()
-        }
-    }
-
-    func action(_ selection: () async throws -> (any Action<Void>)?) async throws {
-        try await context.withLogGroup(named: "Selecting which action to run next...") {
-            guard let action = try await selection() else {
-                logger.info("No action selected")
-                return
-            }
-
-            logger.info("Selected: \(action.name)")
-            try await self.action(action)
-        }
-    }
 }

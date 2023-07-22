@@ -10,9 +10,12 @@ struct Demo: MainAction {
         let project = "/Users/clayellis/Documents/Projects/hx-ios/HX.xcodeproj"
         let simulator = XcodeBuild.Destination.platform(.iOSSimulator, name: "iPhone 14")
 
-        try await action("Build HX App") {
-            try await buildXcodeProject(
-                project,
+        let who = try await shell("pwd")
+        logger.info("whoami: \(who)")
+
+        let output = try await action("Build HX App") {
+            BuildXcodeProject(
+                project: project,
                 scheme: "HX App",
                 configuration: .debug,
                 destination: simulator,
@@ -20,16 +23,8 @@ struct Demo: MainAction {
             )
         }
 
-        let settings = try getXcodeProjectBuildSettings(
-            xcodeProject: project,
-            configuration: .debug,
-            destination: simulator,
-            sdk: .iOSSimulator
-        )
-
-        let buildDirectory = try settings.require(.configurationBuildDirectory)
-        let fullProductName = try settings.require(.fullProductName)
-        let artifactURL = URL(string: "\(buildDirectory)/\(fullProductName)")!
-        try await uploadGitHubActionArtifact(artifactURL, named: "Simulator Build")
+        if let product = output.product {
+            try await uploadGitHubActionArtifact(product.url, named: "Simulator Build")
+        }
     }
 }

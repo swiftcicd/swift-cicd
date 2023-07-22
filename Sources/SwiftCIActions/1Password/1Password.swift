@@ -1,16 +1,13 @@
 import Foundation
 import SwiftCICore
 
-// TODO: Make `brew` a Tool
-
 public enum OnePassword: Tool {
-    static let brew = "brew"///opt/homebrew/bin/brew"
-    static let path = "/usr/local/bin/op"
+    public static let name = "op"
 
     public static var isInstalled: Bool {
         get async {
             do {
-                return try !context.shell("\(path) --version", log: false, quiet: true).isEmpty
+                return try await !context.shell("op --version", log: false, quiet: true).isEmpty
             } catch {
                 return false
             }
@@ -18,15 +15,15 @@ public enum OnePassword: Tool {
     }
 
     public static func install() async throws {
-        try context.shell("\(brew) install --cask 1password/tap/1password-cli")
+        try await context.shell("brew install --cask 1password/tap/1password-cli")
     }
 
     public static func uninstall() async throws {
-        try context.shell("\(brew) uninstall 1password-cli")
+        try await context.shell("brew uninstall 1password-cli")
     }
 
     public static func read(reference: String, serviceAccountToken: String) async throws -> Data {
-        try context.shell("OP_SERVICE_ACCOUNT_TOKEN=\(serviceAccountToken) \(Self.path) read \(reference)", log: false, quiet: true)
+        try await context.shell("OP_SERVICE_ACCOUNT_TOKEN=\(serviceAccountToken) op read \(reference)", log: false, quiet: true)
     }
 }
 

@@ -30,7 +30,7 @@ public struct TestXcodeProject: Action {
         if xcbeautify {
             return try await xcbeautify(test)
         } else {
-            return try context.shell(test)
+            return try await shell(test)
         }
     }
 }

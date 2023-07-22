@@ -48,7 +48,7 @@ public struct XcodeProjectBuildSettings {
         configuration: XcodeBuild.Configuration? = nil,
         destination: XcodeBuild.Destination? = nil,
         sdk: XcodeBuild.SDK? = nil
-    ) throws {
+    ) async throws {
         let xcodeProject = try xcodeProject ?? ContextValues.current.xcodeProject
         var command = ShellCommand("xcodebuild")
         command.append("-project", ifLet: xcodeProject)
@@ -57,7 +57,7 @@ public struct XcodeProjectBuildSettings {
         command.append("-destination", ifLet: destination?.value)
         command.append("-sdk", ifLet: sdk?.value)
         command.append("-showBuildSettings")
-        let output = try ContextValues.current.shell(command, quiet: true)
+        let output = try await ContextValues.current.shell(command, quiet: true)
         self.init(showBuildSettingsOutput: output)
     }
 
@@ -118,8 +118,8 @@ public extension Action {
         configuration: XcodeBuild.Configuration? = nil,
         destination: XcodeBuild.Destination? = nil,
         sdk: XcodeBuild.SDK? = nil
-    ) throws -> XcodeProjectBuildSettings {
-        try XcodeProjectBuildSettings(
+    ) async throws -> XcodeProjectBuildSettings {
+        try await XcodeProjectBuildSettings(
             xcodeProject: xcodeProject,
             scheme: scheme,
             configuration: configuration,
@@ -134,8 +134,8 @@ public extension Action {
         configuration: XcodeBuild.Configuration? = nil,
         destination: XcodeBuild.Destination? = nil,
         sdk: XcodeBuild.SDK? = nil
-    ) throws -> XcodeProjectBuildSettings {
-        try XcodeProjectBuildSettings(
+    ) async throws -> XcodeProjectBuildSettings {
+        try await XcodeProjectBuildSettings(
             xcodeProject: xcodeProject,
             scheme: scheme,
             configuration: configuration,

@@ -28,15 +28,6 @@
       }
     },
     {
-      "identity" : "shellout",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/clayellis/ShellOut",
-      "state" : {
-        "branch" : "master",
-        "revision" : "00211573f56960965fd359a68aed743bb0627cc9"
-      }
-    },
-    {
       "identity" : "swift-arguments",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/clayellis/swift-arguments",

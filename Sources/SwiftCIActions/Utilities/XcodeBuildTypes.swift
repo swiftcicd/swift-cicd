@@ -1,6 +1,20 @@
 import SwiftCICore
 
 public enum XcodeBuild {
+    public enum XcodeContainer {
+        case project(String)
+        case workspace(String)
+
+        public var flag: ShellCommand.Component {
+            switch self {
+            case .project(let project):
+                return "-project \(project)"
+            case .workspace(let workspace):
+                return "-workspace \(workspace)"
+            }
+        }
+    }
+
     public struct Configuration: ExpressibleByStringLiteral {
         public static let debug = Configuration(name: "Debug")
         public static let release = Configuration(name: "Release")

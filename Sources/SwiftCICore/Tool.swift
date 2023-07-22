@@ -1,14 +1,14 @@
 import Foundation
 
 public protocol Tool: ContextAware {
-    static var id: String { get }
+    static var name: String { get }
     static var isInstalled: Bool { get async }
     static func install() async throws
     static func uninstall() async throws
 }
 
 public extension Tool {
-    static var id: String { "\(Self.self)" }
+    static var name: String { "\(Self.self)" }
 }
 
 public final class Tools: ContextAware {
@@ -16,14 +16,14 @@ public final class Tools: ContextAware {
 
     public subscript<T: Tool>(tool: T.Type) -> T.Type {
         get async throws {
-            if tools[tool.id] == nil {
+            if tools[tool.name] == nil {
                 if await !tool.isInstalled {
-                    context.logger.info("Installing \(tool.id)...")
+                    context.logger.info("Installing \(tool.name)...")
                     try await tool.install()
                 } else {
-                    context.logger.info("Tool \(tool.id) is already installed")
+                    context.logger.info("Tool \(tool.name) is already installed")
                 }
-                tools[tool.id] = tool
+                tools[tool.name] = tool
             }
 
             return tool
@@ -40,11 +40,11 @@ public final class Tools: ContextAware {
                 for tool in tools.values {
                     do {
                         if await tool.isInstalled {
-                            context.logger.info("Uninstalling \(tool.id)...")
+                            context.logger.info("Uninstalling \(tool.name)...")
                             try await tool.uninstall()
                         }
                     } catch {
-                        context.logger.error("Failed to uninstall tool: \(tool.id)")
+                        context.logger.error("Failed to uninstall tool: \(tool.name)")
                     }
                 }
             }

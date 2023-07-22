@@ -86,7 +86,7 @@ public struct UploadToAppStoreConnect: Action {
                 break versions
             }
 
-            guard let buildSettings = try? getBuildSettings(fromXcodeProject: project, scheme: scheme) else {
+            guard let buildSettings = try? await getBuildSettings(fromXcodeProject: project, scheme: scheme) else {
                 logger.debug("Couldn't detect bundle short version or bundle version because couldn't get build settings from Xcode project.")
                 break versions
             }
@@ -144,7 +144,7 @@ public struct UploadToAppStoreConnect: Action {
             """
         )
 
-        try context.shell("""
+        try await shell("""
             env API_PRIVATE_KEYS_DIR=\(appStoreConnectKey.path.removingLastPathComponent) \
             xcrun altool \
             --apiKey \(appStoreConnectKey.id) \

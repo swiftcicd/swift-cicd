@@ -110,10 +110,10 @@ public struct BuildXcodeProject: Action {
         if xcbeautify {
             try await xcbeautify(xcodebuild)
         } else {
-            try context.shell(xcodebuild)
+            try await shell(xcodebuild)
         }
 
-        let settings = try getXcodeProjectBuildSettings(
+        let settings = try await getXcodeProjectBuildSettings(
             xcodeProject: project,
             scheme: scheme,
             configuration: configuration,

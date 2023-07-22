@@ -93,7 +93,7 @@ public struct ExportXcodeProjectArchive: Action {
         if xcbeautify {
             return try await xcbeautify(xcodebuild)
         } else {
-            return try context.shell(xcodebuild)
+            return try await shell(xcodebuild)
         }
     }
 

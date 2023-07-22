@@ -3,7 +3,7 @@ import SwiftCICore
 public struct GitPush: Action {
     public func run() async throws -> String {
         let push = ShellCommand("git push")
-        return try context.shell(push)
+        return try await shell(push)
     }
 }
 

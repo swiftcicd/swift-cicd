@@ -10,8 +10,8 @@ public struct InstallCertificate: Action {
 
     @State var certificateCommonName: String?
 
-    func listUserKeychains() throws -> [String] {
-        try context.shell("security list-keychain -d user")
+    func listUserKeychains() async throws -> [String] {
+        try await shell("security list-keychain -d user")
             .components(separatedBy: .newlines)
             .map { $0.trimmingCharacters(in: .whitespaces.union(.init(charactersIn: "\""))) }
     }
@@ -31,22 +31,22 @@ public struct InstallCertificate: Action {
 
         if shouldCreateKeychain {
             if context.fileManager.fileExists(atPath: keychain) {
-                try context.shell("security delete-keychain \(keychain)")
+                try await shell("security delete-keychain \(keychain)")
             }
 
             // Create the keychain with the given password
-            try context.shell("security create-keychain -p \(keychainPassword) \(keychain)")
-            try context.shell("security set-keychain-settings -lut 21600 \(keychain)")
+            try await shell("security create-keychain -p \(keychainPassword) \(keychain)")
+            try await shell("security set-keychain-settings -lut 21600 \(keychain)")
         }
 
         // Unlock the keychain with the password
-        try context.shell("security unlock-keychain -p \(keychainPassword) \(keychain)")
+        try await shell("security unlock-keychain -p \(keychainPassword) \(keychain)")
 
         // Import the certificate to the keychain
         // -A: Allow any application to access the certificate
         // -t cert: Type is cert
         // -f pkcs12: Format is pkcs12
-        try context.shell("security import \(certificate) -P \(certificatePassword) -A -t cert -f pkcs12 -k \(keychain)")
+        try await shell("security import \(certificate) -P \(certificatePassword) -A -t cert -f pkcs12 -k \(keychain)")
 
         if !shouldCreateKeychain {
             guard let certificateData = context.fileManager.contents(atPath: certificate) else {
@@ -56,18 +56,18 @@ public struct InstallCertificate: Action {
             let certificate = try Certificate(data: certificateData)
             certificateCommonName = certificate.commonName
             // This command doesn't exist until macOS 10.12
-            try context.shell("security set-key-partition-list -S apple-tool:,apple: -s -l \(certificate.commonName) -k \(keychainPassword) \(keychain)")
+            try await shell("security set-key-partition-list -S apple-tool:,apple: -s -l \(certificate.commonName) -k \(keychainPassword) \(keychain)")
         }
 
-        let keychains = try listUserKeychains()
+        let keychains = try await listUserKeychains()
         // If the keychain we're using doesn't show up in the user's list, add it to the search list.
         if try !keychainExists(keychain, in: keychains) {
             // Add the keychain to the front of the list so it will be used first
-            try context.shell("security list-keychain -d user -s \(keychain) \(keychains)")
+            try await shell("security list-keychain -d user -s \(keychain) \(keychains)")
         }
 
         // Verify that the keychain exists in our list now
-        let verifyKeychains = try listUserKeychains()
+        let verifyKeychains = try await listUserKeychains()
         guard try keychainExists(keychain, in: verifyKeychains) else {
             throw ActionError("Keychain setup failed \(keychain)")
         }
@@ -77,11 +77,11 @@ public struct InstallCertificate: Action {
 
     public func cleanUp(error: Error?) async throws {
         if let certificateCommonName {
-            try context.shell("security delete-certificate -c \(certificateCommonName) \(keychain)")
+            try await shell("security delete-certificate -c \(certificateCommonName) \(keychain)")
         }
 
         if shouldCreateKeychain {
-            try context.shell("security delete-keychain \(keychain)")
+            try await shell("security delete-keychain \(keychain)")
         }
     }
 }
