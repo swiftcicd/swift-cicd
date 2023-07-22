@@ -57,6 +57,7 @@ public struct Shell {
             let outputTask = Task {
                 var outputData = Data()
                 for try await byte in outputPipe.fileHandleForReading.bytes {
+                    // TODO: It would be nice if we could reconstruct the newline-separated lines of output as they come in and print them as they come in
                     outputData.append(contentsOf: [byte])
                 }
                 return outputData

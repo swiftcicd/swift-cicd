@@ -84,7 +84,7 @@
          </EnvironmentVariable>
          <EnvironmentVariable
             key = "GITHUB_WORKSPACE"
-            value = "/Users/clayellis/Documents/Projects/swift-ci/Sources/Demo"
+            value = "/Users/clayellis/Documents/Projects/swift-cicd/Sources/Demo"
             isEnabled = "YES">
          </EnvironmentVariable>
       </EnvironmentVariables>

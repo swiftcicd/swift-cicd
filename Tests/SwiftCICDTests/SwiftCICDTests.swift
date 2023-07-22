@@ -1,4 +1,4 @@
 import XCTest
-@testable import SwiftCI
+@testable import SwiftCICD
 
 final class SwiftCITests: XCTestCase {}
