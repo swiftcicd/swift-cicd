@@ -1,6 +1,6 @@
 import Foundation
 import Logging
-import SwiftCI
+import SwiftCICD
 
 @main
 struct Demo: MainAction {

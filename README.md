@@ -8,7 +8,7 @@ A basic SwiftCI setup looks like this:
 
 > CICD.swift
 > ```swift
-> import SwiftCI
+> import SwiftCICD
 > 
 > @main
 > struct CICD: MainAction {

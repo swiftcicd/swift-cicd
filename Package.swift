@@ -3,14 +3,14 @@
 import PackageDescription
 
 let package = Package(
-    name: "swift-ci",
+    name: "swift-cicd",
     defaultLocalization: "en-uS",
     platforms: [.macOS(.v12)],
     products: [
-        .library(name: "SwiftCI", targets: ["SwiftCI"]),
-        .library(name: "SwiftCICore", targets: ["SwiftCICore"]),
-        .library(name: "SwiftCIActions", targets: ["SwiftCIActions"]),
-        .library(name: "SwiftCIPlatforms", targets: ["SwiftCIPlatforms"]),
+        .library(name: "SwiftCICD", targets: ["SwiftCICD"]),
+        .library(name: "SwiftCICDCore", targets: ["SwiftCICDCore"]),
+        .library(name: "SwiftCICDActions", targets: ["SwiftCICDActions"]),
+        .library(name: "SwiftCICDPlatforms", targets: ["SwiftCICDPlatforms"]),
         .executable(name: "Demo", targets: ["Demo"])
     ],
     dependencies: [
@@ -22,47 +22,47 @@ let package = Package(
     ],
     targets: [
         .target(
-            name: "SwiftCI",
+            name: "SwiftCICD",
             dependencies: [
-                .target(name: "SwiftCIActions"),
-                .target(name: "SwiftCICore"),
-                .target(name: "SwiftCIPlatforms")
+                .target(name: "SwiftCICDActions"),
+                .target(name: "SwiftCICDCore"),
+                .target(name: "SwiftCICDPlatforms")
             ]
        ),
         .target(
-            name: "SwiftCIActions",
+            name: "SwiftCICDActions",
             dependencies: [
-                .target(name: "SwiftCICore"),
-                .target(name: "SwiftCIPlatforms"),
+                .target(name: "SwiftCICDCore"),
+                .target(name: "SwiftCICDPlatforms"),
                 .product(name: "JWTKit", package: "jwt-kit"),
                 .product(name: "OctoKit", package: "octokit.swift"),
                 .product(name: "SwiftPR", package: "swift-pr"),
             ]
         ),
         .target(
-            name: "SwiftCICore",
+            name: "SwiftCICDCore",
             dependencies: [
                 .product(name: "Logging", package: "swift-log"),
                 .product(name: "SwiftEnvironment", package: "swift-environment"),
             ]
         ),
         .target(
-            name: "SwiftCIPlatforms",
+            name: "SwiftCICDPlatforms",
             dependencies: [
-                .target(name: "SwiftCICore"),
+                .target(name: "SwiftCICDCore"),
                 .product(name: "Logging", package: "swift-log"),
                 .product(name: "OctoKit", package: "octokit.swift"),
                 .product(name: "SwiftEnvironment", package: "swift-environment"),
             ]
         ),
         .testTarget(
-            name: "SwiftCITests",
-            dependencies: ["SwiftCI"]
+            name: "SwiftCICDTests",
+            dependencies: ["SwiftCICD"]
         ),
         .executableTarget(
             name: "Demo",
             dependencies: [
-                .target(name: "SwiftCI"),
+                .target(name: "SwiftCICD"),
                 .product(name: "Logging", package: "swift-log")
             ]
         )
