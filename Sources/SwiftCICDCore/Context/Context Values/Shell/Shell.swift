@@ -83,7 +83,7 @@ public struct Shell {
             let outputData = try await outputTask.value.removingTrailingNewline
             let errorData = try await errorTask.value.removingTrailingNewline
 
-//            task.waitUntilExit()
+            task.waitUntilExit()
 
             guard task.terminationStatus == 0 else {
                 throw ShellError(
