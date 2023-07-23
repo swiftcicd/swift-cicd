@@ -43,37 +43,33 @@ public struct Shell {
             logger.debug("$ \(command)")
         }
 
-        do {
-            let task = Process()
-            task.executableURL = URL(filePathCompat: shell)
-            task.arguments = ["--login", "-c", command.command]
-            task.environment = ProcessInfo.processInfo.environment
+        let task = Process()
+        task.executableURL = URL(filePathCompat: shell)
+        task.arguments = ["--login", "-c", command.command]
+        task.environment = ProcessInfo.processInfo.environment
 
-            let outputPipe = Pipe()
-            task.standardOutput = outputPipe
+        let outputPipe = Pipe()
+        task.standardOutput = outputPipe
 
-            let errorPipe = Pipe()
-            task.standardError = errorPipe
+        let errorPipe = Pipe()
+        task.standardError = errorPipe
 
-            try task.run()
+        try task.run()
 
-            let outputData = try outputPipe.drain()
-            let errorData = try errorPipe.drain()
+        let outputData = try outputPipe.drain()
+        let errorData = try errorPipe.drain()
 
-            task.waitUntilExit()
+        task.waitUntilExit()
 
-            guard task.terminationStatus == 0 else {
-                throw ShellError(
-                    terminationStatus: task.terminationStatus,
-                    errorData: errorData,
-                    outputData: outputData
-                )
-            }
-
-            return outputData
-        } catch {
-            throw error
+        guard task.terminationStatus == 0 else {
+            throw ShellError(
+                terminationStatus: task.terminationStatus,
+                errorData: errorData,
+                outputData: outputData
+            )
         }
+
+        return outputData
     }
 
     @discardableResult
