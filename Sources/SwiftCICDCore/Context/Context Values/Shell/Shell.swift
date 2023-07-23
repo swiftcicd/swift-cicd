@@ -28,18 +28,18 @@ public struct Shell {
     public static let zsh = "/bin/zsh"
     public static let bash = "/bin/bash"
 
-    @Context(\.fileManager) var fileManager
     @Context(\.logger) var logger
 
     @_disfavoredOverload
     @discardableResult
-    public func callAsFunction(_ command: ShellCommand, shell: String = Shell.default, log: Bool = true, quiet: Bool = false) async throws -> Data {
-        let currentDirectory = fileManager.currentDirectoryPath
-
+    public func callAsFunction(
+        _ command: ShellCommand,
+        shell: String = Shell.default,
+        log: Bool = true,
+        quiet: Bool = false
+    ) async throws -> Data {
         // Always log at trace level
-        if logger.logLevel == .trace {
-            logger.debug("$ \(command) (at: \(currentDirectory)")
-        } else if log {
+        if log || logger.logLevel == .trace {
             logger.debug("$ \(command)")
         }
 
@@ -51,37 +51,14 @@ public struct Shell {
 
             let outputPipe = Pipe()
             task.standardOutput = outputPipe
+
             let errorPipe = Pipe()
             task.standardError = errorPipe
 
-            let outputTask = Task {
-                logger.info("DEBUG: Await output data.")
-                var outputData = Data()
-                for try await byte in outputPipe.fileHandleForReading.bytes {
-                    // TODO: It would be nice if we could reconstruct the newline-separated lines of output as they come in and print them as they come in
-                    outputData.append(contentsOf: [byte])
-                }
-                logger.info("DEBUG: Output data done.")
-                return outputData
-            }
-
-            let errorTask = Task {
-                logger.info("DEBUG: Await error data.")
-                var errorData = Data()
-                for try await byte in errorPipe.fileHandleForReading.bytes {
-                    errorData.append(contentsOf: [byte])
-                }
-                logger.info("DEBUG: Error data done.")
-                return errorData
-            }
-
-            logger.info("DEBUG: Running task")
             try task.run()
-//            task.waitUntilExit()
 
-            logger.info("DEBUG: Task exit. Awaiting output/error data.")
-            let outputData = try await outputTask.value.removingTrailingNewline
-            let errorData = try await errorTask.value.removingTrailingNewline
+            let outputData = try outputPipe.drain()
+            let errorData = try errorPipe.drain()
 
             task.waitUntilExit()
 
@@ -100,7 +77,12 @@ public struct Shell {
     }
 
     @discardableResult
-    public func callAsFunction(_ command: ShellCommand, shell: String = Shell.default, log: Bool = true, quiet: Bool = false) async throws -> String {
+    public func callAsFunction(
+        _ command: ShellCommand,
+        shell: String = Shell.default,
+        log: Bool = true,
+        quiet: Bool = false
+    ) async throws -> String {
         let output: Data = try await callAsFunction(command, shell: shell, log: log, quiet: quiet)
         let stringOutput = String(decoding: output, as: UTF8.self)
 
@@ -110,6 +92,12 @@ public struct Shell {
         }
 
         return stringOutput
+    }
+}
+
+private extension Pipe {
+    func drain() throws -> Data {
+        try fileHandleForReading.readToEnd()?.removingTrailingNewline ?? Data()
     }
 }
 
