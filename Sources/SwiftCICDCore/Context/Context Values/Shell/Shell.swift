@@ -77,11 +77,13 @@ public struct Shell {
 
             logger.info("DEBUG: Running task")
             try task.run()
-            task.waitUntilExit()
+//            task.waitUntilExit()
 
             logger.info("DEBUG: Task exit. Awaiting output/error data.")
             let outputData = try await outputTask.value.removingTrailingNewline
             let errorData = try await errorTask.value.removingTrailingNewline
+
+//            task.waitUntilExit()
 
             guard task.terminationStatus == 0 else {
                 throw ShellError(
