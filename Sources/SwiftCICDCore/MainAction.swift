@@ -5,7 +5,7 @@ public protocol MainAction: Action<Void> {
     static var logLevel: Logger.Level { get }
     init()
 
-    /// Runs before every action run by this action. Any errors thrown will stop the exection of the entire workflow.
+    /// Runs before every action run by this action. Any errors thrown will stop the execution of the entire workflow.
     func before() async throws
 }
 
