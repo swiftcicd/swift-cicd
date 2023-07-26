@@ -1,4 +1,5 @@
 import Foundation
+import JWTKit
 import SwiftCICDCore
 
 public struct ImportSigningAssets: Action {
@@ -49,6 +50,12 @@ public struct ImportSigningAssets: Action {
 
     public func run() async throws -> Output {
         let appStoreConnectKeyContents = try await appStoreConnectKeySecret.p8.get().string
+        do {
+            // Verify that the P8 is valid (it should be a private RSA key)
+            _ = try RSAKey.private(pem: appStoreConnectKeyContents)
+        } catch {
+            throw ActionError("Invalid AppStoreConnectKeySecret.p8", error: error)
+        }
         let saveAppStoreConnectP8 = try await saveFile(name: "AuthKey_\(appStoreConnectKeySecret.keyID).p8", contents: appStoreConnectKeyContents)
         let appStoreConnectKey = AppStoreConnect.Key(
             id: appStoreConnectKeySecret.keyID,
