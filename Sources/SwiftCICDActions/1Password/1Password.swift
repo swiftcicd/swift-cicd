@@ -50,7 +50,7 @@ public struct OnePasswordSecret: Secret {
         let secret = try await onePassword.read(reference: reference, serviceAccountToken: token)
 
         // Obfuscate the secret if it can be converted to a string.
-        if let secretString = String(data: secret, encoding: .utf8) {
+        if let secretString = secret.secretString {
             // Reference:
             // https://github.com/1Password/load-secrets-action/blob/d1a4e73495bde3551cf63f6c048588b8f734e21d/entrypoint.sh#L101
             // To support multiline secrets, escape percent signs and add a mask per line.

@@ -38,8 +38,9 @@ public struct EnvironmentSecret: Secret {
 
         var data = value.data
         try await processValue(&data)
-        let string = data.string
-        try context.platform.obfuscate(secret: string)
+        if let secretString = data.secretString {
+            try context.platform.obfuscate(secret: secretString)
+        }
         return data
     }
 }
@@ -57,11 +58,28 @@ public extension Secret where Self == EnvironmentSecret {
 public extension Action {
     func getSecret(_ secret: Secret) async throws -> Data {
         let value = try await secret.get()
-        // Only obfuscate the value if it's a String.
-        // Some values could be raw file data.
-        if let stringValue = String(data: value, encoding: .utf8) {
+        if let stringValue = value.secretString {
             try context.platform.obfuscate(secret: stringValue)
         }
         return value
+    }
+}
+
+public extension Data {
+    /// If the data (usually used in context of secrets) is a string that can encoded/decoded without changing
+    /// values, it should be treated as a secret string. This computed property will return the string if it passes
+    /// this test, otherwise it will return `nil`.
+    var secretString: String? {
+        guard let stringValue = String(data: self, encoding: .utf8) else {
+            return nil
+        }
+
+        // Check that when we convert the string back to data, it's the same value.
+        // Raw files will usually not convert back to the same data.
+        guard self == stringValue.data else {
+            return nil
+        }
+
+        return stringValue
     }
 }
