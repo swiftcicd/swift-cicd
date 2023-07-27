@@ -75,6 +75,14 @@ public enum XcodeBuild {
             .generic(platform: platform.rawValue)
         }
 
+        public static var iOSSimulator: Destination {
+            .iOSSimulator(name: "iPhone 14")
+        }
+
+        public static func iOSSimulator(name: String) -> Destination {
+            .platform(.iOSSimulator, name: name)
+        }
+
         public var sdk: SDK? {
             switch self {
             case .generic(let platformString):
