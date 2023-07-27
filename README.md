@@ -152,7 +152,7 @@ Actions can run other actions by invoking the `action(_:)` method. You can make 
 
 ```swift
 extension Action {
-    func createFile(path: String, contents: String) async throws {
+    func createFile(at path: String, withContents contents: String) async throws {
         try await action(CreateFile(path: path, contents: contents))
     }
 }
