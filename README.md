@@ -6,7 +6,7 @@ SwiftCI is a CI/CD scheme written in Swift that leverages the Swift ecosystem.
 
 ## Getting Started
 
-### GitHub
+### GitHub Actions
 
 > This guide assumes that you are familiar with the basics of GitHub Actions. If you're new to GitHub Actions, you can learn about them [here](https://docs.github.com/actions).
 
