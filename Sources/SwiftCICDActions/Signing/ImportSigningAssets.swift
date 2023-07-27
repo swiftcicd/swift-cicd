@@ -78,6 +78,7 @@ public struct ImportSigningAssets: Action {
     }
 
     private func validateP8(pem: String) throws {
+        logger.info("Validating AppStoreConnectKeySecret.p8")
         do {
             // Verify that the P8 is valid (it should be a private RSA key)
             _ = try RSAKey.private(pem: pem)
@@ -87,6 +88,7 @@ public struct ImportSigningAssets: Action {
     }
 
     private func validateP12(data: Data, password: String) throws {
+        logger.info("Validating CertificateSecret.p12")
         var importResult: CFArray? = nil
         let status = SecPKCS12Import(
             data as NSData,
