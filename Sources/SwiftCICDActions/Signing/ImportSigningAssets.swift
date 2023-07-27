@@ -51,7 +51,7 @@ public struct ImportSigningAssets: Action {
 
     public func run() async throws -> Output {
         let appStoreConnectKeyContents = try await appStoreConnectKeySecret.p8.get().string
-        try validateP8(pem: appStoreConnectKeyContents)
+//        try validateP8(pem: appStoreConnectKeyContents)
         let saveAppStoreConnectP8 = try await saveFile(name: "AuthKey_\(appStoreConnectKeySecret.keyID).p8", contents: appStoreConnectKeyContents)
         let appStoreConnectKey = AppStoreConnect.Key(
             id: appStoreConnectKeySecret.keyID,
@@ -62,7 +62,7 @@ public struct ImportSigningAssets: Action {
 
         let certificateContents = try await certificateSecret.p12.get()
         let certificatePassword = try await certificateSecret.password.get().string
-        try validateP12(data: certificateContents, password: certificatePassword)
+//        try validateP12(data: certificateContents, password: certificatePassword)
         let savedCertificate = try await saveFile(name: "Certificate.p12", contents: certificateContents)
         try await installCertificate(savedCertificate.filePath, password: certificatePassword)
 
