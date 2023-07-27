@@ -1,5 +1,6 @@
 import Foundation
 import JWTKit
+import Security
 import SwiftCICDCore
 
 public struct ImportSigningAssets: Action {
@@ -50,12 +51,7 @@ public struct ImportSigningAssets: Action {
 
     public func run() async throws -> Output {
         let appStoreConnectKeyContents = try await appStoreConnectKeySecret.p8.get().string
-        do {
-            // Verify that the P8 is valid (it should be a private RSA key)
-            _ = try RSAKey.private(pem: appStoreConnectKeyContents)
-        } catch {
-            throw ActionError("Invalid AppStoreConnectKeySecret.p8", error: error)
-        }
+        try validateP8(pem: appStoreConnectKeyContents)
         let saveAppStoreConnectP8 = try await saveFile(name: "AuthKey_\(appStoreConnectKeySecret.keyID).p8", contents: appStoreConnectKeyContents)
         let appStoreConnectKey = AppStoreConnect.Key(
             id: appStoreConnectKeySecret.keyID,
@@ -65,8 +61,9 @@ public struct ImportSigningAssets: Action {
         )
 
         let certificateContents = try await certificateSecret.p12.get()
-        let savedCertificate = try await saveFile(name: "Certificate.p12", contents: certificateContents)
         let certificatePassword = try await certificateSecret.password.get().string
+        try validateP12(data: certificateContents, password: certificatePassword)
+        let savedCertificate = try await saveFile(name: "Certificate.p12", contents: certificateContents)
         try await installCertificate(savedCertificate.filePath, password: certificatePassword)
 
         let profileContents = try await profileSecret.get()
@@ -78,6 +75,45 @@ public struct ImportSigningAssets: Action {
             certificatePath: savedCertificate.filePath,
             profile: profile
         )
+    }
+
+    private func validateP8(pem: String) throws {
+        do {
+            // Verify that the P8 is valid (it should be a private RSA key)
+            _ = try RSAKey.private(pem: pem)
+        } catch {
+            throw ActionError("Invalid AppStoreConnectKeySecret.p8", error: error)
+        }
+    }
+
+    private func validateP12(data: Data, password: String) throws {
+        var importResult: CFArray? = nil
+        let status = SecPKCS12Import(
+            data as NSData,
+            [kSecImportExportPassphrase as String: password] as NSDictionary,
+            &importResult
+        )
+
+        switch status {
+        case errSecSuccess:
+            // Valid
+            break
+        case errSecAuthFailed:
+            // Invalid password
+            throw ActionError("CertificateSecret.password was incorrect")
+        case errSecDecode:
+            // Invalid data
+            throw ActionError("Invalid CertificateSecret.p12")
+        default:
+            logger.warning("SecPKCS12Import didn't result in errSecSuccess. Continuing regardless.")
+            break
+        }
+    }
+
+    // TODO: Validate Provisioning Profile
+    private func validateProvisioningProfile(data: Data, certificatePublicKey: String) throws {
+        // https://stackoverflow.com/questions/6712895/validate-certificate-and-provisioning-profile
+        // https://github.com/quadion/iOSValidation/blob/master/validateProvisioningProfile.rb
     }
 }
 
