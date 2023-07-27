@@ -20,11 +20,14 @@ By the end of this guide, you should have a directory structure that looks like 
 ├─ cicd.yml
 ```   
 
-In order to get started with SwiftCICD using GitHub Actions, you'll first need to create your SwiftCICD executable. This is done by creating a new Swift Package which vends an executable target. Create a new directory at `.github/workflows/cicd`. You can name and place your package wherever you want, but if you use `.github/workflows/cicd` you won't have to specify the `package-path` parameter later in your workflow file since that is the default value.
+In order to get started with SwiftCICD using GitHub Actions, you'll first need to create your SwiftCICD executable. This is done by creating a new Swift Package which vends an executable target. Create a new directory at `.github/workflows/cicd`. 
+
+> You can name and place your package wherever you want, but if you use `.github/workflows/cicd` you won't have to specify the `package-path` parameter later in your workflow file since that is the default value.
 
 Once you've created your package's directory, create a package manifest:
 
-> `.github/workflows/cicd/Package.swift`
+> **.github/workflows/cicd/Package.swift**
+
 ```swift
 // swift-tools-version: 5.9
 
@@ -53,7 +56,7 @@ This package manifest creates a new pacakge named `cicd` and vends an executable
 
 Next, create a file in `.github/workflows/cicd` named `CICD.swift`. This is the file where you'll define your CICD actions. Let's get started by building and testing an Xcode project.
 
-> `.github/workflows/cicd/CICD.swift`
+> **.github/workflows/cicd/CICD.swift**
 ```swift
 import SwiftCICD
 
@@ -77,12 +80,12 @@ struct CICD: MainAction {
 }
 ```
 
-In this CICD file we define a main action named `CICD`. When it runs, it will build and then test the "GettingStarted" Xcode project found in the working directory of the workflow. This will be the root directory of your repo.
+In this CICD file we define a main action named `CICD`. When it runs, it will build and then test the "GettingStarted" Xcode project found in the working directory of the workflow. This will be the root directory of your repo. You should provide the path to your own Xcode project.
 
 Lastly, in order to run SwiftCICD, you'll need to create a workflow. Create a file named `cicd.yml` (you can name your workflow file whatever you want) and place it in the `.github/workflows/` directory. Your workflow triggers will likely vary depending on what actions you want to take and when. But for the sake of simplicity in this guide, we'll trigger the workflow whenever a new commit is pushed to `main`. 
 
 
-> `.github/workflows/cicd.yml`
+> **.github/workflows/cicd.yml**
 ```yaml
 name: CI/CD
 
