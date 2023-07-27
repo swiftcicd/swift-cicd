@@ -10,9 +10,9 @@ public struct TestXcodeProject: Action {
     public init(
         xcodeProject: String? = nil,
         scheme: String? = nil,
-        destination: XcodeBuild.Destination? = nil,
+        destination: XcodeBuild.Destination? = .iOSSimulator,
         withoutBuilding: Bool = false,
-        xcbeautify: Bool = false
+        xcbeautify: Bool = Xcbeautify.default
     ) {
         self.xcodeProject = xcodeProject
         self.scheme = scheme
@@ -40,9 +40,9 @@ public extension Action {
     func testXcodeProject(
         _ xcodeProject: String? = nil,
         scheme: String? = nil,
-        destination: XcodeBuild.Destination? = nil,
+        destination: XcodeBuild.Destination? = .iOSSimulator,
         withoutBuilding: Bool = false,
-        xcbeautify: Bool = false
+        xcbeautify: Bool = Xcbeautify.default
     ) async throws -> String {
         try await action(TestXcodeProject(
             xcodeProject: xcodeProject,

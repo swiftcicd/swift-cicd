@@ -26,15 +26,15 @@ public struct BuildXcodeProject: Action {
     public init(
         project: String? = nil,
         scheme: String? = nil,
-        configuration: XcodeBuild.Configuration? = nil,
-        destination: XcodeBuild.Destination? = nil,
+        configuration: XcodeBuild.Configuration? = .debug,
+        destination: XcodeBuild.Destination? = .iOSSimulator,
         sdk: XcodeBuild.SDK? = nil,
         cleanBuild: Bool = false,
         archivePath: String? = nil,
         codeSignStyle: XcodeBuild.CodeSignStyle? = nil,
         projectVersion: String? = nil,
         includeDSYMs: Bool? = nil,
-        xcbeautify: Bool = false
+        xcbeautify: Bool = Xcbeautify.default
     ) {
         self.project = project
         self.scheme = scheme
@@ -147,15 +147,15 @@ public extension Action {
     func buildXcodeProject(
         _ project: String? = nil,
         scheme: String? = nil,
-        configuration: XcodeBuild.Configuration? = nil,
-        destination: XcodeBuild.Destination? = nil,
+        configuration: XcodeBuild.Configuration? = .debug,
+        destination: XcodeBuild.Destination? = .iOSSimulator,
         sdk: XcodeBuild.SDK? = nil,
         cleanBuild: Bool = false,
         archivePath: String? = nil,
         codeSignStyle: XcodeBuild.CodeSignStyle? = nil,
         projectVersion: String? = nil,
         includeDSYMs: Bool? = nil,
-        xcbeautify: Bool = false
+        xcbeautify: Bool = Xcbeautify.default
     ) async throws -> BuildXcodeProject.Output {
         try await action(
             BuildXcodeProject(
@@ -178,15 +178,15 @@ public extension Action {
     func archiveXcodeProject(
         _ project: String? = nil,
         scheme: String? = nil,
-        configuration: XcodeBuild.Configuration? = nil,
-        destination: XcodeBuild.Destination? = nil,
+        configuration: XcodeBuild.Configuration? = .debug,
+        destination: XcodeBuild.Destination? = .iOSSimulator,
         sdk: XcodeBuild.SDK? = nil,
         cleanBuild: Bool = false,
         archivePath: String,
         codeSignStyle: XcodeBuild.CodeSignStyle? = nil,
         projectVersion: String? = nil,
         includeDSYMs: Bool? = nil,
-        xcbeautify: Bool = false
+        xcbeautify: Bool = Xcbeautify.default
     ) async throws -> BuildXcodeProject.Output {
         try await action(
             BuildXcodeProject(

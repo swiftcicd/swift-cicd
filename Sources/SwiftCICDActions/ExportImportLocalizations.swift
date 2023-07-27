@@ -6,7 +6,7 @@ public struct ImportLocalizations: Action {
     let localizationPath: String
     let xcbeautify: Bool
 
-    public init(xcodeProject: String? = nil, localizationPath: String, xcbeautify: Bool = false) {
+    public init(xcodeProject: String? = nil, localizationPath: String, xcbeautify: Bool = Xcbeautify.default) {
         self.xcodeProject = xcodeProject
         self.localizationPath = localizationPath
         self.xcbeautify = xcbeautify
@@ -34,7 +34,7 @@ public struct ExportLocalizations: Action {
     let failOnWarnings: Bool
     let xcbeautify: Bool
 
-    public init(xcodeProject: String? = nil, localizationPath: String, failOnWarnings: Bool = true, xcbeautify: Bool = false) {
+    public init(xcodeProject: String? = nil, localizationPath: String, failOnWarnings: Bool = true, xcbeautify: Bool = Xcbeautify.default) {
         self.xcodeProject = xcodeProject
         self.localizationPath = localizationPath
         self.failOnWarnings = failOnWarnings
@@ -123,7 +123,7 @@ public struct ExportLocalizations: Action {
 }
 
 public extension Action {
-    func importLocalizations(fromDirectory localizationsDirectory: String, xcodeProject: String? = nil, xcbeautify: Bool = false) async throws {
+    func importLocalizations(fromDirectory localizationsDirectory: String, xcodeProject: String? = nil, xcbeautify: Bool = Xcbeautify.default) async throws {
         do {
 //            context.startLogGroup(name: "Preparing to import localizations...")
 //            defer { context.endLogGroup() }
@@ -141,12 +141,12 @@ public extension Action {
     }
 
     @discardableResult
-    func importLocalizations(from localizationPath: String, xcodeProject: String? = nil, xcbeautify: Bool = false) async throws -> String {
+    func importLocalizations(from localizationPath: String, xcodeProject: String? = nil, xcbeautify: Bool = Xcbeautify.default) async throws -> String {
         try await action(ImportLocalizations(xcodeProject: xcodeProject, localizationPath: localizationPath, xcbeautify: xcbeautify))
     }
 
     @discardableResult
-    func exportLocalizations(to localizationPath: String, xcodeProject: String? = nil, failOnWarnings: Bool = true, xcbeautify: Bool = false) async throws -> ExportLocalizations.Output {
+    func exportLocalizations(to localizationPath: String, xcodeProject: String? = nil, failOnWarnings: Bool = true, xcbeautify: Bool = Xcbeautify.default) async throws -> ExportLocalizations.Output {
         try await action(ExportLocalizations(xcodeProject: xcodeProject, localizationPath: localizationPath, failOnWarnings: failOnWarnings, xcbeautify: xcbeautify))
     }
 }

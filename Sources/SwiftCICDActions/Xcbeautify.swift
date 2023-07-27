@@ -1,6 +1,8 @@
 import SwiftCICDCore
 
 public struct Xcbeautify: Tool {
+    public static let `default`: Bool = true
+
     public struct Options {
         /// Only print tasks that have warnings or errors.
         public var quiet: Bool

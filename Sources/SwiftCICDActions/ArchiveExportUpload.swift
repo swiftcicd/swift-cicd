@@ -27,7 +27,7 @@ public struct ArchiveExportUploadXcodeProject: Action {
         appStoreConnectKey: AppStoreConnect.Key,
         buildNumberStrategy: BuildNumberStrategy = .autoIncrementingInteger,
         includeDSYMs: Bool? = nil,
-        xcbeautify: Bool = false
+        xcbeautify: Bool = Xcbeautify.default
     ) {
         self.xcodeProject = xcodeProject
         self.scheme = scheme
@@ -176,7 +176,7 @@ public extension Action {
         appStoreConnectKey: AppStoreConnect.Key,
         buildNumberStrategy: ArchiveExportUploadXcodeProject.BuildNumberStrategy = .autoIncrementingInteger,
         includeDSYMs: Bool? = nil,
-        xcbeautify: Bool = false
+        xcbeautify: Bool = Xcbeautify.default
     ) async throws -> ArchiveExportUploadXcodeProject.Output {
         try await action(ArchiveExportUploadXcodeProject(
             xcodeProject: xcodeProject,

@@ -24,7 +24,7 @@ public struct ExportXcodeProjectArchive: Action {
         exportOptionsPlist: String,
         allowProvisioningUpdates: Bool,
         appStoreConnectKey: AppStoreConnect.Key? = nil,
-        xcbeautify: Bool = false
+        xcbeautify: Bool = Xcbeautify.default
     ) {
         self.xcodeProject = xcodeProject
         self.archivePath = archivePath
@@ -43,7 +43,7 @@ public struct ExportXcodeProjectArchive: Action {
         exportOptions: Options,
         allowProvisioningUpdates: Bool,
         appStoreConnectKey: AppStoreConnect.Key? = nil,
-        xcbeautify: Bool = false
+        xcbeautify: Bool = Xcbeautify.default
     ) throws {
         let plist = try exportOptions.generatePList()
         let temporaryDirectory = Self.context.fileManager.temporaryDirectory.path
@@ -115,7 +115,7 @@ public extension Action {
         allowProvisioningUpdates: Bool,
         optionsPlist: String,
         appStoreConnectKey: AppStoreConnect.Key? = nil,
-        xcbeautify: Bool = false
+        xcbeautify: Bool = Xcbeautify.default
     ) async throws -> String {
         try await action(ExportXcodeProjectArchive(
             xcodeProject: xcodeProject,
@@ -136,7 +136,7 @@ public extension Action {
         allowProvisioningUpdates: Bool,
         options: ExportXcodeProjectArchive.Options,
         appStoreConnectKey: AppStoreConnect.Key? = nil,
-        xcbeautify: Bool = false
+        xcbeautify: Bool = Xcbeautify.default
     ) async throws -> String {
         try await action(ExportXcodeProjectArchive(
             xcodeProject: xcodeProject,
