@@ -2,7 +2,7 @@
 
 > Note: This project is in its very early stages. Feel free to use it and submit issues with questions or ideas. Pull requests may or may not be accepted while the basic infrastructure is still under active development. 
 
-SwiftCI is a CI/CD scheme written in Swift that leverages the Swift ecosystem.
+SwiftCICD is a CI/CD scheme written in Swift that leverages the Swift ecosystem.
 
 ## Getting Started
 
@@ -131,7 +131,7 @@ struct CreateFile: Action {
 }
 ```
 
-If your action makes any changes to the system, it's good practice to implement the `cleanUp` method to revert those changes. SwiftCI will call your action's `cleanUp` method before it exits and after the main action finishes, either because of a successful run or an error. Actions will be be cleaned up in first-in-last-out order. The `cleanUp` method is optional, but again, it's good practice to clean up after your action if it makes any changes to the system.
+If your action makes any changes to the system, it's good practice to implement the `cleanUp` method to revert those changes. SwiftCICD will call your action's `cleanUp` method before it exits and after the main action finishes, either because of a successful run or an error. Actions will be be cleaned up in first-in-last-out order. The `cleanUp` method is optional, but again, it's good practice to clean up after your action if it makes any changes to the system.
 
 ```swift
 struct CreateFile: Action {
