@@ -40,7 +40,11 @@ let package = Package(
         .package(url: "https://github.com/swiftcicd/swift-cicd", branch: "main")
     ],
     targets: [
-        .executableTarget(name: "cicd", dependencies: [.product(name: "SwiftCICD", package: "swift-cicd")], path: ".")
+        .executableTarget(
+            name: "cicd",
+            dependencies: [.product(name: "SwiftCICD", package: "swift-cicd")],
+            path: "."
+        )
     ]
 )
 ```
