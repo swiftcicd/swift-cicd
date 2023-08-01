@@ -74,8 +74,8 @@ extension ShellCommand {
                 output.append(unescaped)
             }
 
-            public mutating func appendInterpolation(_ argument: String, escapingWith escapeStyle: ArgumentEscapeStyle = .singleQuotes) {
-                guard argument.contains(" ") else {
+            public mutating func appendInterpolation(_ argument: String, escapingWith escapeStyle: ArgumentEscapeStyle = .singleQuotes, alwaysEscape: Bool = false) {
+                guard argument.contains(" ") || alwaysEscape else {
                     output.append(argument)
                     return
                 }
@@ -83,7 +83,7 @@ extension ShellCommand {
                 output.append(escapeStyle.escape(argument: argument))
             }
 
-            public mutating func appendInterpolation(_ arguments: [String], escapingWith escapeStyle: ArgumentEscapeStyle = .singleQuotes) {
+            public mutating func appendInterpolation(_ arguments: [String], escapingWith escapeStyle: ArgumentEscapeStyle = .singleQuotes, alwaysEscape: Bool = false) {
                 for argument in arguments {
                     appendInterpolation(argument, escapingWith: escapeStyle)
                 }
