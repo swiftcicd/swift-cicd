@@ -48,11 +48,11 @@ public struct GitCommit: Action {
 
         var commit = ShellCommand("""
             git \
-            -c user.name=\(userName) \
-            -c user.email=\(userEmail) \
+            -c user.name=\(userName, escapingWith: .singleQuotes) \
+            -c user.email=\(userEmail, escapingWith: .singleQuotes) \
             commit \
             -m \(message, escapingWith: .doubleQuotes) \
-            --author=\(author)
+            --author=\(author, escapingWith: .singleQuotes)
             """
         )
 
