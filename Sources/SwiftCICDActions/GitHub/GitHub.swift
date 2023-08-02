@@ -51,7 +51,7 @@ public extension GitHub {
         let jobs = try await getCurrentWorkflowRunJobs()
         let jobName = try jobName ?? context.environment.github.$job.require()
         guard let job = jobs.first(where: { $0.name == jobName }) else {
-            throw ActionError("Couldn't find current workflow job named '\(jobName)'")
+            throw ActionError("Couldn't find current workflow job named '\(jobName)'. Available jobs are: \(jobs.map { "'\($0.name)'" }.joined(separator: ", "))")
         }
         return job
     }
