@@ -156,3 +156,15 @@ public extension PullRequestEvent {
         action == .synchronize
     }
 }
+
+public extension ContextValues {
+    var githubPullRequest: PullRequestEvent {
+        get throws {
+            guard let pr = environment.github.event?.pullRequest else {
+                throw ActionError("GitHub event was not a pull request.")
+            }
+
+            return pr
+        }
+    }
+}
