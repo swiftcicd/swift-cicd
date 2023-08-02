@@ -49,8 +49,15 @@ public extension GitHub {
 
     func getCurrentWorkflowRunJob(named jobName: String? = nil) async throws -> Job {
         let jobs = try await getCurrentWorkflowRunJobs()
+        // github.job (GITHUB_JOB) returns the job.id which is the unique id of the job *not* the job.name:
+        // https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_id
+        //
+        // So if the user has specified a name for their job (job.name) in their workflow yaml file, the github.job won't match.
+        // https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idname
         let jobName = try jobName ?? context.environment.github.$job.require()
-        guard let job = jobs.first(where: { $0.name == jobName }) else {
+
+        // Look for the job by name. Otherwise, just return the first job.
+        guard let job = jobs.first(where: { $0.name == jobName }) ?? jobs.first else {
             throw ActionError("Couldn't find current workflow job named '\(jobName)'. Available jobs are: \(jobs.map { "'\($0.name)'" }.joined(separator: ", "))")
         }
         return job
