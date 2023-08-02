@@ -69,7 +69,7 @@ struct ForwardCommitStatus: Action {
             } else {
                 status = self.status
                 contextName = statusContext.context
-                let currentJobURL = try await github.getCurrentWorkflowRunJob()
+                let currentJobURL = try await github.getCurrentWorkflowRunJob(named: contextName)
                 detailsURL = currentJobURL.htmlURL
             }
 
