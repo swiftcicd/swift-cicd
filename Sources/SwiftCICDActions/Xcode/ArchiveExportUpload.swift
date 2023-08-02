@@ -129,8 +129,8 @@ public struct ArchiveExportUploadXcodeProject: Action {
 
         // Export the archive
         try await xcode.exportArchive(
+            archivePath,
             project: xcodeProject,
-            archive: archivePath,
             to: exportPath,
             allowProvisioningUpdates: false,
             options: .init(

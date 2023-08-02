@@ -104,8 +104,8 @@ struct XcodeExportArchive: Action {
 
 public extension Xcode {
     func exportArchive(
+        _ archivePath: String,
         project: String? = nil,
-        archive archivePath: String,
         to exportPath: String? = nil,
         allowProvisioningUpdates: Bool,
         optionsPlist: String,
@@ -124,8 +124,8 @@ public extension Xcode {
     }
 
     func exportArchive(
+        _ archivePath: String,
         project: String? = nil,
-        archive archivePath: String,
         to exportPath: String? = nil,
         allowProvisioningUpdates: Bool,
         options: XcodeBuild.ExportArchiveOptions,
