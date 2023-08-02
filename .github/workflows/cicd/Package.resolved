@@ -41,8 +41,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/swiftcicd/swift-cicd",
       "state" : {
-        "branch" : "main",
-        "revision" : "8d37d8fcd092df0cd199a5977e2b9ab309282f6c"
+        "branch" : "namespaced-actions",
+        "revision" : "77fd29c8e5b55f4d219ffa6113b353ac93cf93ba"
       }
     },
     {

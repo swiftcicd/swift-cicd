@@ -6,8 +6,6 @@ import FoundationNetworking
 import Foundation
 #endif
 import OctoKit
-import SwiftCICDCore
-import SwiftEnvironment
 import RequestKit
 
 // MARK: Model
