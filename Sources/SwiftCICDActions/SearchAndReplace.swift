@@ -44,7 +44,7 @@ public extension Action {
         _ replaceOccurrenceWith: [String: String],
         in filePaths: [String]
     ) async throws -> SearchAndReplace.Output {
-        try await action(SearchAndReplace(
+        try await run(SearchAndReplace(
             searchForAndReplaceWith: replaceOccurrenceWith,
             filePaths: filePaths
         ))

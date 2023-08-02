@@ -1,7 +1,7 @@
 import SwiftCICDCore
 
-public enum XcodeBuild {
-    public enum XcodeContainer {
+public extension XcodeBuild {
+    enum Container {
         case project(String)
         case workspace(String)
 
@@ -15,7 +15,7 @@ public enum XcodeBuild {
         }
     }
 
-    public struct Configuration: ExpressibleByStringLiteral {
+    struct Configuration: ExpressibleByStringLiteral {
         public static let debug = Configuration(name: "Debug")
         public static let release = Configuration(name: "Release")
 
@@ -30,7 +30,7 @@ public enum XcodeBuild {
         }
     }
 
-    public enum CodeSignStyle {
+    enum CodeSignStyle {
         case manual(codeSignIdentity: String, developmentTeam: String, provisioningProfile: String)
         case automatic
 
@@ -41,7 +41,7 @@ public enum XcodeBuild {
         }
     }
 
-    public enum Destination {
+    enum Destination {
         public enum Platform: String {
             case iOSSimulator = "iOS Simulator"
             case macOS = "OS X"
@@ -103,7 +103,7 @@ public enum XcodeBuild {
         }
     }
 
-    public enum SDK: String {
+    enum SDK: String {
         case driverKit = "driverkit"
         case iOS = "iphoneos"
         case iOSSimulator = "iphonesimulator"

@@ -4,7 +4,7 @@ import SwiftCICDCore
 
 // Reference: https://github.com/webfactory/ssh-agent/blob/209e2d72ff4a448964d26610aceaaf1b3f8764c6/index.js
 
-public struct AddSSHKeys: Action {
+struct AddSSHKeys: Action {
     var sshPrivateKeys: [Secret]
     var sshAuthSocket: String?
     var shouldLogPublicKey: Bool = true
@@ -26,13 +26,13 @@ public struct AddSSHKeys: Action {
         ssh/"config"
     }
 
-    public init(sshPrivateKeys: [Secret], sshAuthSocket: String? = nil, shouldLogPublicKey: Bool = true) {
+    init(sshPrivateKeys: [Secret], sshAuthSocket: String? = nil, shouldLogPublicKey: Bool = true) {
         self.sshPrivateKeys = sshPrivateKeys
         self.sshAuthSocket = sshAuthSocket
         self.shouldLogPublicKey = shouldLogPublicKey
     }
 
-    public func run() async throws {
+    func run() async throws {
         logger.info("Adding \(sshPrivateKeys.count) key(s) to \(ssh)/known_hosts")
 
         try context.fileManager.createDirectory(atPath: ssh, withIntermediateDirectories: true)
@@ -167,7 +167,7 @@ public struct AddSSHKeys: Action {
         }
     }
 
-    public func cleanUp(error: Error?) async throws {
+    func cleanUp(error: Error?) async throws {
         for file in createdFiles {
             try context.fileManager.removeItem(atPath: file)
         }
@@ -199,8 +199,8 @@ extension SHA256Digest {
     }
 }
 
-public extension Action {
+public extension Signing {
     func addSSHKeys(_ sshKeys: [Secret]) async throws {
-        try await action(AddSSHKeys(sshPrivateKeys: sshKeys))
+        try await run(AddSSHKeys(sshPrivateKeys: sshKeys))
     }
 }

@@ -1,5 +1,22 @@
 import SwiftCICDCore
 
+/// Namespace for Xcode actions.
+public struct Xcode: ActionNamespace {
+    public let caller: any Action
+
+    public var project: String? {
+        get throws {
+            try context.xcodeProject
+        }
+    }
+}
+
+public extension Action {
+    var xcode: Xcode { Xcode(caller: self) }
+}
+
+// MARK: - Specialized Action
+
 public protocol XcodeProjectAction: Action {
     /// Path to Xcode project.
     var xcodeProject: String { get throws }
@@ -22,20 +39,5 @@ public extension ContextValues {
 
             return try xcodeProjectAction.xcodeProject
         }
-    }
-}
-
-public protocol SwiftPackageAction: Action {
-    /// Path to Swift Package directory.
-    var package: String { get }
-}
-
-public extension ContextValues {
-    var package: String? {
-        guard let swiftPackageAction = inherit((any SwiftPackageAction).self) else {
-            return nil
-        }
-
-        return swiftPackageAction.package
     }
 }

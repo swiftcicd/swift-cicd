@@ -1,13 +1,13 @@
 import Foundation
 import SwiftCICDCore
 
-public struct AddProvisioningProfile: Action {
+struct AddProvisioningProfile: Action {
     /// Path to .mobileprovision file.
     let profilePath: String
 
     @State var addedProfilePath: String?
 
-    public func run() async throws -> ProvisioningProfile {
+    func run() async throws -> ProvisioningProfile {
         // https://stackoverflow.com/a/46095880/4283188
 
         logger.info("Adding profile \(profilePath) to provisioning profiles")
@@ -37,16 +37,16 @@ public struct AddProvisioningProfile: Action {
         return profile
     }
 
-    public func cleanUp(error: Error?) async throws {
+    func cleanUp(error: Error?) async throws {
         if let addedProfilePath {
             try context.fileManager.removeItem(atPath: addedProfilePath)
         }
     }
 }
 
-public extension Action {
+public extension Signing {
     func addProvisioningProfile(_ pathToProfile: String) async throws -> ProvisioningProfile {
-        try await action(AddProvisioningProfile(profilePath: pathToProfile))
+        try await run(AddProvisioningProfile(profilePath: pathToProfile))
     }
 }
 

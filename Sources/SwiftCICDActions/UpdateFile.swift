@@ -56,10 +56,10 @@ public struct UpdateFile: Action {
 
 public extension Action {
     func updateFile(_ filePath: String, createFile: Bool = true, _ update: @escaping (inout Data) -> Void) async throws {
-        try await action(UpdateFile(filePath: filePath, createFile: createFile, update: update))
+        try await run(UpdateFile(filePath: filePath, createFile: createFile, update: update))
     }
 
     func updateFile(_ filePath: String, createFile: Bool = true, _ update: @escaping (inout String) -> Void) async throws {
-        try await action(UpdateFile(filePath: filePath, createFile: createFile, update: update))
+        try await run(UpdateFile(filePath: filePath, createFile: createFile, update: update))
     }
 }

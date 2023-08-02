@@ -5,8 +5,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/vapor/jwt-kit",
       "state" : {
-        "revision" : "87ce13a1df913ba4d51cf00606df7ef24d455571",
-        "version" : "4.7.0"
+        "revision" : "9e929d925434b91857661bcd455d1bd53f00bf22",
+        "version" : "4.13.0"
       }
     },
     {
@@ -15,7 +15,7 @@
       "location" : "https://github.com/nerdishbynature/octokit.swift",
       "state" : {
         "branch" : "main",
-        "revision" : "62e4eb3e14f2c77535f121c41e8bed14cf0d0b13"
+        "revision" : "391be84f8ad41aa6a6dd6f05ddeee83b1c85bdd7"
       }
     },
     {
@@ -28,15 +28,6 @@
       }
     },
     {
-      "identity" : "shellout",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/JohnSundell/ShellOut",
-      "state" : {
-        "revision" : "e1577acf2b6e90086d01a6d5e2b8efdaae033568",
-        "version" : "2.3.0"
-      }
-    },
-    {
       "identity" : "swift-arguments",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/clayellis/swift-arguments",
@@ -46,12 +37,12 @@
       }
     },
     {
-      "identity" : "swift-ci",
+      "identity" : "swift-cicd",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/clayellis/swift-ci",
+      "location" : "https://github.com/swiftcicd/swift-cicd",
       "state" : {
-        "branch" : "action",
-        "revision" : "4d20ce1b9f7c0b16abcea61bd61aa987f40bf69b"
+        "branch" : "main",
+        "revision" : "8d37d8fcd092df0cd199a5977e2b9ab309282f6c"
       }
     },
     {
@@ -59,8 +50,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-crypto.git",
       "state" : {
-        "revision" : "92a04c10fc5ce0504f8396aac7392126033e547c",
-        "version" : "2.2.2"
+        "revision" : "33a20e650c33f6d72d822d558333f2085effa3dc",
+        "version" : "2.5.0"
       }
     },
     {
@@ -69,7 +60,7 @@
       "location" : "https://github.com/clayellis/swift-environment",
       "state" : {
         "branch" : "main",
-        "revision" : "c36e1b614d66b40475a3a27fd9fa95f313592370"
+        "revision" : "fb4aa45fb70e3208473692936eb660f2edff3f2a"
       }
     },
     {
@@ -77,8 +68,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-log",
       "state" : {
-        "revision" : "6fe203dc33195667ce1759bf0182975e4653ba1c",
-        "version" : "1.4.4"
+        "revision" : "32e8d724467f8fe623624570367e3d50c5638e46",
+        "version" : "1.5.2"
       }
     },
     {
@@ -87,7 +78,16 @@
       "location" : "https://github.com/clayellis/swift-pr",
       "state" : {
         "branch" : "main",
-        "revision" : "1d9411ca34f964c25c55b7048c05fbf25f586ec9"
+        "revision" : "3307d182dd5e3d3c896525fa3ed70b0e85678e0d"
+      }
+    },
+    {
+      "identity" : "swiftformat",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/nicklockwood/SwiftFormat",
+      "state" : {
+        "revision" : "8ab626fdcf7cd5b300856bd5de28964604022572",
+        "version" : "0.51.13"
       }
     }
   ],

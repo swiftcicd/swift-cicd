@@ -89,8 +89,12 @@ public extension Tools {
 
 public extension Action {
     @discardableResult
-    func xcbeautify(_ command: ShellCommand, options: Xcbeautify.Options = .init()) async throws -> String {
-        let xcbeautify = try await context.tools.xcbeautify
-        return try await xcbeautify.beautify(command, options: options)
+    func xcbeautify(_ command: ShellCommand, `if` flag: Bool, options: Xcbeautify.Options = .init()) async throws -> String {
+        if flag {
+            let xcbeautify = try await context.tools.xcbeautify
+            return try await xcbeautify.beautify(command, options: options)
+        } else {
+            return try await shell(command)
+        }
     }
 }

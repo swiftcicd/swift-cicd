@@ -1,4 +1,4 @@
-import SwiftCI
+import SwiftCICD
 
 @main
 struct CICD: MainAction {

@@ -5,7 +5,7 @@ import SwiftCICDPlatforms
 
 // TODO: Should this be moved into a GitHub-specific actions directory? Maybe under SwiftCIPlatforms?
 
-public struct SetGitHubCommitStatus: Action {
+struct SetGitHubCommitStatus: Action {
     let commitSHA: String
     let statusState: Status.State
     var context: String?
@@ -14,7 +14,7 @@ public struct SetGitHubCommitStatus: Action {
     var owner: String?
     var repository: String?
 
-    public init(
+    init(
         commitSHA: String,
         statusState: Status.State,
         context: String? = nil,
@@ -32,7 +32,7 @@ public struct SetGitHubCommitStatus: Action {
         self.repository = repository
     }
 
-    public func run() async throws {
+    func run() async throws {
         let environmentOwnerRepository = Self.context.environment.github.ownerRepository
         let owner = owner ?? environmentOwnerRepository?.owner
         let repository = repository ?? environmentOwnerRepository?.repository
@@ -65,8 +65,8 @@ public struct SetGitHubCommitStatus: Action {
     }
 }
 
-public extension Action {
-    func setGitHubCommit(
+public extension GitHub {
+    func setCommit(
         sha: String,
         status: Status.State,
         context: String? = nil,
@@ -75,14 +75,16 @@ public extension Action {
         owner: String? = nil,
         repository: String? = nil
     ) async throws {
-        try await action(SetGitHubCommitStatus(
-            commitSHA: sha,
-            statusState: status,
-            context: context,
-            description: description,
-            detailsURL: detailsURL,
-            owner: owner,
-            repository: repository
-        ))
+        try await run(
+            SetGitHubCommitStatus(
+                commitSHA: sha,
+                statusState: status,
+                context: context,
+                description: description,
+                detailsURL: detailsURL,
+                owner: owner,
+                repository: repository
+            )
+        )
     }
 }

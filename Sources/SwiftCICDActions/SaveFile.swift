@@ -42,10 +42,10 @@ public struct SaveFile: Action {
 
 public extension Action {
     func saveFile(name: String, contents: Data, attributes: [FileAttributeKey: Any]? = nil, into parentDirectoryPath: String? = nil) async throws -> SaveFile.Output {
-        try await action(SaveFile(name: name, contents: contents, attributes: attributes, parentDirectoryPath: parentDirectoryPath))
+        try await run(SaveFile(name: name, contents: contents, attributes: attributes, parentDirectoryPath: parentDirectoryPath))
     }
 
     func saveFile(name: String, contents: String, attributes: [FileAttributeKey: Any]? = nil, into parentDirectoryPath: String? = nil) async throws -> SaveFile.Output {
-        try await action(SaveFile(name: name, contents: contents, attributes: attributes, parentDirectoryPath: parentDirectoryPath))
+        try await run(SaveFile(name: name, contents: contents, attributes: attributes, parentDirectoryPath: parentDirectoryPath))
     }
 }

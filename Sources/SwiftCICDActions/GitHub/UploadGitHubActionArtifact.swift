@@ -16,7 +16,7 @@ public struct UploadGitHubActionArtifact: Action {
         }
     }
 
-    public init(artifact: URL, name: String? = nil) throws {
+    init(artifact: URL, name: String? = nil) throws {
         self.artifactURL = artifact
         self.artifactName = name ?? artifact.lastPathComponent
         self.itemPath = "\(self.artifactName)/\(artifact.lastPathComponent)"
@@ -216,10 +216,10 @@ public struct UploadGitHubActionArtifact: Action {
     }
 }
 
-public extension Action {
+public extension GitHub {
     @discardableResult
-    func uploadGitHubActionArtifact(_ artifactURL: URL, named artifactName: String? = nil) async throws -> UploadGitHubActionArtifact.Output {
-        try await action(UploadGitHubActionArtifact(artifact: artifactURL, name: artifactName))
+    func uploadActionArtifact(_ artifactURL: URL, named artifactName: String? = nil) async throws -> UploadGitHubActionArtifact.Output {
+        try await run(UploadGitHubActionArtifact(artifact: artifactURL, name: artifactName))
     }
 }
 

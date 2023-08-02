@@ -31,7 +31,7 @@ Once you've created your package's directory, create a package manifest:
 > **.github/workflows/cicd/Package.swift**
 
 ```swift
-// swift-tools-version: 5.9
+// swift-tools-version: 5.7
 
 import PackageDescription
 

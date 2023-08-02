@@ -1,7 +1,7 @@
 import Foundation
 import SwiftCICDCore
 
-public struct InstallCertificate: Action {
+struct InstallCertificate: Action {
     var shouldCreateKeychain: Bool = false
     let keychain: String
     let keychainPassword: String
@@ -22,7 +22,7 @@ public struct InstallCertificate: Action {
         return keychains.contains(where: { $0.hasSuffix(keychain) })
     }
 
-    public func run() async throws {
+    func run() async throws {
         // References:
         // https://stackoverflow.com/a/46095880/4283188
         // https://github.com/microsoft/azure-pipelines-tasks/blob/ad56e0c4a52a33256e39786bec1947daf97c1743/common-npm-packages/ios-signing-common/ios-signing-common.ts#L16
@@ -75,7 +75,7 @@ public struct InstallCertificate: Action {
         logger.debug("Successfully imported certificate")
     }
 
-    public func cleanUp(error: Error?) async throws {
+    func cleanUp(error: Error?) async throws {
         if let certificateCommonName {
             try await shell("security delete-certificate -c \(certificateCommonName) \(keychain)")
         }
@@ -86,23 +86,38 @@ public struct InstallCertificate: Action {
     }
 }
 
-public extension Action {
+public extension Signing {
     func installCertificate(
         _ certificate: String,
         password certificatePassword: String,
         toKeychain keychain: String,
         password keychainPassword: String
-    ) async throws -> InstallCertificate.Output {
-        try await action(InstallCertificate(keychain: keychain, keychainPassword: keychainPassword, certificate: certificate, certificatePassword: certificatePassword))
+    ) async throws {
+        try await run(
+            InstallCertificate(
+                keychain: keychain,
+                keychainPassword: keychainPassword,
+                certificate: certificate,
+                certificatePassword: certificatePassword
+            )
+        )
     }
 
     func installCertificate(
         _ certificate: String,
         password certificatePassword: String
-    ) async throws -> InstallCertificate.Output {
+    ) async throws {
         let keychain = context.fileManager.temporaryDirectory.path/"temp.keychain"
         let password = String.random(length: 20)
-        return try await action(InstallCertificate(shouldCreateKeychain: true, keychain: keychain, keychainPassword: password, certificate: certificate, certificatePassword: certificatePassword))
+        return try await run(
+            InstallCertificate(
+                shouldCreateKeychain: true,
+                keychain: keychain,
+                keychainPassword: password,
+                certificate: certificate,
+                certificatePassword: certificatePassword
+            )
+        )
     }
 }
 
