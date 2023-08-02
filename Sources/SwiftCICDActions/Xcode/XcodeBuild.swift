@@ -53,7 +53,6 @@ public struct XcodeBuild: Action {
     public func run() async throws -> Output {
         var xcodebuild = ShellCommand("xcodebuild")
         let project = try self.project ?? context.xcodeProject
-        let derivedData = context.fileManager.temporaryDirectory/"DerivedData"
         // TODO: Support -workspace as well. Use XcodeBuild.XcodeContainer.
         xcodebuild.append("-project", ifLet: project)
         xcodebuild.append("-scheme", ifLet: scheme)
@@ -61,7 +60,7 @@ public struct XcodeBuild: Action {
         xcodebuild.append("-configuration", ifLet: configuration?.name)
         xcodebuild.append("-sdk", ifLet: sdk?.value)
         // Control the derived data path so that we can look for built products there
-        xcodebuild.append("-derivedDataPath \(derivedData.filePath)")
+//        xcodebuild.append("-derivedDataPath \(XcodeBuild.derivedData.filePath)")
         xcodebuild.append("clean", if: cleanBuild)
 
         if let archivePath {
@@ -120,8 +119,8 @@ public struct XcodeBuild: Action {
             scheme: scheme,
             configuration: configuration,
             destination: destination,
-            sdk: sdk,
-            derivedDataPath: derivedData.filePath
+            sdk: sdk
+//            derivedDataPath: derivedData.filePath
         )
 
         var product: Output.Product?

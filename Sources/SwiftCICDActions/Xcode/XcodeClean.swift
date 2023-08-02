@@ -8,6 +8,7 @@ struct XcodeClean: Action {
         var command = ShellCommand("xcodebuild clean")
         command.append(container?.flag)
         command.append("-scheme", ifLet: scheme)
+//        command.append("-derivedDataPath \(XcodeBuild.derivedData.filePath)")
         try await shell(command)
     }
 }

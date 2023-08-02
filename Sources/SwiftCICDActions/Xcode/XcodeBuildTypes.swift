@@ -1,6 +1,11 @@
+import Foundation
 import SwiftCICDCore
 
 public extension XcodeBuild {
+//    static var derivedData: URL {
+//        context.fileManager.temporaryDirectory/"DerivedData"
+//    }
+
     enum Container {
         case project(String)
         case workspace(String)

@@ -1,6 +1,6 @@
 import SwiftCICDCore
 
-struct TestXcodeProject: Action {
+struct XcodeTest: Action {
     var xcodeProject: String?
     var scheme: String?
     var destination: XcodeBuild.Destination?
@@ -26,6 +26,7 @@ struct TestXcodeProject: Action {
         test.append("-project", ifLet: xcodeProject)
         test.append("-scheme", ifLet: scheme)
         test.append("-destination", ifLet: destination?.value)
+//        test.append("-derivedDataPath \(XcodeBuild.derivedData.filePath)")
         try await xcbeautify(test, if: xcbeautify)
     }
 }
@@ -39,7 +40,7 @@ public extension Xcode {
         xcbeautify: Bool = Xcbeautify.default
     ) async throws {
         try await run(
-            TestXcodeProject(
+            XcodeTest(
                 xcodeProject: project ?? self.project,
                 scheme: scheme ?? self.defaultScheme,
                 destination: destination,
