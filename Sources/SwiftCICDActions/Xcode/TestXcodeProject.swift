@@ -44,7 +44,7 @@ public extension Action {
         withoutBuilding: Bool = false,
         xcbeautify: Bool = Xcbeautify.default
     ) async throws -> String {
-        try await action(TestXcodeProject(
+        try await run(TestXcodeProject(
             xcodeProject: xcodeProject,
             scheme: scheme,
             destination: destination,

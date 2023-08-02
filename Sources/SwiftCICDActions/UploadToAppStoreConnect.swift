@@ -175,7 +175,7 @@ public extension Action {
         ascPublicID: String? = nil,
         appStoreConnectKey: AppStoreConnect.Key
     ) async throws -> UploadToAppStoreConnect.Output {
-        try await action(UploadToAppStoreConnect(
+        try await run(UploadToAppStoreConnect(
             ipa: ipa,
             xcodeProject: xcodeProject,
             scheme: scheme,

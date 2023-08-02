@@ -172,7 +172,7 @@ public extension Action {
         includeDSYMs: Bool? = nil,
         xcbeautify: Bool = Xcbeautify.default
     ) async throws -> BuildXcodeProject.Output {
-        try await action(
+        try await run(
             BuildXcodeProject(
                 project: project,
                 scheme: scheme,
@@ -203,7 +203,7 @@ public extension Action {
         includeDSYMs: Bool? = nil,
         xcbeautify: Bool = Xcbeautify.default
     ) async throws -> BuildXcodeProject.Output {
-        try await action(
+        try await run(
             BuildXcodeProject(
                 project: project,
                 scheme: scheme,

@@ -23,6 +23,6 @@ public struct XcodeVersion: Action {
 
 extension Action {
     public func selectXcodeVersion(_ version: String) async throws {
-        try await action(XcodeVersion(command: .select(version: version)))
+        try await run(XcodeVersion(command: .select(version: version)))
     }
 }

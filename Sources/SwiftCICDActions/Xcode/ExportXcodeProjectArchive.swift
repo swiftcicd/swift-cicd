@@ -117,7 +117,7 @@ public extension Action {
         appStoreConnectKey: AppStoreConnect.Key? = nil,
         xcbeautify: Bool = Xcbeautify.default
     ) async throws -> String {
-        try await action(ExportXcodeProjectArchive(
+        try await run(ExportXcodeProjectArchive(
             xcodeProject: xcodeProject,
             archivePath: archivePath,
             exportPath: exportPath,
@@ -138,7 +138,7 @@ public extension Action {
         appStoreConnectKey: AppStoreConnect.Key? = nil,
         xcbeautify: Bool = Xcbeautify.default
     ) async throws -> String {
-        try await action(ExportXcodeProjectArchive(
+        try await run(ExportXcodeProjectArchive(
             xcodeProject: xcodeProject,
             archivePath: archivePath,
             exportPath: exportPath,

@@ -126,7 +126,7 @@ public extension Action {
         certificateSecret: ImportSigningAssets.CertificateSecret,
         profileSecret: Secret
     ) async throws -> ImportSigningAssets.Output {
-        try await action(ImportSigningAssets(
+        try await run(ImportSigningAssets(
             appStoreConnectKeySecret: appStoreConnectKeySecret,
             certificateSecret: certificateSecret,
             profileSecret: profileSecret

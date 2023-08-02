@@ -34,10 +34,10 @@ public struct SlackAction: Action {
 
 public extension Action {
     func slack(to webhook: URL, message: LegacySlackMessage) async throws {
-        try await action(SlackAction(message: .legacy(message), webhook: webhook))
+        try await run(SlackAction(message: .legacy(message), webhook: webhook))
     }
 
     func slack(to webhook: URL, message: SlackMessage) async throws {
-        try await action(SlackAction(message: .blocks(message), webhook: webhook))
+        try await run(SlackAction(message: .blocks(message), webhook: webhook))
     }
 }

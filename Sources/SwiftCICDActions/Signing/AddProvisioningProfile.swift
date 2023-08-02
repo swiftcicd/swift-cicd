@@ -46,7 +46,7 @@ public struct AddProvisioningProfile: Action {
 
 public extension Action {
     func addProvisioningProfile(_ pathToProfile: String) async throws -> ProvisioningProfile {
-        try await action(AddProvisioningProfile(profilePath: pathToProfile))
+        try await run(AddProvisioningProfile(profilePath: pathToProfile))
     }
 }
 

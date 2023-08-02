@@ -20,7 +20,7 @@ extension MainAction {
                 logger.info("Running on \(platform.name)")
                 try context.fileManager.changeCurrentDirectory(platform.workingDirectory)
                 let mainAction = self.init()
-                try await mainAction.action(mainAction)
+                try await mainAction.run(mainAction)
                 await cleanUp(error: nil)
                 await uninstallTools()
                 try? context.endLogGroup()

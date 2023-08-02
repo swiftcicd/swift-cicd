@@ -130,12 +130,12 @@ extension GitCommit {
 public extension Action {
     @discardableResult
     func commit(flags: [String] = [], message: String) async throws -> GitCommit.Output {
-        try await action(GitCommit(flags: flags, message: message))
+        try await run(GitCommit(flags: flags, message: message))
     }
 
     @discardableResult
     func commitTrackedChanges(message: String, flags: [String] = []) async throws -> GitCommit.Output {
-        try await action(GitCommit(flags: ["a"] + flags, message: message))
+        try await run(GitCommit(flags: ["a"] + flags, message: message))
     }
 
     @discardableResult

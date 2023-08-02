@@ -19,7 +19,7 @@ public extension Action {
     ///   - scheme: The scheme to clean, if specified.
     func cleanXcodeProject(_ project: String? = nil, scheme: String? = nil) async throws {
         let project = try? project ?? context.xcodeProject
-        try await action(CleanXcodeProject(container: project.map(XcodeBuild.XcodeContainer.project), scheme: scheme))
+        try await run(CleanXcodeProject(container: project.map(XcodeBuild.XcodeContainer.project), scheme: scheme))
     }
 
     /// Cleans the workspace's derived data by running `xcodebuild clean`.
@@ -27,6 +27,6 @@ public extension Action {
     ///   - workspace: The workspace to clean.
     ///   - scheme: The scheme to clean, if specified.
     func cleanXcodeWorkspace(_ workspace: String, scheme: String? = nil) async throws {
-        try await action(CleanXcodeProject(container: .workspace(workspace), scheme: scheme))
+        try await run(CleanXcodeProject(container: .workspace(workspace), scheme: scheme))
     }
 }

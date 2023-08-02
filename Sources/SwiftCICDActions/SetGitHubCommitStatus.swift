@@ -75,7 +75,7 @@ public extension Action {
         owner: String? = nil,
         repository: String? = nil
     ) async throws {
-        try await action(SetGitHubCommitStatus(
+        try await run(SetGitHubCommitStatus(
             commitSHA: sha,
             statusState: status,
             context: context,

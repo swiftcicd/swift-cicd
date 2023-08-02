@@ -201,6 +201,6 @@ extension SHA256Digest {
 
 public extension Action {
     func addSSHKeys(_ sshKeys: [Secret]) async throws {
-        try await action(AddSSHKeys(sshPrivateKeys: sshKeys))
+        try await run(AddSSHKeys(sshPrivateKeys: sshKeys))
     }
 }

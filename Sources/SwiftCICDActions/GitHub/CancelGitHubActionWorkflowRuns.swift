@@ -46,7 +46,7 @@ public struct CancelGitHubActionWorkflowRuns: Action {
 public extension Action {
     func cancelGitHubActionWorkflowRuns(where predicate: (Run) -> Bool = { _ in true }) async throws {
         let runs = try await getWorkflowRuns(where: predicate)
-        try await action(CancelGitHubActionWorkflowRuns(runs: runs))
+        try await run(CancelGitHubActionWorkflowRuns(runs: runs))
     }
 
     func cancelOtherExistingGitHubActionWorkflowRunsForCurrentPullRequest(where predicate: (Run) -> Bool = { _ in true }) async throws {
@@ -56,7 +56,7 @@ public extension Action {
                 && $0.status == .queued || $0.status == .inProgress
                 && predicate($0)
         }
-        return try await action(CancelGitHubActionWorkflowRuns(runs: runs))
+        return try await run(CancelGitHubActionWorkflowRuns(runs: runs))
     }
 
     /// Cancels the current GitHub action workflow run if another action is queued and then throws an error to stop the execution.

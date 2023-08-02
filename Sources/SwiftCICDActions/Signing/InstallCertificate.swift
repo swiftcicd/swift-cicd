@@ -93,7 +93,7 @@ public extension Action {
         toKeychain keychain: String,
         password keychainPassword: String
     ) async throws -> InstallCertificate.Output {
-        try await action(InstallCertificate(keychain: keychain, keychainPassword: keychainPassword, certificate: certificate, certificatePassword: certificatePassword))
+        try await run(InstallCertificate(keychain: keychain, keychainPassword: keychainPassword, certificate: certificate, certificatePassword: certificatePassword))
     }
 
     func installCertificate(
@@ -102,7 +102,7 @@ public extension Action {
     ) async throws -> InstallCertificate.Output {
         let keychain = context.fileManager.temporaryDirectory.path/"temp.keychain"
         let password = String.random(length: 20)
-        return try await action(InstallCertificate(shouldCreateKeychain: true, keychain: keychain, keychainPassword: password, certificate: certificate, certificatePassword: certificatePassword))
+        return try await run(InstallCertificate(shouldCreateKeychain: true, keychain: keychain, keychainPassword: password, certificate: certificate, certificatePassword: certificatePassword))
     }
 }
 

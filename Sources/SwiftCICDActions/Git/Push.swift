@@ -10,6 +10,6 @@ public struct GitPush: Action {
 public extension Action {
     @discardableResult
     func push() async throws -> String {
-        try await action(GitPush())
+        try await run(GitPush())
     }
 }

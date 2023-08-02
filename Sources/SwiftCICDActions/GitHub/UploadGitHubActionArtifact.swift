@@ -219,7 +219,7 @@ public struct UploadGitHubActionArtifact: Action {
 public extension Action {
     @discardableResult
     func uploadGitHubActionArtifact(_ artifactURL: URL, named artifactName: String? = nil) async throws -> UploadGitHubActionArtifact.Output {
-        try await action(UploadGitHubActionArtifact(artifact: artifactURL, name: artifactName))
+        try await run(UploadGitHubActionArtifact(artifact: artifactURL, name: artifactName))
     }
 }
 

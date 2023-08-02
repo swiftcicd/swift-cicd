@@ -136,17 +136,17 @@ public extension Action {
 
         for file in try context.fileManager.contentsOfDirectory(atPath: localizationsDirectory) {
             guard file.hasSuffix(".xcloc") else { continue }
-            try await action(ImportLocalizations(xcodeProject: xcodeProject, localizationPath: localizationsDirectory/file, xcbeautify: xcbeautify))
+            try await run(ImportLocalizations(xcodeProject: xcodeProject, localizationPath: localizationsDirectory/file, xcbeautify: xcbeautify))
         }
     }
 
     @discardableResult
     func importLocalizations(from localizationPath: String, xcodeProject: String? = nil, xcbeautify: Bool = Xcbeautify.default) async throws -> String {
-        try await action(ImportLocalizations(xcodeProject: xcodeProject, localizationPath: localizationPath, xcbeautify: xcbeautify))
+        try await run(ImportLocalizations(xcodeProject: xcodeProject, localizationPath: localizationPath, xcbeautify: xcbeautify))
     }
 
     @discardableResult
     func exportLocalizations(to localizationPath: String, xcodeProject: String? = nil, failOnWarnings: Bool = true, xcbeautify: Bool = Xcbeautify.default) async throws -> ExportLocalizations.Output {
-        try await action(ExportLocalizations(xcodeProject: xcodeProject, localizationPath: localizationPath, failOnWarnings: failOnWarnings, xcbeautify: xcbeautify))
+        try await run(ExportLocalizations(xcodeProject: xcodeProject, localizationPath: localizationPath, failOnWarnings: failOnWarnings, xcbeautify: xcbeautify))
     }
 }

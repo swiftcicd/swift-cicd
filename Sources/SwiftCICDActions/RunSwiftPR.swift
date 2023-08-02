@@ -40,6 +40,6 @@ public struct RunSwiftPR: Action {
 public extension Action {
     @discardableResult
     func runSwiftPR(_ prCheck: PRCheck.Type) async throws -> RunSwiftPR.Output {
-        try await action(RunSwiftPR(prCheck: prCheck))
+        try await run(RunSwiftPR(prCheck: prCheck))
     }
 }

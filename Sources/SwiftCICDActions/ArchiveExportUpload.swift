@@ -178,7 +178,7 @@ public extension Action {
         includeDSYMs: Bool? = nil,
         xcbeautify: Bool = Xcbeautify.default
     ) async throws -> ArchiveExportUploadXcodeProject.Output {
-        try await action(ArchiveExportUploadXcodeProject(
+        try await run(ArchiveExportUploadXcodeProject(
             xcodeProject: xcodeProject,
             scheme: scheme,
             profile: profile,
