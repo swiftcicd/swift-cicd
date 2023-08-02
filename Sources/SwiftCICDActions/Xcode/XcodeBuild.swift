@@ -141,9 +141,9 @@ public struct XcodeBuild: Action {
 //            }
 //        }
 
-        return Output(
-            product: product
-        )
+        let output = Output(product: product)
+        context.outputs.latestXcodeBuildProduct = output
+        return output
     }
 
     public func cleanUp(error: Error?) async throws {
@@ -214,5 +214,16 @@ public extension Xcode {
                 xcbeautify: xcbeautify
             )
         )
+    }
+}
+
+public extension OutputValues {
+    private enum Key: OutputKey {
+        static var defaultValue: XcodeBuild.Output?
+    }
+
+    var latestXcodeBuildProduct: XcodeBuild.Output? {
+        get { self[Key.self] }
+        set { self[Key.self] = newValue }
     }
 }

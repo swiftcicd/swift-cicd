@@ -221,6 +221,19 @@ public extension GitHub {
     func uploadActionArtifact(_ artifactURL: URL, named artifactName: String? = nil) async throws -> UploadGitHubActionArtifact.Output {
         try await run(UploadGitHubActionArtifact(artifact: artifactURL, name: artifactName))
     }
+
+    @discardableResult
+    func uploadLatestXcodeBuildProduct(artifactName: String? = nil) async throws -> UploadGitHubActionArtifact.Output {
+        guard let output = context.outputs.latestXcodeBuildProduct else {
+            throw ActionError("Missing expected 'outputs.latestXcodeBuildProduct'. Make sure to run 'xcode.build' before '\(#function)'")
+        }
+
+        guard let product = output.product else {
+            throw ActionError("'outputs.latestXcodeBuildProduct.product' was nil.")
+        }
+
+        return try await uploadActionArtifact(product.url, named: product.name)
+    }
 }
 
 extension FileManager {
