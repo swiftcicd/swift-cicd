@@ -193,7 +193,7 @@ public extension Git {
     }
 
     @discardableResult
-    func commitLocalizedFiles(message: String) async throws -> GitCommit.Output {
+    func commitLocalizedFiles(message: String = "(Automated) Import/export localizations.") async throws -> GitCommit.Output {
         try await commit(message: message, filesMatching: { file in
             [".strings", ".xliff", ".xcloc", ".lproj"].contains { file.hasSuffix($0) }
         })
