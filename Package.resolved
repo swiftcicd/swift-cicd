@@ -5,8 +5,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/vapor/jwt-kit",
       "state" : {
-        "revision" : "ef12bdfa557cd9d9f0c53396e0a9908f773bcd7b",
-        "version" : "4.9.0"
+        "revision" : "9e929d925434b91857661bcd455d1bd53f00bf22",
+        "version" : "4.13.0"
       }
     },
     {
@@ -15,7 +15,7 @@
       "location" : "https://github.com/nerdishbynature/octokit.swift",
       "state" : {
         "branch" : "main",
-        "revision" : "3cd42d664b675dce9cf83818cc115ebfcdf6b6e6"
+        "revision" : "391be84f8ad41aa6a6dd6f05ddeee83b1c85bdd7"
       }
     },
     {
@@ -70,6 +70,15 @@
       "state" : {
         "branch" : "main",
         "revision" : "3307d182dd5e3d3c896525fa3ed70b0e85678e0d"
+      }
+    },
+    {
+      "identity" : "swiftformat",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/nicklockwood/SwiftFormat",
+      "state" : {
+        "revision" : "8ab626fdcf7cd5b300856bd5de28964604022572",
+        "version" : "0.51.13"
       }
     }
   ],
