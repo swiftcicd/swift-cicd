@@ -61,7 +61,7 @@ public struct XcodeBuild: Action {
         xcodebuild.append("-configuration", ifLet: configuration?.name)
         xcodebuild.append("-sdk", ifLet: sdk?.value)
         // Control the derived data path so that we can look for built products there
-        xcodebuild.append("-derviedDataPath \(derivedData.filePath)")
+        xcodebuild.append("-derivedDataPath \(derivedData.filePath)")
         xcodebuild.append("clean", if: cleanBuild)
 
         if let archivePath {
