@@ -134,14 +134,15 @@ public struct BuildXcodeProject: Action {
             if context.fileManager.fileExists(atPath: productPath) {
                 product = Output.Product(url: productURL, name: fullProductName)
             }
-        } else if let configuration {
-            // TODO: When build a Swift package, how do we determine the name of the product?
-            let name = "???"
-            let productPath = derivedData/"Build/Products/\(configuration.name)/\(name)"
-            if context.fileManager.fileExists(atPath: productPath.filePath) {
-                product = Output.Product(url: productPath, name: name)
-            }
         }
+//        else if let configuration {
+//            // TODO: When building a Swift package, how do we determine the name of the product?
+//            let name = "???"
+//            let productPath = derivedData/"Build/Products/\(configuration.name)/\(name)"
+//            if context.fileManager.fileExists(atPath: productPath.filePath) {
+//                product = Output.Product(url: productPath, name: name)
+//            }
+//        }
 
         return Output(
             product: product
