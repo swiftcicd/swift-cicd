@@ -6,17 +6,8 @@ on:
 
 jobs:
   cicd:
-    name: swift-ci
-    runs-on: macos-12
+    name: SwiftCICD
+    runs-on: macos-13
     steps:
     - uses: actions/checkout@v3
-
-    - name: Xcode 14.1
-      run: sudo xcode-select -s /Applications/Xcode_14.1.app
-      
-    - name: swift-ci
-      run: |
-        echo "::group::swift run cicd"
-        swift run --package-path .github/workflows/cicd
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - uses: swiftcicd/github-action@main
