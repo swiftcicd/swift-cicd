@@ -54,6 +54,7 @@ public struct BuildXcodeProject: Action {
         var xcodebuild = ShellCommand("xcodebuild")
         let project = try self.project ?? context.xcodeProject
         let derivedData = context.fileManager.temporaryDirectory/"DerivedData"
+        // TODO: Support -workspace as well. Use XcodeBuild.XcodeContainer.
         xcodebuild.append("-project", ifLet: project)
         xcodebuild.append("-scheme", ifLet: scheme)
         xcodebuild.append("-destination", ifLet: destination?.value)
