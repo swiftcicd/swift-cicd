@@ -69,14 +69,14 @@ struct CICD: MainAction {
     func run() async throws {
         let project = try context.workingDirectory/"GettingStarted.xcodeproj"
 
-        try await buildXcodeProject(
-            project,
+        try await xcode.build(
+            project: project,
             configuration: .debug,
             destination: .iOSSimulator
         )
 
-        try await testXcodeProject(
-            project,
+        try await xcode.test(
+            project: project,
             destination: .iOSSimulator,
             withoutBuilding: true
         )
@@ -111,55 +111,3 @@ jobs:
 This workflow file has two steps that use pre-built actions. The first step checks out the repo. The second step (`- uses: swiftcicd/github-action@main`) runs SwiftCICD. This action has an input parameter `package-path` which is the path to the directory containing your SwiftCICD executable (the directory which contains your `Package.swift`).
 
 With that, whenever a new commit is pushed to `main`, GitHub Actions will run your SwiftCICD action which builds and tests the Xcode project. There's a lot more that you can do with SwiftCICD like importing signing assets and uploading release builds to App Store Connect, and on. Feel free to explore the built-in actions in [`Sources/SwiftCICDActions/`](/Sources/SwiftCICDActions/). 
-
-## Overview
-
-SwiftCICD is composed of `Action`s, where actions have an `Output`. A specialized action, `MainAction`, acts as the entry-point to your CICD workflow. It can and should be decorated with the `@main` attribute.
-
-_// TODO: `Context`_
-
-## First-Party Actions
-
-_// TODO: Table of actions with a brief description_
-
-## Developing Actions
-
-You can create your own actions by making a type that conforms to the `Action` protocol.
-
-```swift
-struct CreateFile: Action {
-    let path: String
-    let contents: String
-    
-    func run() async throws {
-        try context.fileManager.createFile(atPath: path, contents: Data(contents.utf8))
-    }
-}
-```
-
-If your action makes any changes to the system, it's good practice to implement the `cleanUp` method to revert those changes. SwiftCICD will call your action's `cleanUp` method before it exits and after the main action finishes, either because of a successful run or an error. Actions will be be cleaned up in first-in-last-out order. The `cleanUp` method is optional, but again, it's good practice to clean up after your action if it makes any changes to the system.
-
-```swift
-struct CreateFile: Action {
-    ...
-    
-    func cleanUp(error: Error?) async throws {
-        // CreateFile created a file, so we should clean up by deleting that file.
-        try context.fileManager.removeItem(atPath: path)
-    }
-}
-```
-
-### Making Your Actions Ergonomic
-
-Actions can run other actions by invoking the `action(_:)` method. You can make your actions more ergonomic by extending `Action` and adding a method that takes the same parameters and returns the same output as your action, which invokes your action, like so:
-
-> Note: This action doesn't have any output (its `Output` is `Void`)
-
-```swift
-extension Action {
-    func createFile(at path: String, withContents contents: String) async throws {
-        try await action(CreateFile(path: path, contents: contents))
-    }
-}
-```
