@@ -10,7 +10,7 @@ public extension Action {
     var github: GitHub { GitHub(caller: self) }
 }
 
-extension GitHub {
+public extension GitHub {
     var gitHubPullRequestNumber: Int {
         get throws {
             guard let pullRequestNumber = context.environment.github.pullRequestNumber ?? context.environment.github.event?.pullRequest?.number else {
