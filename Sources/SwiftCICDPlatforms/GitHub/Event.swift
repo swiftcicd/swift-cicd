@@ -147,4 +147,12 @@ public extension PullRequestEvent {
     var isClosed: Bool {
         action == .closed
     }
+
+    var isEdited: Bool {
+        action == .edited
+    }
+
+    var isSynchronize: Bool {
+        action == .synchronize
+    }
 }
