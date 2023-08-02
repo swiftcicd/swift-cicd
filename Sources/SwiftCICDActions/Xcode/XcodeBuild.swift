@@ -1,7 +1,7 @@
 import Foundation
 import SwiftCICDCore
 
-public struct BuildXcodeProject: Action {
+public struct XcodeBuild: Action {
     public struct Output {
         public struct Product {
             public let url: URL
@@ -23,7 +23,7 @@ public struct BuildXcodeProject: Action {
     var includeDSYMs: Bool?
     let xcbeautify: Bool
 
-    public init(
+    init(
         project: String? = nil,
         scheme: String? = nil,
         // FIXME: xcodebuild's actual default is RELEASE. Should we mirror that?
@@ -112,14 +112,11 @@ public struct BuildXcodeProject: Action {
             )
         }
 
-        if xcbeautify {
-            try await xcbeautify(xcodebuild)
-        } else {
-            try await shell(xcodebuild)
-        }
 
-        let settings = try await getXcodeProjectBuildSettings(
-            xcodeProject: project,
+        try await xcbeautify(xcodebuild, if: xcbeautify)
+
+        let settings = try await xcode.getBuildSettings(
+            project: project,
             scheme: scheme,
             configuration: configuration,
             destination: destination,
@@ -157,10 +154,10 @@ public struct BuildXcodeProject: Action {
     }
 }
 
-public extension Action {
+public extension Xcode {
     @discardableResult
-    func buildXcodeProject(
-        _ project: String? = nil,
+    func build(
+        project: String? = nil,
         scheme: String? = nil,
         configuration: XcodeBuild.Configuration? = .debug,
         destination: XcodeBuild.Destination? = .iOSSimulator,
@@ -171,9 +168,9 @@ public extension Action {
         projectVersion: String? = nil,
         includeDSYMs: Bool? = nil,
         xcbeautify: Bool = Xcbeautify.default
-    ) async throws -> BuildXcodeProject.Output {
+    ) async throws -> XcodeBuild.Output {
         try await run(
-            BuildXcodeProject(
+            XcodeBuild(
                 project: project,
                 scheme: scheme,
                 configuration: configuration,
@@ -190,8 +187,8 @@ public extension Action {
     }
 
     @discardableResult
-    func archiveXcodeProject(
-        _ project: String? = nil,
+    func archive(
+        project: String? = nil,
         scheme: String? = nil,
         configuration: XcodeBuild.Configuration? = .debug,
         destination: XcodeBuild.Destination? = .iOSSimulator,
@@ -202,9 +199,9 @@ public extension Action {
         projectVersion: String? = nil,
         includeDSYMs: Bool? = nil,
         xcbeautify: Bool = Xcbeautify.default
-    ) async throws -> BuildXcodeProject.Output {
+    ) async throws -> XcodeBuild.Output {
         try await run(
-            BuildXcodeProject(
+            XcodeBuild(
                 project: project,
                 scheme: scheme,
                 configuration: configuration,

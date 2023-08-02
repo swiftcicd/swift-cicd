@@ -2,7 +2,7 @@ import SwiftCICDCore
 
 // https://github.com/xcpretty/xcode-install
 
-public struct XcodeVersion: Action {
+struct XcodeVersion: Action {
     enum Command {
         case select(version: String)
 
@@ -16,13 +16,13 @@ public struct XcodeVersion: Action {
 
     let command: Command
 
-    public func run() async throws {
+    func run() async throws {
         try await shell("xcversion \(command.command)")
     }
 }
 
-extension Action {
-    public func selectXcodeVersion(_ version: String) async throws {
+extension Xcode {
+    public func select(_ version: String) async throws {
         try await run(XcodeVersion(command: .select(version: version)))
     }
 }

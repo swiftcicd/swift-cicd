@@ -55,7 +55,7 @@ public struct ArchiveExportUploadXcodeProject: Action {
         }
 
         let temporaryDirectory = context.fileManager.temporaryDirectory.path
-        let buildSettings = try await getBuildSettings(fromXcodeProject: xcodeProject, scheme: scheme, destination: destination)
+        let buildSettings = try await xcode.getBuildSettings(project: xcodeProject, scheme: scheme, destination: destination)
         let productName = try buildSettings.require(.productName)
         let archivePath = temporaryDirectory/"Archive/\(productName).xcarchive"
         let exportPath = temporaryDirectory/"Export"
@@ -115,8 +115,8 @@ public struct ArchiveExportUploadXcodeProject: Action {
         }
 
         // Archive the build
-        try await archiveXcodeProject(
-            xcodeProject,
+        try await xcode.archive(
+            project: xcodeProject,
             scheme: scheme,
             configuration: .release,
             destination: destination,
@@ -128,8 +128,8 @@ public struct ArchiveExportUploadXcodeProject: Action {
         )
 
         // Export the archive
-        try await exportXcodeProject(
-            xcodeProject,
+        try await xcode.exportArchive(
+            project: xcodeProject,
             archive: archivePath,
             to: exportPath,
             allowProvisioningUpdates: false,

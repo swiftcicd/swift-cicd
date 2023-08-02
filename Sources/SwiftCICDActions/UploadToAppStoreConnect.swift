@@ -86,7 +86,7 @@ public struct UploadToAppStoreConnect: Action {
                 break versions
             }
 
-            guard let buildSettings = try? await getBuildSettings(fromXcodeProject: project, scheme: scheme) else {
+            guard let buildSettings = try? await xcode.getBuildSettings(project: project, scheme: scheme) else {
                 logger.debug("Couldn't detect bundle short version or bundle version because couldn't get build settings from Xcode project.")
                 break versions
             }

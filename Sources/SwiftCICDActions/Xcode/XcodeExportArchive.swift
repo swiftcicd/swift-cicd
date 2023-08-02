@@ -4,7 +4,7 @@ import SwiftCICDCore
 // TODO: Make the export available in Xcode Organizer
 // TODO: Automatically detect project, schemes, etc.
 
-public struct ExportXcodeProjectArchive: Action {
+struct XcodeExportArchive: Action {
     var xcodeProject: String?
     /// Specifies the directory where any created archives will be placed, or the archive that should be exported.
     let archivePath: String
@@ -17,8 +17,8 @@ public struct ExportXcodeProjectArchive: Action {
     var isExportOptionsSynthesized: Bool
     let xcbeautify: Bool
 
-    public init(
-        xcodeProject: String? = nil,
+    init(
+        project: String? = nil,
         archivePath: String,
         exportPath: String? = nil,
         exportOptionsPlist: String,
@@ -26,7 +26,7 @@ public struct ExportXcodeProjectArchive: Action {
         appStoreConnectKey: AppStoreConnect.Key? = nil,
         xcbeautify: Bool = Xcbeautify.default
     ) {
-        self.xcodeProject = xcodeProject
+        self.xcodeProject = project
         self.archivePath = archivePath
         self.exportPath = exportPath
         self.exportOptionsPlist = exportOptionsPlist
@@ -36,11 +36,11 @@ public struct ExportXcodeProjectArchive: Action {
         self.xcbeautify = xcbeautify
     }
 
-    public init(
-        xcodeProject: String? = nil,
+    init(
+        project: String? = nil,
         archivePath: String,
         exportPath: String? = nil,
-        exportOptions: Options,
+        exportOptions: XcodeBuild.ExportArchiveOptions,
         allowProvisioningUpdates: Bool,
         appStoreConnectKey: AppStoreConnect.Key? = nil,
         xcbeautify: Bool = Xcbeautify.default
@@ -50,7 +50,7 @@ public struct ExportXcodeProjectArchive: Action {
         let plistPath = temporaryDirectory/"exportOptions.plist"
         Self.context.fileManager.createFile(atPath: plistPath, contents: plist)
         self.init(
-            xcodeProject: xcodeProject,
+            project: project,
             archivePath: archivePath,
             exportPath: exportPath,
             exportOptionsPlist: plistPath,
@@ -66,7 +66,7 @@ public struct ExportXcodeProjectArchive: Action {
         """)
     }
 
-    public func run() async throws -> String {
+    func run() async throws {
         var xcodebuild = ShellCommand("xcodebuild -exportArchive -archivePath \(archivePath) -exportOptionsPlist \(exportOptionsPlist)")
         xcodebuild.append("-project", ifLet: xcodeProject)
         xcodebuild.append("-allowProvisioningUpdates", if: allowProvisioningUpdates)
@@ -90,14 +90,10 @@ public struct ExportXcodeProjectArchive: Action {
             )
         }
 
-        if xcbeautify {
-            return try await xcbeautify(xcodebuild)
-        } else {
-            return try await shell(xcodebuild)
-        }
+        try await xcbeautify(xcodebuild, if: xcbeautify)
     }
 
-    public func cleanUp(error: Error?) async throws {
+    func cleanUp(error: Error?) async throws {
         if isExportOptionsSynthesized {
             try context.fileManager.removeItem(atPath: exportOptionsPlist)
         }
@@ -106,19 +102,18 @@ public struct ExportXcodeProjectArchive: Action {
     }
 }
 
-public extension Action {
-    @discardableResult
-    func exportXcodeProjectArchive(
-        _ xcodeProject: String? = nil,
-        exportArchive archivePath: String,
+public extension Xcode {
+    func exportArchive(
+        project: String? = nil,
+        archive archivePath: String,
         to exportPath: String? = nil,
         allowProvisioningUpdates: Bool,
         optionsPlist: String,
         appStoreConnectKey: AppStoreConnect.Key? = nil,
         xcbeautify: Bool = Xcbeautify.default
-    ) async throws -> String {
-        try await run(ExportXcodeProjectArchive(
-            xcodeProject: xcodeProject,
+    ) async throws {
+        try await run(XcodeExportArchive(
+            project: project ?? self.project,
             archivePath: archivePath,
             exportPath: exportPath,
             exportOptionsPlist: optionsPlist,
@@ -128,18 +123,17 @@ public extension Action {
         ))
     }
 
-    @discardableResult
-    func exportXcodeProject(
-        _ xcodeProject: String? = nil,
+    func exportArchive(
+        project: String? = nil,
         archive archivePath: String,
         to exportPath: String? = nil,
         allowProvisioningUpdates: Bool,
-        options: ExportXcodeProjectArchive.Options,
+        options: XcodeBuild.ExportArchiveOptions,
         appStoreConnectKey: AppStoreConnect.Key? = nil,
         xcbeautify: Bool = Xcbeautify.default
-    ) async throws -> String {
-        try await run(ExportXcodeProjectArchive(
-            xcodeProject: xcodeProject,
+    ) async throws {
+        try await run(XcodeExportArchive(
+            project: project ?? self.project,
             archivePath: archivePath,
             exportPath: exportPath,
             exportOptions: options,
@@ -150,8 +144,8 @@ public extension Action {
     }
 }
 
-extension ExportXcodeProjectArchive {
-    public struct Options: Encodable {
+extension XcodeBuild {
+    public struct ExportArchiveOptions: Encodable {
         public enum Destination: String, Encodable {
             case export
             case upload
@@ -391,13 +385,13 @@ extension ExportXcodeProjectArchive {
     }
 }
 
-extension ExportXcodeProjectArchive.Options {
+extension XcodeBuild.ExportArchiveOptions {
     func generatePList() throws -> Data {
         try PropertyListEncoder().encode(self)
     }
 }
 
-extension ExportXcodeProjectArchive.Options {
+extension XcodeBuild.ExportArchiveOptions {
     public enum OnDemandResources {
         case embed
         case remote(baseURL: String)
