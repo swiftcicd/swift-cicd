@@ -22,7 +22,7 @@ public extension Xcode {
         try await run(
             XcodeClean(
                 container: project.map(XcodeBuild.Container.project),
-                scheme: scheme
+                scheme: scheme ?? self.defaultScheme
             )
         )
     }
@@ -35,7 +35,7 @@ public extension Xcode {
         try await run(
             XcodeClean(
                 container: .workspace(workspace),
-                scheme: scheme
+                scheme: scheme ?? self.defaultScheme
             )
         )
     }

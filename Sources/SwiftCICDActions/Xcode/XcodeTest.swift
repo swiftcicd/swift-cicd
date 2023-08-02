@@ -41,7 +41,7 @@ public extension Xcode {
         try await run(
             TestXcodeProject(
                 xcodeProject: project ?? self.project,
-                scheme: scheme,
+                scheme: scheme ?? self.defaultScheme,
                 destination: destination,
                 withoutBuilding: withoutBuilding,
                 xcbeautify: xcbeautify

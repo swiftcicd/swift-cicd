@@ -157,13 +157,16 @@ public struct ArchiveExportUploadXcodeProject: Action {
             appStoreConnectKey: appStoreConnectKey
         )
 
-        return Output(
+        let output = Output(
             archive: archivePath,
             export: exportPath,
             ipa: ipa,
             uploadedBuildVersion: buildShortVersion,
             uploadedBuildNumber: uploadOutput.buildNumber
         )
+
+        context.outputs.archiveExportUpload = output
+        return output
     }
 }
 
@@ -181,7 +184,7 @@ public extension Xcode {
         try await run(
             ArchiveExportUploadXcodeProject(
                 xcodeProject: project ?? self.project,
-                scheme: scheme,
+                scheme: scheme ?? self.defaultScheme,
                 profile: profile,
                 appStoreConnectKey: appStoreConnectKey,
                 buildNumberStrategy: buildNumberStrategy,
@@ -189,5 +192,39 @@ public extension Xcode {
                 xcbeautify: xcbeautify
             )
         )
+    }
+
+    @discardableResult
+    func archiveExportUpload(
+        project: String? = nil,
+        scheme: String? = nil,
+        buildNumberStrategy: ArchiveExportUploadXcodeProject.BuildNumberStrategy = .autoIncrementingInteger,
+        includeDSYMs: Bool? = nil,
+        xcbeautify: Bool = Xcbeautify.default
+    ) async throws -> ArchiveExportUploadXcodeProject.Output {
+        guard let signingAssets = context.outputs.signingAssets else {
+            throw ActionError("Signing Assets not found from previous outputs. Run 'signing.import' before running this action.")
+        }
+
+        return try await archiveExportUpload(
+            project: project,
+            scheme: scheme,
+            profile: signingAssets.profile,
+            appStoreConnectKey: signingAssets.appStoreConnectKey,
+            buildNumberStrategy: buildNumberStrategy,
+            includeDSYMs: includeDSYMs,
+            xcbeautify: xcbeautify
+        )
+    }
+}
+
+extension OutputValues {
+    private enum Key: OutputKey {
+        static var defaultValue: ArchiveExportUploadXcodeProject.Output?
+    }
+
+    var archiveExportUpload: ArchiveExportUploadXcodeProject.Output? {
+        get { self[Key.self] }
+        set { self[Key.self] = newValue }
     }
 }
