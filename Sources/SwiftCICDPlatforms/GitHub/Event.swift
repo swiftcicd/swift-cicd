@@ -138,3 +138,13 @@ public struct PullRequestEvent: Decodable {
         case autoMergeDisabled = "auto_merge_disabled"
     }
 }
+
+public extension PullRequestEvent {
+    var isIntoMain: Bool {
+        pullRequest.base.ref == "main"
+    }
+
+    var isClosed: Bool {
+        action == .closed
+    }
+}
