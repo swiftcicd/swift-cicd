@@ -72,21 +72,3 @@ enum JobsRouter: Router {
         return [:]
     }
 }
-
-public extension Action {
-    func getCurrentWorkflowRunJobs() async throws -> [Job] {
-        let (owner, repository) = try context.environment.github.requireOwnerRepository()
-        let runID = try context.environment.github.$runID.require()
-        let attempt = try context.environment.github.$runAttempt.require()
-        return try await context.githubAPI.listJobs(owner: owner, repository: repository, runID: runID, attemptNumber: attempt)
-    }
-
-    func getCurrentWorkflowRunJob(named jobName: String? = nil) async throws -> Job {
-        let jobs = try await getCurrentWorkflowRunJobs()
-        let jobName = try jobName ?? context.environment.github.$job.require()
-        guard let job = jobs.first(where: { $0.name == jobName }) else {
-            throw ActionError("Couldn't find current workflow job named '\(jobName)'")
-        }
-        return job
-    }
-}
