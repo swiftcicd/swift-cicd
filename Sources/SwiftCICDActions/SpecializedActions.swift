@@ -10,6 +10,13 @@ public extension ContextValues {
     var xcodeProject: String? {
         get throws {
             guard let xcodeProjectAction = inherit((any XcodeProjectAction).self) else {
+                let workingDirectory = try self.workingDirectory
+                let contents = try fileManager.contentsOfDirectory(atPath: workingDirectory)
+                if let project = contents.first(where: { $0.hasSuffix(".xcodeproj") }) {
+                    return project
+                } else if let workspace = contents.first(where: { $0.hasSuffix(".xcworkspace") }) {
+                    return workspace
+                }
                 return nil
             }
 

@@ -23,6 +23,10 @@ public extension URL {
         return copy
     }
 
+    static func / (lhs: URL, rhs: String) -> URL {
+        lhs.appendingCompat(rhs)
+    }
+
     mutating func appendQueryItems(_ items: [URLQueryItem]) {
         if #available(macOS 13.0, *) {
             self.append(queryItems: items)

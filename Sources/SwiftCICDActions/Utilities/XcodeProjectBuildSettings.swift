@@ -47,7 +47,8 @@ public struct XcodeProjectBuildSettings {
         scheme: String? = nil,
         configuration: XcodeBuild.Configuration? = nil,
         destination: XcodeBuild.Destination? = nil,
-        sdk: XcodeBuild.SDK? = nil
+        sdk: XcodeBuild.SDK? = nil,
+        derivedDataPath: String? = nil
     ) async throws {
         let xcodeProject = try xcodeProject ?? ContextValues.current.xcodeProject
         var command = ShellCommand("xcodebuild")
@@ -57,6 +58,7 @@ public struct XcodeProjectBuildSettings {
         command.append("-destination", ifLet: destination?.value)
         command.append("-sdk", ifLet: sdk?.value)
         command.append("-showBuildSettings")
+        command.append("-derivedDataPath", ifLet: derivedDataPath)
         let output = try await ContextValues.current.shell(command, quiet: true)
         self.init(showBuildSettingsOutput: output)
     }
@@ -117,14 +119,16 @@ public extension Action {
         scheme: String? = nil,
         configuration: XcodeBuild.Configuration? = nil,
         destination: XcodeBuild.Destination? = nil,
-        sdk: XcodeBuild.SDK? = nil
+        sdk: XcodeBuild.SDK? = nil,
+        derivedDataPath: String? = nil
     ) async throws -> XcodeProjectBuildSettings {
         try await XcodeProjectBuildSettings(
             xcodeProject: xcodeProject,
             scheme: scheme,
             configuration: configuration,
             destination: destination,
-            sdk: sdk
+            sdk: sdk,
+            derivedDataPath: derivedDataPath
         )
     }
 
@@ -133,14 +137,16 @@ public extension Action {
         scheme: String? = nil,
         configuration: XcodeBuild.Configuration? = nil,
         destination: XcodeBuild.Destination? = nil,
-        sdk: XcodeBuild.SDK? = nil
+        sdk: XcodeBuild.SDK? = nil,
+        derivedDataPath: String? = nil
     ) async throws -> XcodeProjectBuildSettings {
         try await XcodeProjectBuildSettings(
             xcodeProject: xcodeProject,
             scheme: scheme,
             configuration: configuration,
             destination: destination,
-            sdk: sdk
+            sdk: sdk,
+            derivedDataPath: derivedDataPath
         )
     }
 }

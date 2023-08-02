@@ -26,6 +26,7 @@ public struct BuildXcodeProject: Action {
     public init(
         project: String? = nil,
         scheme: String? = nil,
+        // FIXME: xcodebuild's actual default is RELEASE. Should we mirror that?
         configuration: XcodeBuild.Configuration? = .debug,
         destination: XcodeBuild.Destination? = .iOSSimulator,
         sdk: XcodeBuild.SDK? = nil,
@@ -52,11 +53,14 @@ public struct BuildXcodeProject: Action {
     public func run() async throws -> Output {
         var xcodebuild = ShellCommand("xcodebuild")
         let project = try self.project ?? context.xcodeProject
+        let derivedData = context.fileManager.temporaryDirectory/"DerivedData"
         xcodebuild.append("-project", ifLet: project)
         xcodebuild.append("-scheme", ifLet: scheme)
         xcodebuild.append("-destination", ifLet: destination?.value)
         xcodebuild.append("-configuration", ifLet: configuration?.name)
         xcodebuild.append("-sdk", ifLet: sdk?.value)
+        // Control the derived data path so that we can look for built products there
+        xcodebuild.append("-derviedDataPath \(derivedData.filePath)")
         xcodebuild.append("clean", if: cleanBuild)
 
         if let archivePath {
@@ -118,15 +122,24 @@ public struct BuildXcodeProject: Action {
             scheme: scheme,
             configuration: configuration,
             destination: destination,
-            sdk: sdk
+            sdk: sdk,
+            derivedDataPath: derivedData.filePath
         )
 
         var product: Output.Product?
+
         if let buildDirectory = settings[.configurationBuildDirectory], let fullProductName = settings[.fullProductName] {
             let productPath = "\(buildDirectory)/\(fullProductName)"
             let productURL = URL(filePathCompat: productPath)
             if context.fileManager.fileExists(atPath: productPath) {
                 product = Output.Product(url: productURL, name: fullProductName)
+            }
+        } else if let configuration {
+            // TODO: When build a Swift package, how do we determine the name of the product?
+            let name = "???"
+            let productPath = derivedData/"Build/Products/\(configuration.name)/\(name)"
+            if context.fileManager.fileExists(atPath: productPath.filePath) {
+                product = Output.Product(url: productPath, name: name)
             }
         }
 
