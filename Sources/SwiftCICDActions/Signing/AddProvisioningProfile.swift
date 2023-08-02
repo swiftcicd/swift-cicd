@@ -34,6 +34,7 @@ struct AddProvisioningProfile: Action {
         }
 
         logger.info("Added profile \(addedProfilePath)")
+        context.outputs.provisioningProfile = profile
         return profile
     }
 
@@ -125,4 +126,15 @@ public struct Certificate {
 
 struct CertificateError: Error {
     let message: String
+}
+
+public extension OutputValues {
+    private enum Key: OutputKey {
+        static var defaultValue: ProvisioningProfile?
+    }
+
+    var provisioningProfile: ProvisioningProfile? {
+        get { self[Key.self] }
+        set { self[Key.self] = newValue }
+    }
 }

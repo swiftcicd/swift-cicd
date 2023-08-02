@@ -70,11 +70,14 @@ public struct ImportSigningAssets: Action {
         let savedProfile = try await saveFile(name: "Profile.mobileprovision", contents: profileContents)
         let profile = try await signing.addProvisioningProfile(savedProfile.filePath)
 
-        return Output(
+        let output = Output(
             appStoreConnectKey: appStoreConnectKey,
             certificatePath: savedCertificate.filePath,
             profile: profile
         )
+
+        context.outputs.signingAssets = output
+        return output
     }
 
     private func validateP8(pem: String) throws {
@@ -131,5 +134,16 @@ public extension Signing {
             certificateSecret: certificateSecret,
             profileSecret: profileSecret
         ))
+    }
+}
+
+public extension OutputValues {
+    private enum Key: OutputKey {
+        static var defaultValue: ImportSigningAssets.Output?
+    }
+
+    var signingAssets: ImportSigningAssets.Output? {
+        get { self[Key.self] }
+        set { self[Key.self] = newValue }
     }
 }

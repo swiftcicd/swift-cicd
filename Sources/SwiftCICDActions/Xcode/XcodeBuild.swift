@@ -172,7 +172,7 @@ public extension Xcode {
         try await run(
             XcodeBuild(
                 project: project,
-                scheme: scheme,
+                scheme: scheme ?? self.defaultScheme,
                 configuration: configuration,
                 destination: destination,
                 sdk: sdk,
@@ -203,7 +203,7 @@ public extension Xcode {
         try await run(
             XcodeBuild(
                 project: project,
-                scheme: scheme,
+                scheme: scheme ?? self.defaultScheme,
                 configuration: configuration,
                 destination: destination,
                 sdk: sdk,

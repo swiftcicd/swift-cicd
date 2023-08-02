@@ -9,6 +9,10 @@ public struct Xcode: ActionNamespace {
             try context.xcodeProject
         }
     }
+
+    public var defaultScheme: String? {
+        context.defaultXcodeProjectScheme
+    }
 }
 
 public extension Action {
@@ -20,6 +24,13 @@ public extension Action {
 public protocol XcodeProjectAction: Action {
     /// Path to Xcode project.
     var xcodeProject: String { get throws }
+
+    /// The default scheme to use when building the project.
+    var defaultScheme: String? { get }
+}
+
+public extension XcodeProjectAction {
+    var defaultScheme: String? { nil }
 }
 
 public extension ContextValues {
@@ -39,5 +50,9 @@ public extension ContextValues {
 
             return try xcodeProjectAction.xcodeProject
         }
+    }
+
+    var defaultXcodeProjectScheme: String? {
+        inherit((any XcodeProjectAction).self)?.defaultScheme
     }
 }
