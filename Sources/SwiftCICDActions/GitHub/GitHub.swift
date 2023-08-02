@@ -10,7 +10,6 @@ public extension Action {
     var github: GitHub { GitHub(caller: self) }
 }
 
-
 public extension GitHub {
     var gitHubPullRequestNumber: Int {
         get throws {
