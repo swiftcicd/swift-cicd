@@ -13,9 +13,9 @@ public extension ContextValues {
                 let workingDirectory = try self.workingDirectory
                 let contents = try fileManager.contentsOfDirectory(atPath: workingDirectory)
                 if let project = contents.first(where: { $0.hasSuffix(".xcodeproj") }) {
-                    return project
+                    return workingDirectory/project
                 } else if let workspace = contents.first(where: { $0.hasSuffix(".xcworkspace") }) {
-                    return workspace
+                    return workingDirectory/workspace
                 }
                 return nil
             }
