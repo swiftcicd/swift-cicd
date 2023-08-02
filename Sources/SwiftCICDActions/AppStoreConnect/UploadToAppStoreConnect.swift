@@ -43,7 +43,7 @@ public struct UploadToAppStoreConnect: Action {
         case tvOS = "appletvos"
     }
 
-    public init(
+    init(
         ipa: String,
         xcodeProject: String? = nil,
         scheme: String? = nil,
@@ -123,7 +123,7 @@ public struct UploadToAppStoreConnect: Action {
         guard let bundleShortVersion else { throw ActionError("Missing bundleShortVersion") }
         guard let bundleID else { throw ActionError("Missing bundleID") }
 
-        let apps = try await context.appStoreConnect.getApps(key: appStoreConnectKey)
+        let apps = try await context.appStoreConnectAPI.getApps(key: appStoreConnectKey)
         guard let app = apps.first(where: { $0.attributes.bundleId == bundleID }) else {
             throw ActionError("No app with bundle id \(bundleID) found on App Store Connect. Either the bundle id isn't correct or the app hasn't been created on App Store Connect yet.")
         }
@@ -162,8 +162,8 @@ public struct UploadToAppStoreConnect: Action {
     }
 }
 
-public extension Action {
-    func uploadToAppStoreConnect(
+public extension AppStoreConnect {
+    func upload(
         ipa: String,
         xcodeProject: String? = nil,
         scheme: String? = nil,

@@ -14,3 +14,30 @@ public struct Xcode: ActionNamespace {
 public extension Action {
     var xcode: Xcode { Xcode(caller: self) }
 }
+
+// MARK: - Specialized Action
+
+public protocol XcodeProjectAction: Action {
+    /// Path to Xcode project.
+    var xcodeProject: String { get throws }
+}
+
+public extension ContextValues {
+    /// Returns the Xcode project when accessed during an `XcodeProjectAction` run.
+    var xcodeProject: String? {
+        get throws {
+            guard let xcodeProjectAction = inherit((any XcodeProjectAction).self) else {
+                let workingDirectory = try self.workingDirectory
+                let contents = try fileManager.contentsOfDirectory(atPath: workingDirectory)
+                if let project = contents.first(where: { $0.hasSuffix(".xcodeproj") }) {
+                    return workingDirectory/project
+                } else if let workspace = contents.first(where: { $0.hasSuffix(".xcworkspace") }) {
+                    return workingDirectory/workspace
+                }
+                return nil
+            }
+
+            return try xcodeProjectAction.xcodeProject
+        }
+    }
+}

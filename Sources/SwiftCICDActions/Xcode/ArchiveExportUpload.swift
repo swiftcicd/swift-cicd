@@ -19,7 +19,7 @@ public struct ArchiveExportUploadXcodeProject: Action {
         case project
     }
 
-    public init(
+    init(
         xcodeProject: String? = nil,
         scheme: String? = nil,
         destination: XcodeBuild.Destination? = .generic(platform: .iOS),
@@ -63,7 +63,7 @@ public struct ArchiveExportUploadXcodeProject: Action {
         let buildShortVersion = try buildSettings.require(.version)
 
         // Look up the app on App Store Connect early so this step can fail early without performing other steps just to fail.
-        let apps = try await context.appStoreConnect.getApps(key: appStoreConnectKey)
+        let apps = try await context.appStoreConnectAPI.getApps(key: appStoreConnectKey)
         guard let app = apps.first(where: { $0.attributes.bundleId == bundleID }) else {
             throw ActionError("No app with bundle id \(bundleID) found on App Store Connect. Either the bundle id isn't correct or the app hasn't been created on App Store Connect yet.")
         }
@@ -85,7 +85,7 @@ public struct ArchiveExportUploadXcodeProject: Action {
             overrideProjectVersion = dateString
 
         case .autoIncrementingInteger:
-            if let latestBuild = try await context.appStoreConnect.getLatestBuild(appID: app.id, key: appStoreConnectKey),
+            if let latestBuild = try await context.appStoreConnectAPI.getLatestBuild(appID: app.id, key: appStoreConnectKey),
                let latestBuildNumber = Int(latestBuild.attributes.version),
                let projectBuildNumber = buildSettings[.build].flatMap(Int.init) {
                 if projectBuildNumber <= latestBuildNumber {
@@ -148,7 +148,7 @@ public struct ArchiveExportUploadXcodeProject: Action {
 
         let ipa = exportPath/"\(productName).ipa"
 
-        let uploadOutput = try await uploadToAppStoreConnect(
+        let uploadOutput = try await appStoreConnect.upload(
             ipa: ipa,
             scheme: scheme,
             bundleID: bundleID,
@@ -167,10 +167,10 @@ public struct ArchiveExportUploadXcodeProject: Action {
     }
 }
 
-public extension Action {
+public extension Xcode {
     @discardableResult
     func archiveExportUpload(
-        xcodeProject: String? = nil,
+        project: String? = nil,
         scheme: String? = nil,
         profile: ProvisioningProfile,
         appStoreConnectKey: AppStoreConnect.Key,
@@ -178,14 +178,16 @@ public extension Action {
         includeDSYMs: Bool? = nil,
         xcbeautify: Bool = Xcbeautify.default
     ) async throws -> ArchiveExportUploadXcodeProject.Output {
-        try await run(ArchiveExportUploadXcodeProject(
-            xcodeProject: xcodeProject,
-            scheme: scheme,
-            profile: profile,
-            appStoreConnectKey: appStoreConnectKey,
-            buildNumberStrategy: buildNumberStrategy,
-            includeDSYMs: includeDSYMs,
-            xcbeautify: xcbeautify
-        ))
+        try await run(
+            ArchiveExportUploadXcodeProject(
+                xcodeProject: project ?? self.project,
+                scheme: scheme,
+                profile: profile,
+                appStoreConnectKey: appStoreConnectKey,
+                buildNumberStrategy: buildNumberStrategy,
+                includeDSYMs: includeDSYMs,
+                xcbeautify: xcbeautify
+            )
+        )
     }
 }

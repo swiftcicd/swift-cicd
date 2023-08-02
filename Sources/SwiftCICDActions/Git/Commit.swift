@@ -11,7 +11,14 @@ public struct GitCommit: Action {
     var userEmail: String?
     let pushChanges: Bool
 
-    public init(flags: [String], message: String, author: String? = nil, userName: String? = nil, userEmail: String? = nil, pushChanges: Bool = true) {
+    init(
+        flags: [String],
+        message: String,
+        author: String? = nil,
+        userName: String? = nil,
+        userEmail: String? = nil,
+        pushChanges: Bool = true
+    ) {
         self.message = message
         self.flags = flags.filter { $0 != "m" }
         self.author = author
@@ -127,7 +134,7 @@ extension GitCommit {
     }
 }
 
-public extension Action {
+public extension Git {
     @discardableResult
     func commit(flags: [String] = [], message: String) async throws -> GitCommit.Output {
         try await run(GitCommit(flags: flags, message: message))
@@ -140,14 +147,14 @@ public extension Action {
 
     @discardableResult
     func commitAllChanges(message: String, flags: [String] = []) async throws -> GitCommit.Output {
-        try await shell("git add -A")
+        try await context.shell("git add -A")
         return try await commit(flags: flags, message: message)
     }
 
     @discardableResult
     func commit(files: String..., message: String, flags: [String] = []) async throws -> GitCommit.Output {
         for file in files {
-            try await shell("git add \(file)")
+            try await context.shell("git add \(file)")
         }
 
         return try await commit(flags: flags, message: message)
@@ -158,7 +165,7 @@ public extension Action {
         try await context.withLogGroup(named: "Step: Commit Files Matching Predicate") {
             context.logger.info("Committing files matching predicate.")
 
-            let status = try await shell("git status --short")
+            let status = try await context.shell("git status --short")
             let files = status
                 .components(separatedBy: "\n")
                 .compactMap(GitCommit.File.init(line:))
@@ -175,9 +182,9 @@ public extension Action {
 
             for file in filesToCommit {
                 if file.status.contains(.deleted) {
-                    try await shell("git rm --cached \(file.path)")
+                    try await context.shell("git rm --cached \(file.path)")
                 } else {
-                    try await shell("git add \(file.path)")
+                    try await context.shell("git add \(file.path)")
                 }
             }
 

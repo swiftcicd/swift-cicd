@@ -15,7 +15,7 @@ public struct GitHubActionWorkflowRunCancelled: LocalizedError {
     }
 }
 
-public struct CancelGitHubActionWorkflowRuns: Action {
+struct CancelGitHubActionWorkflowRuns: Action {
     let runsToCancel: [Int]
 
     init(runs: [Run]) {
@@ -26,7 +26,7 @@ public struct CancelGitHubActionWorkflowRuns: Action {
         self.runsToCancel = runIDs
     }
 
-    public func run() async throws {
+    func run() async throws {
         if runsToCancel.isEmpty {
             logger.info("No existing workflow runs to cancel")
             return
@@ -35,7 +35,7 @@ public struct CancelGitHubActionWorkflowRuns: Action {
         for runID in runsToCancel {
             do {
                 logger.info("Cancelling existing workflow run \(runID)")
-                try await cancelWorkflowRun(id: runID)
+                try await github.cancelWorkflowRun(id: runID)
             } catch {
                 logger.error("Failed to cancel workflow run: \(runID)")
             }
@@ -43,13 +43,13 @@ public struct CancelGitHubActionWorkflowRuns: Action {
     }
 }
 
-public extension Action {
-    func cancelGitHubActionWorkflowRuns(where predicate: (Run) -> Bool = { _ in true }) async throws {
+public extension GitHub {
+    func cancelRuns(where predicate: (Run) -> Bool = { _ in true }) async throws {
         let runs = try await getWorkflowRuns(where: predicate)
         try await run(CancelGitHubActionWorkflowRuns(runs: runs))
     }
 
-    func cancelOtherExistingGitHubActionWorkflowRunsForCurrentPullRequest(where predicate: (Run) -> Bool = { _ in true }) async throws {
+    func cancelOtherRunsForCurrentPullRequest(where predicate: (Run) -> Bool = { _ in true }) async throws {
         let currentRunID = try context.environment.github.$runID.require()
         let runs = try await getWorkflowRunsForCurrentPullRequest().filter {
             $0.id != currentRunID
@@ -60,7 +60,7 @@ public extension Action {
     }
 
     /// Cancels the current GitHub action workflow run if another action is queued and then throws an error to stop the execution.
-    func cancelGitHubActionWorkflowRunIfNewerRunForCurrentPullRequestIsQueuedOrInProgress() async throws {
+    func cancelCurrentRunIfNewerRunForCurrentPullRequestIsQueuedOrInProgress() async throws {
         let currentRunID = try context.environment.github.$runID.require()
         let currentRunNumber = try context.environment.github.$runNumber.require()
 
@@ -71,7 +71,7 @@ public extension Action {
         }
 
         if let newerRun = newerRuns.first {
-            logger.info("A newer run (\(newerRun.runNumber)) was detected. Cancelling the current run (\(currentRunNumber)).")
+            context.logger.info("A newer run (\(newerRun.runNumber)) was detected. Cancelling the current run (\(currentRunNumber)).")
             try await cancelWorkflowRun(id: currentRunID)
             throw GitHubActionWorkflowRunCancelled(cancelledRunNumber: currentRunNumber, newerRunNumber: newerRun.runNumber)
         }

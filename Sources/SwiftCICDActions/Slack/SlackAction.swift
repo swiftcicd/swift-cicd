@@ -1,16 +1,16 @@
 import Foundation
 import SwiftCICDCore
 
-public struct SlackAction: Action {
+struct SlackAction: Action {
     enum Message {
-        case legacy(LegacySlackMessage)
-        case blocks(SlackMessage)
+        case legacy(Slack.LegacyMessage)
+        case blocks(Slack.Message)
     }
 
     let message: Message
     let webhook: URL
 
-    public func run() async throws {
+    func run() async throws {
         let encoder = JSONEncoder()
         encoder.outputFormatting = .withoutEscapingSlashes
         let encodedMessage: Data
@@ -32,12 +32,12 @@ public struct SlackAction: Action {
     }
 }
 
-public extension Action {
-    func slack(to webhook: URL, message: LegacySlackMessage) async throws {
+public extension Slack {
+    func legacyMessage(to webhook: URL, message: LegacyMessage) async throws {
         try await run(SlackAction(message: .legacy(message), webhook: webhook))
     }
 
-    func slack(to webhook: URL, message: SlackMessage) async throws {
+    func message(to webhook: URL, message: Message) async throws {
         try await run(SlackAction(message: .blocks(message), webhook: webhook))
     }
 }

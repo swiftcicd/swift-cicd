@@ -43,7 +43,7 @@ public struct ImportSigningAssets: Action {
         public let profile: ProvisioningProfile
     }
 
-    public init(appStoreConnectKeySecret: AppStoreConnectKeySecret, certificateSecret: CertificateSecret, profileSecret: Secret) {
+    init(appStoreConnectKeySecret: AppStoreConnectKeySecret, certificateSecret: CertificateSecret, profileSecret: Secret) {
         self.appStoreConnectKeySecret = appStoreConnectKeySecret
         self.certificateSecret = certificateSecret
         self.profileSecret = profileSecret
@@ -64,11 +64,11 @@ public struct ImportSigningAssets: Action {
         let certificatePassword = try await certificateSecret.password.get().string
 //        try validateP12(data: certificateContents, password: certificatePassword)
         let savedCertificate = try await saveFile(name: "Certificate.p12", contents: certificateContents)
-        try await installCertificate(savedCertificate.filePath, password: certificatePassword)
+        try await signing.installCertificate(savedCertificate.filePath, password: certificatePassword)
 
         let profileContents = try await profileSecret.get()
         let savedProfile = try await saveFile(name: "Profile.mobileprovision", contents: profileContents)
-        let profile = try await addProvisioningProfile(savedProfile.filePath)
+        let profile = try await signing.addProvisioningProfile(savedProfile.filePath)
 
         return Output(
             appStoreConnectKey: appStoreConnectKey,
@@ -119,9 +119,9 @@ public struct ImportSigningAssets: Action {
     }
 }
 
-public extension Action {
+public extension Signing {
     @discardableResult
-    func importSigningAssets(
+    func `import`(
         appStoreConnectKeySecret: ImportSigningAssets.AppStoreConnectKeySecret,
         certificateSecret: ImportSigningAssets.CertificateSecret,
         profileSecret: Secret

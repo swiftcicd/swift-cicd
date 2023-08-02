@@ -6,14 +6,14 @@ import SwiftPR
 // TODO: Make SwiftPR generic to different platforms.
 // TODO: Inject that "generic" behavior into this action.
 
-public struct RunSwiftPR: Action {
+public struct RunSwiftPRCheck: Action {
     let prCheck: PRCheck.Type
 
     public var name: String {
         "Run SwiftPR Check: \(prCheck.name)"
     }
 
-    public init(prCheck: PRCheck.Type) {
+    init(_ prCheck: PRCheck.Type) {
         self.prCheck = prCheck
     }
 
@@ -37,9 +37,9 @@ public struct RunSwiftPR: Action {
     }
 }
 
-public extension Action {
+public extension SwiftPR {
     @discardableResult
-    func runSwiftPR(_ prCheck: PRCheck.Type) async throws -> RunSwiftPR.Output {
-        try await run(RunSwiftPR(prCheck: prCheck))
+    func runCheck(_ prCheck: PRCheck.Type) async throws -> RunSwiftPRCheck.Output {
+        try await run(RunSwiftPRCheck(prCheck))
     }
 }
