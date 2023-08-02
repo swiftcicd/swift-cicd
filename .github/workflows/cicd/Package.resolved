@@ -15,7 +15,7 @@
       "location" : "https://github.com/nerdishbynature/octokit.swift",
       "state" : {
         "branch" : "main",
-        "revision" : "62e4eb3e14f2c77535f121c41e8bed14cf0d0b13"
+        "revision" : "391be84f8ad41aa6a6dd6f05ddeee83b1c85bdd7"
       }
     },
     {
@@ -41,8 +41,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/swiftcicd/swift-cicd",
       "state" : {
-        "branch" : "namespaced-actions",
-        "revision" : "77fd29c8e5b55f4d219ffa6113b353ac93cf93ba"
+        "branch" : "main",
+        "revision" : "8d37d8fcd092df0cd199a5977e2b9ab309282f6c"
       }
     },
     {
@@ -60,7 +60,7 @@
       "location" : "https://github.com/clayellis/swift-environment",
       "state" : {
         "branch" : "main",
-        "revision" : "c36e1b614d66b40475a3a27fd9fa95f313592370"
+        "revision" : "fb4aa45fb70e3208473692936eb660f2edff3f2a"
       }
     },
     {
@@ -78,7 +78,16 @@
       "location" : "https://github.com/clayellis/swift-pr",
       "state" : {
         "branch" : "main",
-        "revision" : "1d9411ca34f964c25c55b7048c05fbf25f586ec9"
+        "revision" : "3307d182dd5e3d3c896525fa3ed70b0e85678e0d"
+      }
+    },
+    {
+      "identity" : "swiftformat",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/nicklockwood/SwiftFormat",
+      "state" : {
+        "revision" : "8ab626fdcf7cd5b300856bd5de28964604022572",
+        "version" : "0.51.13"
       }
     }
   ],
