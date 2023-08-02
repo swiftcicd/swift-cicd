@@ -6,6 +6,40 @@ public protocol GitHubStatusContext {
     var context: String { get }
 }
 
+public struct NamedContext: GitHubStatusContext, ExpressibleByStringLiteral {
+    public let context: String
+
+    public init(_ context: String) {
+        self.context = context
+    }
+
+    public init(stringLiteral value: StaticString) {
+        self.init("\(value)")
+    }
+}
+
+public struct PRCheckContext: GitHubStatusContext {
+    let prCheck: PRCheck.Type
+    public let context: String
+
+    public init(_ prCheck: PRCheck.Type) {
+        self.prCheck = prCheck
+        self.context = prCheck.statusContext
+    }
+}
+
+public extension GitHubStatusContext where Self == NamedContext {
+    static func context(_ name: String) -> NamedContext {
+        NamedContext(name)
+    }
+}
+
+public extension GitHubStatusContext where Self == PRCheckContext {
+    static func prCheck(_ prCheck: PRCheck.Type) -> PRCheckContext {
+        PRCheckContext(prCheck)
+    }
+}
+
 struct ForwardCommitStatus: Action {
     let status: OctoKit.Status.State
     let contexts: [GitHubStatusContext]
@@ -53,7 +87,7 @@ struct ForwardCommitStatus: Action {
 public extension GitHub {
     func forwardCommitStatus(
         _ status: OctoKit.Status.State,
-        to contexts: [GitHubStatusContext]
+        to contexts: [any GitHubStatusContext]
     ) async throws {
         try await run(
             ForwardCommitStatus(
@@ -61,5 +95,12 @@ public extension GitHub {
                 contexts: contexts
             )
         )
+    }
+
+    func forwardCommitStatus(
+        _ status: OctoKit.Status.State,
+        to contexts: [String]
+    ) async throws {
+        try await forwardCommitStatus(status, to: contexts.map { .context($0) })
     }
 }
