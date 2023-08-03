@@ -2,42 +2,9 @@ import OctoKit
 import SwiftCICDCore
 import SwiftPR
 
-public protocol GitHubStatusContext {
-    var context: String { get }
-}
-
-public struct NamedContext: GitHubStatusContext, ExpressibleByStringLiteral {
-    public let context: String
-
-    public init(_ context: String) {
-        self.context = context
-    }
-
-    public init(stringLiteral value: StaticString) {
-        self.init("\(value)")
-    }
-}
-
-public struct PRCheckContext: GitHubStatusContext {
-    let prCheck: PRCheck.Type
-    public let context: String
-
-    public init(_ prCheck: PRCheck.Type) {
-        self.prCheck = prCheck
-        self.context = prCheck.statusContext
-    }
-}
-
-public extension GitHubStatusContext where Self == NamedContext {
-    static func context(_ name: String) -> NamedContext {
-        NamedContext(name)
-    }
-}
-
-public extension GitHubStatusContext where Self == PRCheckContext {
-    static func prCheck(_ prCheck: PRCheck.Type) -> PRCheckContext {
-        PRCheckContext(prCheck)
-    }
+public enum GitHubStatusContext {
+    case context(String)
+    case prCheck(PRCheck.Type)
 }
 
 struct ForwardCommitStatus: Action {
@@ -59,18 +26,20 @@ struct ForwardCommitStatus: Action {
             let contextName: String
             let detailsURL: String
 
-            if let prCheckContext = type(of: statusContext) as? PRCheck.Type {
-                status = prCheckContext.statusState
-                contextName = prCheckContext.statusContext
-                guard let prCheckComment = try await prCheckContext.getSwiftPRComment() else {
-                    throw ActionError("Couldn't get SwiftPR comment for check: \(prCheckContext.name)")
-                }
-                detailsURL = prCheckComment.htmlURL.absoluteString
-            } else {
+            switch statusContext {
+            case .context(let name):
                 status = self.status
-                contextName = statusContext.context
+                contextName = name
                 let currentJobURL = try await github.getCurrentWorkflowRunJob(named: contextName)
                 detailsURL = currentJobURL.htmlURL
+
+            case .prCheck(let prCheck):
+                status = prCheck.statusState
+                contextName = prCheck.statusContext
+                guard let prCheckComment = try await prCheck.getSwiftPRComment() else {
+                    throw ActionError("Couldn't get SwiftPR comment for check: \(prCheck.name)")
+                }
+                detailsURL = prCheckComment.htmlURL.absoluteString
             }
 
             try await github.setCommit(
@@ -87,7 +56,7 @@ struct ForwardCommitStatus: Action {
 public extension GitHub {
     func forwardCommitStatus(
         _ status: OctoKit.Status.State,
-        to contexts: [any GitHubStatusContext]
+        to contexts: [GitHubStatusContext]
     ) async throws {
         try await run(
             ForwardCommitStatus(
@@ -101,6 +70,9 @@ public extension GitHub {
         _ status: OctoKit.Status.State,
         to contexts: [String]
     ) async throws {
-        try await forwardCommitStatus(status, to: contexts.map { .context($0) })
+        try await forwardCommitStatus(
+            status,
+            to: contexts.map(GitHubStatusContext.context)
+        )
     }
 }
