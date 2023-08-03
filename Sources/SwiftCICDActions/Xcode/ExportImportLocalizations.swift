@@ -111,7 +111,7 @@ public struct ExportLocalizations: Action {
 
 public extension Xcode {
     func importLocalizations(
-        fromDirectory localizationsDirectory: String,
+        in localizationsDirectory: String,
         project: String? = nil,
         xcbeautify: Bool = Xcbeautify.default
     ) async throws {
@@ -124,19 +124,13 @@ public extension Xcode {
 
         for file in try context.fileManager.contentsOfDirectory(atPath: localizationsDirectory) {
             guard file.hasSuffix(".xcloc") else { continue }
-            try await run(
-                ImportLocalizations(
-                    xcodeProject: project ?? self.project,
-                    localizationPath: localizationsDirectory/file,
-                    xcbeautify: xcbeautify
-                )
-            )
+            try await importLocalizations(at: localizationsDirectory/file, project: project, xcbeautify: xcbeautify)
         }
     }
 
     @discardableResult
     func importLocalizations(
-        from localizationPath: String,
+        at localizationPath: String,
         project: String? = nil,
         xcbeautify: Bool = Xcbeautify.default
     ) async throws -> String {
