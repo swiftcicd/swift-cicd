@@ -57,9 +57,16 @@ public extension GitHub {
         let jobName = try jobName ?? context.environment.github.$job.require()
 
         // Look for the job by name. Otherwise, just return the first job.
-        guard let job = jobs.first(where: { $0.name == jobName }) ?? jobs.first else {
+        if let job = jobs.first(where: { $0.name == jobName }) {
+            context.logger.info("Found current workflow run job named '\(jobName)'")
+            return job
+        } else if jobs.count == 1 {
+            // Otherwise just return the first job in the list (if it's the only one.)
+            let job = jobs[0]
+            context.logger.info("Couldn't find current workflow job named '\(jobName)', returning the only job in the list: '\(job.name)'.")
+            return job
+        } else {
             throw ActionError("Couldn't find current workflow job named '\(jobName)'. Available jobs are: \(jobs.map { "'\($0.name)'" }.joined(separator: ", "))")
         }
-        return job
     }
 }
