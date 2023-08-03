@@ -3,8 +3,8 @@ import SwiftCICDCore
 import SwiftPR
 
 public enum GitHubStatusContext {
-    case context(String)
-    case prCheck(PRCheck.Type)
+    case statusCheck(String)
+    case swiftPRCheck(PRCheck.Type)
 }
 
 struct ForwardCommitStatus: Action {
@@ -27,13 +27,13 @@ struct ForwardCommitStatus: Action {
             let detailsURL: String
 
             switch statusContext {
-            case .context(let name):
+            case .statusCheck(let name):
                 status = self.status
                 contextName = name
                 let currentJobURL = try await github.getCurrentWorkflowRunJob(named: contextName)
                 detailsURL = currentJobURL.htmlURL
 
-            case .prCheck(let prCheck):
+            case .swiftPRCheck(let prCheck):
                 status = prCheck.statusState
                 contextName = prCheck.statusContext
                 guard let prCheckComment = try await prCheck.getSwiftPRComment() else {
@@ -63,16 +63,6 @@ public extension GitHub {
                 status: status,
                 contexts: contexts
             )
-        )
-    }
-
-    func forwardCommitStatus(
-        _ status: OctoKit.Status.State,
-        to contexts: [String]
-    ) async throws {
-        try await forwardCommitStatus(
-            status,
-            to: contexts.map(GitHubStatusContext.context)
         )
     }
 }
