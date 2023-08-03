@@ -7,6 +7,12 @@ public enum GitHubStatusContext {
     case swiftPRCheck(PRCheck.Type)
 }
 
+extension GitHubStatusContext: ExpressibleByStringLiteral {
+    public init(stringLiteral value: String) {
+        self = .statusCheck(value)
+    }
+}
+
 struct ForwardCommitStatus: Action {
     let status: OctoKit.Status.State
     let contexts: [GitHubStatusContext]
