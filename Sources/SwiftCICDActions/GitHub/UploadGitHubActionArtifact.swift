@@ -220,6 +220,10 @@ extension GitHub {
     public struct UploadLatestXcodeBuildProduct: Action {
         var artifactName: String?
 
+        public init(artifactName: String? = nil) {
+            self.artifactName = artifactName
+        }
+
         public func run() async throws -> UploadActionArtifact.Output {
             guard let output = context.outputs.latestXcodeBuildProduct else {
                 throw ActionError("Missing expected 'outputs.latestXcodeBuildProduct'. Make sure to run 'xcode.build' before '\(#function)'")
