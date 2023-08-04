@@ -1,25 +1,25 @@
 import Foundation
 import Logging
 
-public struct PrintLogHandler: LogHandler {
-    public var label: String
-    public var logLevel: Logger.Level
-    public var metadata: Logger.Metadata
-    public var metadataProvider: Logger.MetadataProvider?
+struct PrintLogHandler: LogHandler {
+    var label: String
+    var logLevel: Logger.Level
+    var metadata: Logger.Metadata
+    var metadataProvider: Logger.MetadataProvider?
 
-    public init(label: String, logLevel: Logger.Level = .info, metadata: Logger.Metadata = .init(), metadataProvider: Logger.MetadataProvider? = nil) {
+    init(label: String, logLevel: Logger.Level = .info, metadata: Logger.Metadata = .init(), metadataProvider: Logger.MetadataProvider? = nil) {
         self.label = label
         self.logLevel = logLevel
         self.metadata = metadata
         self.metadataProvider = metadataProvider
     }
 
-    public subscript(metadataKey metadataKey: String) -> Logger.Metadata.Value? {
+    subscript(metadataKey metadataKey: String) -> Logger.Metadata.Value? {
         get { metadata[metadataKey] }
         set { metadata[metadataKey] = newValue }
     }
 
-    public func log(level: Logger.Level, message: Logger.Message, metadata: Logger.Metadata?, source: String, file: String, function: String, line: UInt) {
+    func log(level: Logger.Level, message: Logger.Message, metadata: Logger.Metadata?, source: String, file: String, function: String, line: UInt) {
         var output = ""
         output.append("[\(level)]".padding(toLength: 11, withPad: " ", startingAt: 0))
 

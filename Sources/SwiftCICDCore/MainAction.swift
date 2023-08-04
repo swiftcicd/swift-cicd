@@ -67,12 +67,12 @@ extension MainAction {
     }
 
     static func detectPlatform() -> Platform.Type? {
-        let knownPlatforms: [any Platform.Type] = [
+        let builtInPlatforms: [any Platform.Type] = [
             LocalPlatform.self,
             GitHubPlatform.self
         ]
 
-        return knownPlatforms.first(where: { $0.detect() })
+        return builtInPlatforms.first(where: { $0.detect() })
     }
 
     static func logEnvironment() {
