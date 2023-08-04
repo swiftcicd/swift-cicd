@@ -1,15 +1,18 @@
 import SwiftCICDCore
 
-struct GitPush: Action {
-    func run() async throws -> String {
-        let push = ShellCommand("git push")
-        return try await shell(push)
+extension Git {
+    public struct Push: Action {
+        public init() {}
+
+        public func run() async throws {
+            let push = ShellCommand("git push")
+            try await shell(push)
+        }
     }
 }
 
 public extension Git {
-    @discardableResult
-    func push() async throws -> String {
-        try await run(GitPush())
+    func push() async throws {
+        try await run(Push())
     }
 }

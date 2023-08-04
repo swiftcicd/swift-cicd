@@ -15,29 +15,31 @@ public struct GitHubActionWorkflowRunCancelled: LocalizedError {
     }
 }
 
-struct CancelGitHubActionWorkflowRuns: Action {
-    let runsToCancel: [Int]
+extension GitHub {
+    struct CancelRuns: Action {
+        let runsToCancel: [Int]
 
-    init(runs: [Run]) {
-        self.runsToCancel = runs.map(\.id)
-    }
-
-    init(runIDs: [Int]) {
-        self.runsToCancel = runIDs
-    }
-
-    func run() async throws {
-        if runsToCancel.isEmpty {
-            logger.info("No existing workflow runs to cancel")
-            return
+        init(runs: [Run]) {
+            self.runsToCancel = runs.map(\.id)
         }
 
-        for runID in runsToCancel {
-            do {
-                logger.info("Cancelling existing workflow run \(runID)")
-                try await github.cancelWorkflowRun(id: runID)
-            } catch {
-                logger.error("Failed to cancel workflow run: \(runID)")
+        init(runIDs: [Int]) {
+            self.runsToCancel = runIDs
+        }
+
+        func run() async throws {
+            if runsToCancel.isEmpty {
+                logger.info("No existing workflow runs to cancel")
+                return
+            }
+
+            for runID in runsToCancel {
+                do {
+                    logger.info("Cancelling existing workflow run \(runID)")
+                    try await github.cancelWorkflowRun(id: runID)
+                } catch {
+                    logger.error("Failed to cancel workflow run: \(runID)")
+                }
             }
         }
     }
@@ -46,7 +48,7 @@ struct CancelGitHubActionWorkflowRuns: Action {
 public extension GitHub {
     func cancelRuns(where predicate: (Run) -> Bool = { _ in true }) async throws {
         let runs = try await getWorkflowRuns(where: predicate)
-        try await run(CancelGitHubActionWorkflowRuns(runs: runs))
+        try await run(CancelRuns(runs: runs))
     }
 
     func cancelOtherRunsForCurrentPullRequest(where predicate: (Run) -> Bool = { _ in true }) async throws {
@@ -56,7 +58,7 @@ public extension GitHub {
                 && $0.status == .queued || $0.status == .inProgress
                 && predicate($0)
         }
-        return try await run(CancelGitHubActionWorkflowRuns(runs: runs))
+        return try await run(CancelRuns(runs: runs))
     }
 
     /// Cancels the current GitHub action workflow run if another action is queued and then throws an error to stop the execution.

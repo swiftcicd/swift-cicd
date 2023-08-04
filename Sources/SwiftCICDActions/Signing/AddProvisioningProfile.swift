@@ -1,53 +1,59 @@
 import Foundation
 import SwiftCICDCore
 
-struct AddProvisioningProfile: Action {
-    /// Path to .mobileprovision file.
-    let profilePath: String
+extension Signing {
+    public struct AddProvisioningProfile: Action {
+        /// Path to .mobileprovision file.
+        let profilePath: String
 
-    @State var addedProfilePath: String?
+        @State var addedProfilePath: String?
 
-    func run() async throws -> ProvisioningProfile {
-        // https://stackoverflow.com/a/46095880/4283188
-
-        logger.info("Adding profile \(profilePath) to provisioning profiles")
-
-        guard let profileContents = context.fileManager.contents(atPath: profilePath) else {
-            throw ActionError("Failed to get contents of profile at \(profilePath)")
+        public init(_ profilePath: String) {
+            self.profilePath = profilePath
         }
 
-        let profile = try ProvisioningProfile(data: profileContents)
+        public func run() async throws -> ProvisioningProfile {
+            // https://stackoverflow.com/a/46095880/4283188
 
-        let provisioningProfiles = context.fileManager.homeDirectoryForCurrentUser
-            .appendingPathComponent("Library/MobileDevice/Provisioning Profiles")
+            logger.info("Adding profile \(profilePath) to provisioning profiles")
 
-        try context.fileManager.createDirectory(at: provisioningProfiles, withIntermediateDirectories: true)
+            guard let profileContents = context.fileManager.contents(atPath: profilePath) else {
+                throw ActionError("Failed to get contents of profile at \(profilePath)")
+            }
 
-        let addedProfilePath = provisioningProfiles
-            .appendingPathComponent("\(profile.uuid).mobileprovision")
-            .path
+            let profile = try ProvisioningProfile(data: profileContents)
 
-        self.addedProfilePath = addedProfilePath
+            let provisioningProfiles = context.fileManager.homeDirectoryForCurrentUser
+                .appendingPathComponent("Library/MobileDevice/Provisioning Profiles")
 
-        guard context.fileManager.createFile(atPath: addedProfilePath, contents: profileContents) else {
-            throw ActionError("Failed to create profile at \(addedProfilePath)")
+            try context.fileManager.createDirectory(at: provisioningProfiles, withIntermediateDirectories: true)
+
+            let addedProfilePath = provisioningProfiles
+                .appendingPathComponent("\(profile.uuid).mobileprovision")
+                .path
+
+            self.addedProfilePath = addedProfilePath
+
+            guard context.fileManager.createFile(atPath: addedProfilePath, contents: profileContents) else {
+                throw ActionError("Failed to create profile at \(addedProfilePath)")
+            }
+
+            logger.info("Added profile \(addedProfilePath)")
+            context.outputs.provisioningProfile = profile
+            return profile
         }
 
-        logger.info("Added profile \(addedProfilePath)")
-        context.outputs.provisioningProfile = profile
-        return profile
-    }
-
-    func cleanUp(error: Error?) async throws {
-        if let addedProfilePath {
-            try context.fileManager.removeItem(atPath: addedProfilePath)
+        public func cleanUp(error: Error?) async throws {
+            if let addedProfilePath {
+                try context.fileManager.removeItem(atPath: addedProfilePath)
+            }
         }
     }
 }
 
 public extension Signing {
     func addProvisioningProfile(_ pathToProfile: String) async throws -> ProvisioningProfile {
-        try await run(AddProvisioningProfile(profilePath: pathToProfile))
+        try await run(AddProvisioningProfile(pathToProfile))
     }
 }
 

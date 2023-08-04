@@ -8,13 +8,13 @@ public struct UpdateFile: Action {
     let createFile: Bool
     let update: (inout Data) -> Void
 
-    public init(filePath: String, createFile: Bool, update: @escaping (inout Data) -> Void) {
+    public init(_ filePath: String, createFile: Bool = true, update: @escaping (inout Data) -> Void) {
         self.filePath = filePath
         self.createFile = createFile
         self.update = update
     }
 
-    public init(filePath: String, createFile: Bool, update: @escaping (inout String) -> Void) {
+    public init(_ filePath: String, createFile: Bool = true, update: @escaping (inout String) -> Void) {
         self.filePath = filePath
         self.createFile = createFile
         self.update = { data in
@@ -55,11 +55,11 @@ public struct UpdateFile: Action {
 }
 
 public extension Action {
-    func updateFile(_ filePath: String, createFile: Bool = true, _ update: @escaping (inout Data) -> Void) async throws {
-        try await run(UpdateFile(filePath: filePath, createFile: createFile, update: update))
+    func updateFile(_ filePath: String, createFile: Bool = true, update: @escaping (inout Data) -> Void) async throws {
+        try await run(UpdateFile(filePath, createFile: createFile, update: update))
     }
 
-    func updateFile(_ filePath: String, createFile: Bool = true, _ update: @escaping (inout String) -> Void) async throws {
-        try await run(UpdateFile(filePath: filePath, createFile: createFile, update: update))
+    func updateFile(_ filePath: String, createFile: Bool = true, update: @escaping (inout String) -> Void) async throws {
+        try await run(UpdateFile(filePath, createFile: createFile, update: update))
     }
 }

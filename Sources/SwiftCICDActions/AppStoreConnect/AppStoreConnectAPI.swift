@@ -3,8 +3,8 @@ import SwiftCICDCore
 
 // TODO: Consider finding a Swift package for AppStoreConnect.
 
-public struct AppStoreConnectAPI {
-    private func request<Response: Decodable>(method: String = "GET", _ path: String, key: AppStoreConnect.Key, as response: Response.Type = Response.self) async throws -> Response {
+public enum AppStoreConnectAPI {
+    private static func request<Response: Decodable>(method: String = "GET", _ path: String, key: AppStoreConnect.Key, as response: Response.Type = Response.self) async throws -> Response {
         var request = URLRequest(url: URL(string: "https://api.appstoreconnect.apple.com\(path)")!)
         let token = AppStoreConnect.Token(
             keyID: key.id,
@@ -21,11 +21,11 @@ public struct AppStoreConnectAPI {
         return response
     }
 
-    public func getApps(key: AppStoreConnect.Key) async throws -> [App] {
+    public static func getApps(key: AppStoreConnect.Key) async throws -> [App] {
         try await request("/v1/apps", key: key, as: DataResponse<[App]>.self).data
     }
 
-    public func getLatestBuild(appID: String, key: AppStoreConnect.Key) async throws -> Build? {
+    public static func getLatestBuild(appID: String, key: AppStoreConnect.Key) async throws -> Build? {
         // FIXME: Processing builds don't show up in this list right away. They do at some point, but not as fast as they appear on the App Store Connect website.
         // Is there some mix of query parameters that would start returning processing builds right away?
         let data = try await request("/v1/builds?filter[app]=\(appID)&limit=1", key: key, as: DataResponse<[Build]>.self)
@@ -35,12 +35,11 @@ public struct AppStoreConnectAPI {
 
 public extension ContextValues {
     private enum Key: ContextKey {
-        static let defaultValue = AppStoreConnectAPI()
+        static let defaultValue = AppStoreConnectAPI.self
     }
 
-    var appStoreConnectAPI: AppStoreConnectAPI {
-        get { self[Key.self] }
-        set { self[Key.self] = newValue }
+    var appStoreConnectAPI: AppStoreConnectAPI.Type {
+        self[Key.self]
     }
 }
 

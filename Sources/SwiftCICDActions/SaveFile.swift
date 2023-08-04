@@ -9,7 +9,7 @@ public struct SaveFile: Action {
     var attributes: [FileAttributeKey: Any]?
     var parentDirectoryPath: String?
 
-    public init(name: String, contents: Data, attributes: [FileAttributeKey: Any]?, parentDirectoryPath: String? = nil) {
+    public init(name: String, contents: Data, attributes: [FileAttributeKey: Any]? = nil, parentDirectoryPath: String? = nil) {
         self.fileName = name
         self.contents = contents
         self.attributes = attributes
