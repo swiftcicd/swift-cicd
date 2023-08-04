@@ -58,4 +58,19 @@ public extension ContextValues {
     var workingDirectory: String {
         get throws { try platform.workingDirectory }
     }
+
+    var temporaryDirectory: String {
+        fileManager.temporaryDirectory.filePath
+    }
+
+    var applicationsDirectory: String {
+        get throws {
+            try fileManager.url(
+                for: .applicationDirectory,
+                in: .localDomainMask,
+                appropriateFor: nil,
+                create: false
+            ).filePath
+        }
+    }
 }
