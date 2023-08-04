@@ -103,6 +103,9 @@ extension ActionStack.Frame {
 }
 
 public extension Action {
+    // TODO: Re-enable this syntax:
+    // try await run("Build for Simulator") { try await xcode.build() }
+
     @discardableResult
     func run<A: Action>(_ action: A) async throws -> A.Output {
         try await self.run(nil, action)
