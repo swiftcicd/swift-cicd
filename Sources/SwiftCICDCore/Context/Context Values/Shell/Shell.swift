@@ -54,12 +54,29 @@ public struct Shell {
         let errorPipe = Pipe()
         task.standardError = errorPipe
 
+        if !quiet {
+            outputPipe.fileHandleForReading.readabilityHandler = { handler in
+                let data = handler.availableData
+                let string = String(decoding: data, as: UTF8.self)
+                print(string)
+            }
+
+            errorPipe.fileHandleForReading.readabilityHandler = { handler in
+                let data = handler.availableData
+                let string = String(decoding: data, as: UTF8.self)
+                print(string)
+            }
+        }
+
         try task.run()
 
         let outputData = try outputPipe.drain()
         let errorData = try errorPipe.drain()
 
         task.waitUntilExit()
+
+        outputPipe.fileHandleForReading.readabilityHandler = nil
+        errorPipe.fileHandleForReading.readabilityHandler = nil
 
         guard task.terminationStatus == 0 else {
             throw ShellError(
@@ -83,9 +100,9 @@ public struct Shell {
         let stringOutput = String(decoding: output, as: UTF8.self)
 
         // TODO: Make output destination customizable via handles
-        if !quiet {
-            print(stringOutput)
-        }
+//        if !quiet {
+//            print(stringOutput)
+//        }
 
         return stringOutput
     }
