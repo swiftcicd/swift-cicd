@@ -1,4 +1,4 @@
-///// Marker protocol for Group.
+/// Marker protocol for Group.
 protocol _GroupAction: Action {}
 
 public struct Group<Wrapped: Action>: _GroupAction {

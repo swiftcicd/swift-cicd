@@ -57,11 +57,9 @@ public struct Xcbeautify: Tool {
 
     public static func install() async throws {
         try await context.shell("brew install xcbeautify")
-//        try await context.shell("/opt/homebrew/bin/brew install xcbeautify")
     }
 
     public static func uninstall() async throws {
-//        try await context.shell("/opt/homebrew/bin/brew uninstall xcbeautify")
         try await context.shell("brew uninstall xcbeautify")
     }
 

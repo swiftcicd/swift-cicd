@@ -1,105 +1,107 @@
 import Foundation
 import SwiftCICDCore
 
-public struct XcodeBuild: Action {
-    public struct Output {
-        public struct Product {
-            public let url: URL
-            public let name: String
+extension Xcode {
+    public struct Build: Action {
+        public struct Output {
+            public struct Product {
+                public let url: URL
+                public let name: String
+            }
+
+            public let product: Product?
         }
 
-        public let product: Product?
-    }
+        var project: String?
+        var scheme: String?
+        var configuration: XcodeBuild.Configuration?
+        let destination: XcodeBuild.Destination?
+        let sdk: XcodeBuild.SDK?
+        var cleanBuild: Bool
+        var archivePath: String?
+        var codeSignStyle: XcodeBuild.CodeSignStyle?
+        var projectVersion: String?
+        var includeDSYMs: Bool?
+        let xcbeautify: Bool
 
-    var project: String?
-    var scheme: String?
-    var configuration: XcodeBuild.Configuration?
-    let destination: XcodeBuild.Destination?
-    let sdk: XcodeBuild.SDK?
-    var cleanBuild: Bool
-    var archivePath: String?
-    var codeSignStyle: XcodeBuild.CodeSignStyle?
-    var projectVersion: String?
-    var includeDSYMs: Bool?
-    let xcbeautify: Bool
-
-    public init(
-        project: String? = nil,
-        scheme: String? = nil,
-        // FIXME: xcodebuild's actual default is RELEASE. Should we mirror that?
-        configuration: XcodeBuild.Configuration? = .debug,
-        destination: XcodeBuild.Destination? = .iOSSimulator,
-        sdk: XcodeBuild.SDK? = nil,
-        cleanBuild: Bool = false,
-        archivePath: String? = nil,
-        codeSignStyle: XcodeBuild.CodeSignStyle? = nil,
-        projectVersion: String? = nil,
-        includeDSYMs: Bool? = nil,
-        xcbeautify: Bool = Xcbeautify.default
-    ) {
-        self.project = project
-        self.scheme = scheme
-        self.configuration = configuration
-        self.destination = destination
-        self.sdk = sdk ?? destination?.sdk
-        self.cleanBuild = cleanBuild
-        self.archivePath = archivePath
-        self.codeSignStyle = codeSignStyle
-        self.projectVersion = projectVersion
-        self.includeDSYMs = includeDSYMs
-        self.xcbeautify = xcbeautify
-    }
-
-    public func run() async throws -> Output {
-        var xcodebuild = ShellCommand("xcodebuild")
-        let project = try self.project ?? context.xcodeProject
-        // TODO: Support -workspace as well. Use XcodeBuild.XcodeContainer.
-        xcodebuild.append("-project", ifLet: project)
-        xcodebuild.append("-scheme", ifLet: scheme)
-        xcodebuild.append("-destination", ifLet: destination?.value)
-        xcodebuild.append("-configuration", ifLet: configuration?.name)
-        xcodebuild.append("-sdk", ifLet: sdk?.value)
-        // Control the derived data path so that we can look for built products there
-//        xcodebuild.append("-derivedDataPath \(XcodeBuild.derivedData.filePath)")
-        xcodebuild.append("clean", if: cleanBuild)
-
-        if let archivePath {
-            xcodebuild.append("archive -archivePath \(archivePath)")
-        } else {
-            xcodebuild.append("build")
+        public init(
+            project: String? = nil,
+            scheme: String? = nil,
+            // FIXME: xcodebuild's actual default is RELEASE. Should we mirror that?
+            configuration: XcodeBuild.Configuration? = .debug,
+            destination: XcodeBuild.Destination? = .iOSSimulator,
+            sdk: XcodeBuild.SDK? = nil,
+            cleanBuild: Bool = false,
+            archivePath: String? = nil,
+            codeSignStyle: XcodeBuild.CodeSignStyle? = nil,
+            projectVersion: String? = nil,
+            includeDSYMs: Bool? = nil,
+            xcbeautify: Bool = Xcbeautify.default
+        ) {
+            self.project = project
+            self.scheme = scheme
+            self.configuration = configuration
+            self.destination = destination
+            self.sdk = sdk ?? destination?.sdk
+            self.cleanBuild = cleanBuild
+            self.archivePath = archivePath
+            self.codeSignStyle = codeSignStyle
+            self.projectVersion = projectVersion
+            self.includeDSYMs = includeDSYMs
+            self.xcbeautify = xcbeautify
         }
 
-        xcodebuild.append("CURRENT_PROJECT_VERSION", "=", ifLet: projectVersion)
+        public func run() async throws -> Output {
+            var xcodebuild = ShellCommand("xcodebuild")
+            let project = try self.project ?? context.xcodeProject
+            let scheme = self.scheme ?? context.defaultXcodeProjectScheme
+            // TODO: Support -workspace as well. Use XcodeBuild.XcodeContainer.
+            xcodebuild.append("-project", ifLet: project)
+            xcodebuild.append("-scheme", ifLet: scheme)
+            xcodebuild.append("-destination", ifLet: destination?.value)
+            xcodebuild.append("-configuration", ifLet: configuration?.name)
+            xcodebuild.append("-sdk", ifLet: sdk?.value)
+            // Control the derived data path so that we can look for built products there
+//            xcodebuild.append("-derivedDataPath \(XcodeBuild.derivedData.filePath)")
+            xcodebuild.append("clean", if: cleanBuild)
 
-        // Only override the debug information format if the flag was explicitly passed.
-        if let includeDSYMs {
-            xcodebuild.append("DEBUG_INFORMATION_FORMAT=\(includeDSYMs ? "dwarf-with-dsym" : "dwarf")")
-        }
+            if let archivePath {
+                xcodebuild.append("archive -archivePath \(archivePath)")
+            } else {
+                xcodebuild.append("build")
+            }
 
-        if case let .manual(codeSignIdentity, developmentTeam, provisioningProfile) = codeSignStyle {
-            // It seems like this happens when you have a swift package that has a target that has resources.
-            // Adding CODE_SIGNING_REQUIRED=Yes and CODE_SIGNING_ALLOWED=No because of this answer:
-            // https://forums.swift.org/t/xcode-14-beta-code-signing-issues-when-spm-targets-include-resources/59685/17
+            xcodebuild.append("CURRENT_PROJECT_VERSION", "=", ifLet: projectVersion)
 
-            // need either code sign identity or development team, but not both (both can be used, just not required) according to testing
-            // there's a note on this thread (https://developer.apple.com/forums/thread/48762) that says apple says not to use code_sign_identity when doing manual signing
+            // Only override the debug information format if the flag was explicitly passed.
+            if let includeDSYMs {
+                xcodebuild.append("DEBUG_INFORMATION_FORMAT=\(includeDSYMs ? "dwarf-with-dsym" : "dwarf")")
+            }
 
-            // But there's a slide from that presentation (https://devstreaming-cdn.apple.com/videos/wwdc/2017/403yv29uwyamwsi222/403/403_whats_new_in_signing_for_xcode_and_xcode_server.pdf)
-            // that has this on it:
-            /*
-             Manual Signing
-             Build settings
-             DEVELOPMENT_TEAM to set your team identifier
-             PROVISIONING_PROFILE_SPECIFIER to set your profile name
-             CODE_SIGN_IDENTITY to set your certificate
-            */
-            // So maybe those notes are wrong?
+            if case let .manual(codeSignIdentity, developmentTeam, provisioningProfile) = codeSignStyle {
+                // It seems like this happens when you have a swift package that has a target that has resources.
+                // Adding CODE_SIGNING_REQUIRED=Yes and CODE_SIGNING_ALLOWED=No because of this answer:
+                // https://forums.swift.org/t/xcode-14-beta-code-signing-issues-when-spm-targets-include-resources/59685/17
 
-            // Also provisioning_profile is supposedly deprecated (or at the xcodebuild argument was)
-            // Does that mean we shouldn't use the build setting? Maybe just the specifier?
-            // Only using the specifier setting seems to work.
+                // need either code sign identity or development team, but not both (both can be used, just not required) according to testing
+                // there's a note on this thread (https://developer.apple.com/forums/thread/48762) that says apple says not to use code_sign_identity when doing manual signing
 
-            xcodebuild.append("""
+                // But there's a slide from that presentation (https://devstreaming-cdn.apple.com/videos/wwdc/2017/403yv29uwyamwsi222/403/403_whats_new_in_signing_for_xcode_and_xcode_server.pdf)
+                // that has this on it:
+                /*
+                 Manual Signing
+                 Build settings
+                 DEVELOPMENT_TEAM to set your team identifier
+                 PROVISIONING_PROFILE_SPECIFIER to set your profile name
+                 CODE_SIGN_IDENTITY to set your certificate
+                 */
+                // So maybe those notes are wrong?
+
+                // Also provisioning_profile is supposedly deprecated (or at the xcodebuild argument was)
+                // Does that mean we shouldn't use the build setting? Maybe just the specifier?
+                // Only using the specifier setting seems to work.
+
+                xcodebuild.append("""
                 CODE_SIGNING_REQUIRED=Yes \
                 CODE_SIGNING_ALLOWED=No \
                 CODE_SIGN_STYLE=Manual \
@@ -108,47 +110,48 @@ public struct XcodeBuild: Action {
                 PROVISIONING_PROFILE=\(provisioningProfile)
                 PROVISIONING_PROFILE_SPECIFIER=\(provisioningProfile)
                 """
-            )
-        }
-
-
-        try await xcbeautify(xcodebuild, if: xcbeautify)
-
-        let settings = try await xcode.getBuildSettings(
-            project: project,
-            scheme: scheme,
-            configuration: configuration,
-            destination: destination,
-            sdk: sdk
-//            derivedDataPath: derivedData.filePath
-        )
-
-        var product: Output.Product?
-
-        if let buildDirectory = settings[.configurationBuildDirectory], let fullProductName = settings[.fullProductName] {
-            let productPath = "\(buildDirectory)/\(fullProductName)"
-            let productURL = URL(filePathCompat: productPath)
-            if context.fileManager.fileExists(atPath: productPath) {
-                product = Output.Product(url: productURL, name: fullProductName)
+                )
             }
-        }
-//        else if let configuration {
-//            // TODO: When building a Swift package, how do we determine the name of the product?
-//            let name = "???"
-//            let productPath = derivedData/"Build/Products/\(configuration.name)/\(name)"
-//            if context.fileManager.fileExists(atPath: productPath.filePath) {
-//                product = Output.Product(url: productPath, name: name)
+
+
+            try await xcbeautify(xcodebuild, if: xcbeautify)
+
+            let settings = try await xcode.getBuildSettings(
+                project: project,
+                scheme: scheme,
+                configuration: configuration,
+                destination: destination,
+                sdk: sdk
+//                derivedDataPath: derivedData.filePath
+            )
+
+            var product: Output.Product?
+
+            if let buildDirectory = settings[.configurationBuildDirectory], let fullProductName = settings[.fullProductName] {
+                let productPath = "\(buildDirectory)/\(fullProductName)"
+                let productURL = URL(filePathCompat: productPath)
+                if context.fileManager.fileExists(atPath: productPath) {
+                    product = Output.Product(url: productURL, name: fullProductName)
+                }
+            }
+//            else if let configuration {
+//                // TODO: When building a Swift package, how do we determine the name of the product?
+//                let name = "???"
+//                let productPath = derivedData/"Build/Products/\(configuration.name)/\(name)"
+//                if context.fileManager.fileExists(atPath: productPath.filePath) {
+//                    product = Output.Product(url: productPath, name: name)
+//                }
 //            }
-//        }
 
-        let output = Output(product: product)
-        context.outputs.latestXcodeBuildProduct = output
-        return output
-    }
+            let output = Output(product: product)
+            context.outputs.latestXcodeBuildProduct = output
+            return output
+        }
 
-    public func cleanUp(error: Error?) async throws {
-        if let archivePath {
-            try context.fileManager.removeItem(atPath: archivePath)
+        public func cleanUp(error: Error?) async throws {
+            if let archivePath {
+                try context.fileManager.removeItem(atPath: archivePath)
+            }
         }
     }
 }
@@ -167,11 +170,11 @@ public extension Xcode {
         projectVersion: String? = nil,
         includeDSYMs: Bool? = nil,
         xcbeautify: Bool = Xcbeautify.default
-    ) async throws -> XcodeBuild.Output {
+    ) async throws -> Build.Output {
         try await run(
-            XcodeBuild(
+            Build(
                 project: project,
-                scheme: scheme ?? self.defaultScheme,
+                scheme: scheme,
                 configuration: configuration,
                 destination: destination,
                 sdk: sdk,
@@ -198,11 +201,11 @@ public extension Xcode {
         projectVersion: String? = nil,
         includeDSYMs: Bool? = nil,
         xcbeautify: Bool = Xcbeautify.default
-    ) async throws -> XcodeBuild.Output {
+    ) async throws -> Build.Output {
         try await run(
-            XcodeBuild(
+            Build(
                 project: project,
-                scheme: scheme ?? self.defaultScheme,
+                scheme: scheme,
                 configuration: configuration,
                 destination: destination,
                 sdk: sdk,
@@ -219,10 +222,10 @@ public extension Xcode {
 
 public extension OutputValues {
     private enum Key: OutputKey {
-        static var defaultValue: XcodeBuild.Output?
+        static var defaultValue: Xcode.Build.Output?
     }
 
-    var latestXcodeBuildProduct: XcodeBuild.Output? {
+    var latestXcodeBuildProduct: Xcode.Build.Output? {
         get { self[Key.self] }
         set { self[Key.self] = newValue }
     }

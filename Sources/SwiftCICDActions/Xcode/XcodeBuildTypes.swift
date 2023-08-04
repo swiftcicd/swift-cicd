@@ -1,12 +1,12 @@
 import Foundation
 import SwiftCICDCore
 
-public extension XcodeBuild {
+public enum XcodeBuild {
 //    static var derivedData: URL {
 //        context.fileManager.temporaryDirectory/"DerivedData"
 //    }
 
-    enum Container {
+    public enum Container {
         case project(String)
         case workspace(String)
 
@@ -20,7 +20,7 @@ public extension XcodeBuild {
         }
     }
 
-    struct Configuration: ExpressibleByStringLiteral {
+    public struct Configuration: ExpressibleByStringLiteral {
         public static let debug = Configuration(name: "Debug")
         public static let release = Configuration(name: "Release")
 
@@ -35,7 +35,7 @@ public extension XcodeBuild {
         }
     }
 
-    enum CodeSignStyle {
+    public enum CodeSignStyle {
         case manual(codeSignIdentity: String, developmentTeam: String, provisioningProfile: String)
         case automatic
 
@@ -46,7 +46,7 @@ public extension XcodeBuild {
         }
     }
 
-    enum Destination {
+    public enum Destination {
         public enum Platform: String {
             case iOSSimulator = "iOS Simulator"
             case macOS = "OS X"
@@ -108,7 +108,7 @@ public extension XcodeBuild {
         }
     }
 
-    enum SDK: String {
+    public enum SDK: String {
         case driverKit = "driverkit"
         case iOS = "iphoneos"
         case iOSSimulator = "iphonesimulator"
