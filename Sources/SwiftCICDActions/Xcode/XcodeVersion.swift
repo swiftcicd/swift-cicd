@@ -4,6 +4,8 @@ import SwiftCICDCore
 
 extension Xcode {
     public struct Select: Action {
+        public let name = "Select Xcode Version"
+
         let version: String
 
         public init(_ version: String) {

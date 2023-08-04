@@ -178,7 +178,6 @@ public extension Git {
 
     @discardableResult
     func commit(message: String, flags: [String] = [], filesMatching predicate: @escaping (String) -> Bool) async throws -> Commit.Output {
-        context.platform.startLogGroup(named: "Action: Commit Files Matching Predicate")
         context.logger.info("Committing files matching predicate.")
 
         let status = try await context.shell("git status --short")
