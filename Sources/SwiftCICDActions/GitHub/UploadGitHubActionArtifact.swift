@@ -17,7 +17,7 @@ extension GitHub {
             }
         }
 
-        public init(_ artifact: URL, named name: String? = nil) throws {
+        public init(_ artifact: URL, named name: String? = nil) {
             self.artifactURL = artifact
             self.artifactName = name ?? artifact.lastPathComponent
             self.itemPath = "\(self.artifactName)/\(artifact.lastPathComponent)"
@@ -216,37 +216,12 @@ extension GitHub {
             try context.fileManager.removeItem(at: zippedArtifactURL)
         }
     }
-
-    public struct UploadLatestXcodeBuildProduct: Action {
-        var artifactName: String?
-
-        public init(artifactName: String? = nil) {
-            self.artifactName = artifactName
-        }
-
-        public func run() async throws -> UploadActionArtifact.Output {
-            guard let output = context.outputs.latestXcodeBuildProduct else {
-                throw ActionError("Missing expected 'outputs.latestXcodeBuildProduct'. Make sure to run 'xcode.build' before '\(#function)'")
-            }
-
-            guard let product = output.product else {
-                throw ActionError("'outputs.latestXcodeBuildProduct.product' was nil.")
-            }
-
-            return try await github.uploadActionArtifact(product.url, named: product.name)
-        }
-    }
 }
 
 public extension GitHub {
     @discardableResult
     func uploadActionArtifact(_ artifactURL: URL, named artifactName: String? = nil) async throws -> UploadActionArtifact.Output {
         try await run(UploadActionArtifact(artifactURL, named: artifactName))
-    }
-
-    @discardableResult
-    func uploadLatestXcodeBuildProduct(artifactName: String? = nil) async throws -> UploadActionArtifact.Output {
-        try await run(UploadLatestXcodeBuildProduct(artifactName: artifactName))
     }
 }
 
