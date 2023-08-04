@@ -36,7 +36,7 @@ public final class Tools: ContextAware {
         }
 
         do {
-            try await context.withLogGroup(named: "Uninstalling tools...") {
+            try await context.startingLogGroup(named: "Uninstalling tools...") {
                 for tool in tools.values {
                     do {
                         if await tool.isInstalled {

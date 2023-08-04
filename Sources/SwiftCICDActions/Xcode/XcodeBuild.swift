@@ -23,7 +23,7 @@ public struct XcodeBuild: Action {
     var includeDSYMs: Bool?
     let xcbeautify: Bool
 
-    init(
+    public init(
         project: String? = nil,
         scheme: String? = nil,
         // FIXME: xcodebuild's actual default is RELEASE. Should we mirror that?

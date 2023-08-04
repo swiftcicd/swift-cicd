@@ -11,15 +11,17 @@ public enum LocalPlatform: Platform {
         FileManager.default.currentDirectoryPath
     }
 
-    public static let supportsLogGroups = false
-
-    public static let supportsNestedLogGroups = false
+    public static let supportsLogGroups = true
 
     public static let supportsSecretObfuscation = false
 
-    public static func startLogGroup(named groupName: String) {}
+    public static func startLogGroup(named groupName: String) {
+        print("start log group: \(groupName)")
+    }
 
-    public static func endLogGroup() {}
+    public static func endLogGroup() {
+        print("end log group")
+    }
 
     public static func detect() -> Bool {
         CommandLine.arguments.contains("local")

@@ -1,5 +1,7 @@
 import Logging
 
+// TODO: Make a PlatformLogger so that if a platform supports formatting log levels (like GitHub actions: https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#setting-a-debug-message) then those can be formatted according to the platform.
+
 public extension Action {
     static var logger: Logger { context.logger }
     var logger: Logger { context.logger }
@@ -60,7 +62,6 @@ extension ContextValues {
         platform.endLogGroup()
     }
 
-    
     /// Starts a new log group with the given name and sets the ``ContextValues/currentLogGroup`` for the duration of the operation.
     ///
     /// The log group _will not_ be ended at the end of the operation. Log groups are automatically balanced by only ending a group when a new one is started.
@@ -70,7 +71,7 @@ extension ContextValues {
     ///   - operation: The operation to run.
     /// - Returns: The result of the operation.
     @discardableResult
-    public func withLogGroup<Result>(named name: String, operation: () throws -> Result) throws -> Result {
+    public func startingLogGroup<Result>(named name: String, operation: () throws -> Result) throws -> Result {
         try Self.withValue(\.currentLogGroup, LogGroup(name: name)) {
             try startLogGroup(named: name)
             return try operation()
@@ -86,7 +87,7 @@ extension ContextValues {
     ///   - operation: The operation to run.
     /// - Returns: The result of the operation.
     @discardableResult
-    public func withLogGroup<Result>(named name: String, operation: () async throws -> Result) async throws -> Result {
+    public func startingLogGroup<Result>(named name: String, operation: () async throws -> Result) async throws -> Result {
         try await Self.withValue(\.currentLogGroup, LogGroup(name: name)) {
             try startLogGroup(named: name)
             return try await operation()

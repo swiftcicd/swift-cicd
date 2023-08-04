@@ -13,9 +13,6 @@ public protocol Platform: ContextAware {
     /// Whether the platform supports grouping log messages together.
     static var supportsLogGroups: Bool { get }
 
-    /// Whether the platform supports nested log groups.
-    static var supportsNestedLogGroups: Bool { get }
-
     /// If the platform supports log groups, call this method to start a new log group.
     static func startLogGroup(named groupName: String)
 
@@ -33,6 +30,11 @@ public protocol Platform: ContextAware {
     /// - Parameter secret: The secret to obfuscate.
     static func obfuscate(secret: String)
 }
+
+// TODO: In order to remove the need for hard-coding supportedPlatforms we could just add a 'static platform: Platform?' property to MainAction.
+// Then a user could specify up-front what platform they intend to run on and implement the Platform protocol themselves.
+// Then in the MainAction.run we could guard detect the platform they specified, if they specified one.
+// Otherwise, we'll just check for the platforms we know about (Local and GitHub)
 
 private let supportedPlatforms: [any Platform.Type] = [
     LocalPlatform.self,

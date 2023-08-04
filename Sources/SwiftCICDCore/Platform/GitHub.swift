@@ -1,5 +1,8 @@
 import SwiftEnvironment
 
+// TODO: Explore using these GitHub commands to highlight certain lines in the action output
+// https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#setting-a-notice-message
+
 public enum GitHubPlatform: Platform {
     public static let name = "GitHub Actions"
 
@@ -16,8 +19,7 @@ public enum GitHubPlatform: Platform {
     // https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#grouping-log-lines
     public static let supportsLogGroups = true
 
-    public static let supportsNestedLogGroups = false
-
+    // https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#masking-a-value-in-a-log
     public static let supportsSecretObfuscation = true
 
     public static func startLogGroup(named groupName: String) {

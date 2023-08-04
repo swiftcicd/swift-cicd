@@ -48,7 +48,7 @@ extension MainAction {
     }
 
     static func logEnvironment() throws {
-        try context.withLogGroup(named: "Environment") {
+        try context.startingLogGroup(named: "Environment") {
             logger.debug("""
                 Environment:
                 \(context.environment._dump().indented())
@@ -109,10 +109,15 @@ extension MainAction {
 
     static func cleanUp(error: Error?) async {
         do {
-            try await context.withLogGroup(named: "Cleaning up...") {
+            try await context.startingLogGroup(named: "Cleaning up...") {
                 while let action = context.stack.pop()?.action {
+                    // Don't clean up after container actions.
+                    guard !action.isContainer else {
+                        continue
+                    }
+
                     do {
-                        logger.info("Cleaning up after action: \(action.name).")
+                        logger.info("Cleaning up after action: \(action.name)")
                         try await action.cleanUp(error: error)
                     } catch {
                         logger.error("Failed to clean up after action: \(action.name). Error: \(error)")
