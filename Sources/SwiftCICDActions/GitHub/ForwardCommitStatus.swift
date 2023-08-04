@@ -19,7 +19,7 @@ extension GitHub {
         let contexts: [GitHubStatusContext]
 
         public init(
-            _ status: OctoKit.Status.State,
+            _ status: OctoKit.Status.State = .success,
             to contexts: [GitHubStatusContext]
         ) {
             self.status = status
@@ -71,7 +71,7 @@ extension GitHub {
 
 public extension GitHub {
     func forwardCommitStatus(
-        _ status: OctoKit.Status.State,
+        _ status: OctoKit.Status.State = .success,
         to contexts: [GitHubStatusContext]
     ) async throws {
         try await run(ForwardCommitStatus(status, to: contexts))
