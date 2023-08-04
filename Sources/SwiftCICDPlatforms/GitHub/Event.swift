@@ -140,6 +140,10 @@ public struct PullRequestEvent: Decodable {
 }
 
 public extension PullRequestEvent {
+    var isClosedAndMergedIntoMain: Bool {
+        isClosed && pullRequest.isMerged && isIntoMain
+    }
+
     var isIntoMain: Bool {
         pullRequest.base.ref == "main"
     }
