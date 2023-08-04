@@ -16,26 +16,23 @@ public enum GitHubPlatform: Platform {
         }
     }
 
-    // https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#grouping-log-lines
-    public static let supportsLogGroups = true
-
-    // https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#masking-a-value-in-a-log
-    public static let supportsSecretObfuscation = true
-
-    public static func startLogGroup(named groupName: String) {
-        guard isRunningCI else { return }
-        print("::group::\(groupName)")
-    }
-
-    public static func endLogGroup() {
-        guard isRunningCI else { return }
-        print("::endgroup::")
-    }
-
     public static func detect() -> Bool {
         context.environment.github.actions ?? false
     }
 
+    // https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#grouping-log-lines
+    public static func startLogGroup(named groupName: String) {
+        // GitHub doesn't support nested log groups.
+        // So always eageraly end a group before starting a new one.
+        endLogGroup()
+        print("::group::\(groupName)")
+    }
+
+    public static func endLogGroup() {
+        print("::endgroup::")
+    }
+
+    // https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#masking-a-value-in-a-log
     public static func obfuscate(secret: String) {
         // Reference:
         // https://github.com/1Password/load-secrets-action/blob/d1a4e73495bde3551cf63f6c048588b8f734e21d/entrypoint.sh#L101

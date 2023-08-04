@@ -146,9 +146,8 @@ public extension Action {
             // - The action is a regular action
             // - The action's first non-container ancestor is a main action
             if action.isRegular, let ancestor = frame.firstNonContainerAncestor, ancestor.action.isMain {
-                output = try await context.startingLogGroup(named: actionName) {
-                    try await action.run()
-                }
+                context.platform.startLogGroup(named: actionName)
+                output = try await action.run()
             } else {
                 // Only log the action's name if:
                 // - The action is a regular action

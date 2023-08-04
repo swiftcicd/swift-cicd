@@ -178,34 +178,33 @@ public extension Git {
 
     @discardableResult
     func commit(message: String, flags: [String] = [], filesMatching predicate: @escaping (String) -> Bool) async throws -> Commit.Output {
-        try await context.startingLogGroup(named: "Action: Commit Files Matching Predicate") {
-            context.logger.info("Committing files matching predicate.")
+        context.platform.startLogGroup(named: "Action: Commit Files Matching Predicate")
+        context.logger.info("Committing files matching predicate.")
 
-            let status = try await context.shell("git status --short")
-            let files = status
-                .components(separatedBy: "\n")
-                .compactMap(Commit.File.init(line:))
+        let status = try await context.shell("git status --short")
+        let files = status
+            .components(separatedBy: "\n")
+            .compactMap(Commit.File.init(line:))
 
-            let filesToCommit = files.filter { predicate($0.path) }
+        let filesToCommit = files.filter { predicate($0.path) }
 
-            context.logger.debug("Files with changes:\n\(files)")
-            context.logger.debug("Files to commit:\n\(filesToCommit)")
+        context.logger.debug("Files with changes:\n\(files)")
+        context.logger.debug("Files to commit:\n\(filesToCommit)")
 
-            guard !filesToCommit.isEmpty else {
-                context.logger.info("No files to commit.")
-                return .init(commitSHA: nil)
-            }
-
-            for file in filesToCommit {
-                if file.status.contains(.deleted) {
-                    try await context.shell("git rm --cached \(file.path)")
-                } else {
-                    try await context.shell("git add \(file.path)")
-                }
-            }
-
-            return try await commit(flags: flags, message: message)
+        guard !filesToCommit.isEmpty else {
+            context.logger.info("No files to commit.")
+            return .init(commitSHA: nil)
         }
+
+        for file in filesToCommit {
+            if file.status.contains(.deleted) {
+                try await context.shell("git rm --cached \(file.path)")
+            } else {
+                try await context.shell("git add \(file.path)")
+            }
+        }
+
+        return try await commit(flags: flags, message: message)
     }
 
     @discardableResult

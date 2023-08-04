@@ -35,21 +35,17 @@ public final class Tools: ContextAware {
             return
         }
 
-        do {
-            try await context.startingLogGroup(named: "Uninstalling tools...") {
-                for tool in tools.values {
-                    do {
-                        if await tool.isInstalled {
-                            context.logger.info("Uninstalling \(tool.name)...")
-                            try await tool.uninstall()
-                        }
-                    } catch {
-                        context.logger.error("Failed to uninstall tool: \(tool.name)")
-                    }
+        context.platform.startLogGroup(named: "Uninstalling tools...")
+
+        for tool in tools.values {
+            do {
+                if await tool.isInstalled {
+                    context.logger.info("Uninstalling \(tool.name)")
+                    try await tool.uninstall()
                 }
+            } catch {
+                context.logger.error("Failed to uninstall tool: \(tool.name)")
             }
-        } catch {
-            context.logger.error("Failed to uninstall tools: \(error)")
         }
     }
 }

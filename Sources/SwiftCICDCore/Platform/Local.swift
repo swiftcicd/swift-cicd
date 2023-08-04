@@ -11,11 +11,12 @@ public enum LocalPlatform: Platform {
         FileManager.default.currentDirectoryPath
     }
 
-    public static let supportsLogGroups = true
-
-    public static let supportsSecretObfuscation = false
+    public static func detect() -> Bool {
+        CommandLine.arguments.contains("local")
+    }
 
     public static func startLogGroup(named groupName: String) {
+        endLogGroup()
         print("start log group: \(groupName)")
     }
 
@@ -23,11 +24,9 @@ public enum LocalPlatform: Platform {
         print("end log group")
     }
 
-    public static func detect() -> Bool {
-        CommandLine.arguments.contains("local")
+    public static func obfuscate(secret: String) {
+        print("obfuscating: \(secret.prefix(4))***")
     }
-
-    public static func obfuscate(secret: String) {}
 }
 
 public extension Platform {

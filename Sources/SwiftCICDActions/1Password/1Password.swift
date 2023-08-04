@@ -55,7 +55,7 @@ public struct OnePasswordSecret: Secret {
             // https://github.com/1Password/load-secrets-action/blob/d1a4e73495bde3551cf63f6c048588b8f734e21d/entrypoint.sh#L101
             // To support multiline secrets, escape percent signs and add a mask per line.
             let escapedSecret = secretString.replacingOccurrences(of: "%", with: "%25")
-            try context.platform.obfuscate(secret: escapedSecret)
+            context.platform.obfuscate(secret: escapedSecret)
         }
 
         return secret

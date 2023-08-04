@@ -14,8 +14,7 @@ public struct Group<Wrapped: Action>: _GroupAction {
     }
 
     public func run() async throws {
-        try await context.startingLogGroup(named: "Action: \(name)") {
-            try await self.run(wrapped)
-        }
+        context.platform.startLogGroup(named: "Action: \(name)")
+        try await self.run(wrapped)
     }
 }

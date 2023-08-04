@@ -39,7 +39,7 @@ public struct EnvironmentSecret: Secret {
         var data = value.data
         try await processValue(&data)
         if let secretString = data.secretString {
-            try context.platform.obfuscate(secret: secretString)
+            context.platform.obfuscate(secret: secretString)
         }
         return data
     }
@@ -59,7 +59,7 @@ public extension Action {
     func getSecret(_ secret: Secret) async throws -> Data {
         let value = try await secret.get()
         if let stringValue = value.secretString {
-            try context.platform.obfuscate(secret: stringValue)
+            context.platform.obfuscate(secret: stringValue)
         }
         return value
     }

@@ -2,6 +2,7 @@ import Foundation
 import Logging
 
 public protocol MainAction: Action<Void> {
+    static var platform: Platform.Type? { get }
     static var logLevel: Logger.Level { get }
     init()
 
@@ -10,27 +11,39 @@ public protocol MainAction: Action<Void> {
 }
 
 extension MainAction {
+    public static var platform: Platform.Type? { nil }
+
+    // Default level is debug
     public static var logLevel: Logger.Level { .debug }
 
     public static func main() async {
-        await ContextValues.withValues { $0.logger.logLevel = Self.logLevel } operation: {
+        guard let platform = self.platform ?? detectPlatform() else {
+            logger.error("Failed to detect platform")
+            exit(1)
+        }
+
+        // TODO: Bootstrap the platform's logger
+
+        await ContextValues.withValues {
+            $0.logger.logLevel = Self.logLevel
+            $0.platform = platform
+        } operation: {
             do {
-                let platform = try context.platform
-                try logEnvironment()
+                logEnvironment()
                 logger.info("Running on \(platform.name)")
                 try context.fileManager.changeCurrentDirectory(platform.workingDirectory)
                 let mainAction = self.init()
                 try await mainAction.run(mainAction)
                 await cleanUp(error: nil)
                 await uninstallTools()
-                try? context.endLogGroup()
+                platform.endLogGroup()
                 exit(0)
             } catch {
                 let trace = context.stack.traceLastFrame()
                 logger.error("\n❌ \(errorMessage(from: error))")
                 await cleanUp(error: error)
                 await uninstallTools()
-                try? context.endLogGroup()
+                platform.endLogGroup()
                 if let trace {
                     logger.error("\n❌ An error occurred while running action: \(trace)")
                     if let errorLines = errorPreview(from: error) {
@@ -47,14 +60,22 @@ extension MainAction {
         }
     }
 
-    static func logEnvironment() throws {
-        try context.startingLogGroup(named: "Environment") {
-            logger.debug("""
-                Environment:
-                \(context.environment._dump().indented())
-                """
-            )
-        }
+    static func detectPlatform() -> Platform.Type? {
+        let knownPlatforms: [any Platform.Type] = [
+            LocalPlatform.self,
+            GitHubPlatform.self
+        ]
+
+        return knownPlatforms.first(where: { $0.detect() })
+    }
+
+    static func logEnvironment() {
+        context.platform.startLogGroup(named: "Environment")
+        logger.debug("""
+            Environment:
+            \(context.environment._dump().indented())
+            """
+        )
     }
 
     static func errorMessage(from error: Error) -> String {
@@ -108,24 +129,19 @@ extension MainAction {
     }
 
     static func cleanUp(error: Error?) async {
-        do {
-            try await context.startingLogGroup(named: "Cleaning up...") {
-                while let action = context.stack.pop()?.action {
-                    // Don't clean up after container actions.
-                    guard !action.isContainer else {
-                        continue
-                    }
-
-                    do {
-                        logger.info("Cleaning up after action: \(action.name)")
-                        try await action.cleanUp(error: error)
-                    } catch {
-                        logger.error("Failed to clean up after action: \(action.name). Error: \(error)")
-                    }
-                }
+        context.platform.startLogGroup(named: "Cleaning up...")
+        while let action = context.stack.pop()?.action {
+            // Don't clean up after container actions.
+            guard !action.isContainer else {
+                continue
             }
-        } catch {
-            logger.error("Failed to clean up: \(error)")
+
+            do {
+                logger.info("Cleaning up after action: \(action.name)")
+                try await action.cleanUp(error: error)
+            } catch {
+                logger.error("Failed to clean up after action: \(action.name). Error: \(error)")
+            }
         }
     }
 
