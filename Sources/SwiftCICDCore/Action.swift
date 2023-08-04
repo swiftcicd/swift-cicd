@@ -16,7 +16,7 @@ public protocol Action<Output>: ContextAware {
     #endif
 
     @ActionBuilder
-    var body: Body { get }
+    var body: Body { get throws }
 
     /// The name of this action as it will appear in logs.
     var name: String { get }
