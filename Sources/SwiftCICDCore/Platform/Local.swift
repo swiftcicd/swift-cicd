@@ -1,15 +1,10 @@
 import Foundation
+import Logging
 
 public enum LocalPlatform: Platform {
     public static let name = "Local"
-
-    public static var isRunningCI: Bool {
-        false
-    }
-
-    public static var workingDirectory: String {
-        FileManager.default.currentDirectoryPath
-    }
+    public static let isRunningCI = false
+    public static let workingDirectory = FileManager.default.currentDirectoryPath
 
     public static func detect() -> Bool {
         CommandLine.arguments.contains("local")

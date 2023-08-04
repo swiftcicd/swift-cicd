@@ -1,6 +1,7 @@
+import Logging
 import SwiftEnvironment
 
-// TODO: Explore using these GitHub commands to highlight certain lines in the action output
+// TODO: Explore using these GitHub commands to add annotations to the project files.
 // https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#setting-a-notice-message
 
 public enum GitHubPlatform: Platform {

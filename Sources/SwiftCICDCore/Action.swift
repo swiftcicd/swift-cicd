@@ -60,6 +60,17 @@ public extension Action {
     }
 }
 
+public extension Action {
+    // Logging is so common that we should hoist the logger up.
+    static var logger: Logger {
+        context.logger
+    }
+
+    var logger: Logger {
+        context.logger
+    }
+}
+
 extension Action {
     var rootMainAction: (any MainAction)? {
         context.stack.root as? any MainAction

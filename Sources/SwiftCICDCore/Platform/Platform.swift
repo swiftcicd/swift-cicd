@@ -1,4 +1,5 @@
 import Foundation
+import Logging
 
 /// A CI platform.
 public protocol Platform: ContextAware {
@@ -9,6 +10,9 @@ public protocol Platform: ContextAware {
 
     /// An absolute path to the working directory on the CI platform's machine.
     static var workingDirectory: String { get throws }
+
+    /// A swift-log Logger.
+    static var logger: Logger { get set }
 
     /// Returns whether this platform is detected as the current platform or not.
     static func detect() -> Bool
@@ -24,6 +28,15 @@ public protocol Platform: ContextAware {
     ///
     /// - Parameter secret: The secret to obfuscate.
     static func obfuscate(secret: String)
+}
+
+private var defaultLogger = Logger(label: "swift-cicd")
+
+public extension Platform {
+    static var logger: Logger {
+        get { defaultLogger }
+        set { defaultLogger = newValue }
+    }
 }
 
 public extension ContextValues {
@@ -45,5 +58,10 @@ public extension ContextValues {
 
     var workingDirectory: String {
         get throws { try platform.workingDirectory }
+    }
+
+    var logger: Logger {
+        get { platform.logger }
+        set { platform.logger = newValue }
     }
 }

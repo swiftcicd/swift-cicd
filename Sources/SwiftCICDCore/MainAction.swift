@@ -10,27 +10,30 @@ public protocol MainAction: Action<Void> {
     func before() async throws
 }
 
+public extension MainAction {
+    // Default is nil so that platform detection is the default behavior.
+    static var platform: Platform.Type? { nil }
+
+    // Default log level is debug
+    static var logLevel: Logger.Level { .debug }
+}
+
 extension MainAction {
-    public static var platform: Platform.Type? { nil }
-
-    // Default level is debug
-    public static var logLevel: Logger.Level { .debug }
-
     public static func main() async {
         guard let platform = self.platform ?? detectPlatform() else {
-            logger.error("Failed to detect platform")
+            print("❌ Failed to detect platform")
             exit(1)
         }
 
-        // TODO: Bootstrap the platform's logger
+        // Set the log level to the level specified by the main action.
+        platform.logger.logLevel = logLevel
 
         await ContextValues.withValues {
-            $0.logger.logLevel = Self.logLevel
             $0.platform = platform
         } operation: {
             do {
-                logEnvironment()
                 logger.info("Running on \(platform.name)")
+                logEnvironment()
                 try context.fileManager.changeCurrentDirectory(platform.workingDirectory)
                 let mainAction = self.init()
                 try await mainAction.run(mainAction)
