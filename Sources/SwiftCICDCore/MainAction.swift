@@ -25,8 +25,11 @@ extension MainAction {
             exit(1)
         }
 
+        // Bootstrap the logging system using the platform's log handler.
+        LoggingSystem.bootstrap(platform.logHandler(label:))
+
         // Set the log level to the level specified by the main action.
-        platform.logger.logLevel = logLevel
+        logger.logLevel = logLevel
 
         await ContextValues.withValues {
             $0.platform = platform

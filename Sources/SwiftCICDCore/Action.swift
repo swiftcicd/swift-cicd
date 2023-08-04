@@ -63,7 +63,8 @@ public extension Action {
 public extension Action {
     // Logging is so common that we should hoist the logger up.
     static var logger: Logger {
-        context.logger
+        get { context.logger }
+        set { context.logger = newValue }
     }
 
     var logger: Logger {
