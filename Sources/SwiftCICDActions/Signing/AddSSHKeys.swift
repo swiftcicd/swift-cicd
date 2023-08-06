@@ -10,10 +10,10 @@ extension Signing {
         var sshAuthSocket: String?
         var shouldLogPublicKey: Bool = true
 
-        @State var createdFiles = [String]()
-        @State var addedSections = [String]()
-        @State var sshAgentPID: String?
-        @State var sshAgentAuthSocket: String?
+        @Value var createdFiles = [String]()
+        @Value var addedSections = [String]()
+        @Value var sshAgentPID: String?
+        @Value var sshAgentAuthSocket: String?
 
         var ssh: String {
             context.fileManager.homeDirectoryForCurrentUser.appendingPathComponent(".ssh").path

@@ -2,7 +2,7 @@ import Foundation
 import SwiftCICDCore
 
 public struct SaveFile: Action {
-    @State var savedFilePath: String?
+    @Value var savedFilePath: String?
 
     let fileName: String
     let contents: Data

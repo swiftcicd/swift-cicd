@@ -6,7 +6,7 @@ extension Signing {
         /// Path to .mobileprovision file.
         let profilePath: String
 
-        @State var addedProfilePath: String?
+        @Value var addedProfilePath: String?
 
         public init(_ profilePath: String) {
             self.profilePath = profilePath

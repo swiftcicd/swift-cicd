@@ -2,17 +2,22 @@ import SwiftCICD
 
 @main
 struct Demo: MainAction {
-//    func run() async throws {
-//        try await xcode.build()
-//    }
+    @Value var simulatorBuild: Xcode.Build.Output?
 
     var body: some Action {
-        Group("Demo Group") {
-            PrintHello(to: "World")
+        Xcode.Build()
+            .storeOutput(in: $simulatorBuild)
 
-            for i in 0...5 {
-                Count(to: i)
-            }
+        if let build = simulatorBuild?.product {
+            GitHub.UploadActionArtifact(build.url, named: build.name)
+        }
+
+        RequireValue($simulatorBuild, \.product) { build in
+            GitHub.UploadActionArtifact(build.url, named: build.name)
+        }
+
+        WithOutput(\.latestXcodeBuildProduct?.product) { build in
+            GitHub.UploadActionArtifact(build.url, named: build.name)
         }
     }
 }

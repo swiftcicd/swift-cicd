@@ -35,8 +35,12 @@ public enum ActionBuilder {
         action
     }
 
-    public static func buildOptional<A: Action>(_ wrapped: A?) -> A? {
-        wrapped
+    public static func buildOptional<A: Action>(_ wrapped: A?) -> _Conditional<A, _EmptyAction> {
+        if let wrapped {
+            return .first(wrapped)
+        } else {
+            return .second(_EmptyAction())
+        }
     }
 
     public static func buildPartialBlock<A: Action>(first: A) -> A {

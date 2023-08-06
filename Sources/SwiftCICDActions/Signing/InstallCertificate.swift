@@ -9,7 +9,7 @@ extension Signing {
         let certificate: String
         let certificatePassword: String
 
-        @State var certificateCommonName: String?
+        @Value var certificateCommonName: String?
 
         func listUserKeychains() async throws -> [String] {
             try await shell("security list-keychain -d user")

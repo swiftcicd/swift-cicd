@@ -7,7 +7,7 @@ extension GitHub {
         let artifactURL: URL
         let artifactName: String
         let itemPath: String
-        @State var zippedArtifactURL: URL?
+        @Value var zippedArtifactURL: URL?
 
         private var artifactsBaseURL: URL {
             get throws {

@@ -2,7 +2,7 @@ import Foundation
 import SwiftCICDCore
 
 public struct UpdateFile: Action {
-    @State var previousFileContents: Data?
+    @Value var previousFileContents: Data?
 
     let filePath: String
     let createFile: Bool
