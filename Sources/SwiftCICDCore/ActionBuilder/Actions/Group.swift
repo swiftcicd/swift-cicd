@@ -1,5 +1,5 @@
 /// Marker protocol for Group.
-protocol _GroupAction: Action {}
+protocol _GroupAction: _BuilderAction {}
 
 public struct Group<Wrapped: Action>: _GroupAction {
     private var explicitName: String?
@@ -14,7 +14,23 @@ public struct Group<Wrapped: Action>: _GroupAction {
     }
 
     public func run() async throws {
-        context.platform.startLogGroup(named: "Action: \(name)")
+        if !isRunningInsideGroup {
+            context.platform.startLogGroup(named: name)
+        }
         try await self.run(wrapped)
+    }
+}
+
+extension Action {
+    var isRunningInsideGroup: Bool {
+        var current = context.currentStackFrame?.parent
+        while let c = current {
+            if c.action.isGroup {
+                return true
+            } else {
+                current = current?.parent
+            }
+        }
+        return false
     }
 }

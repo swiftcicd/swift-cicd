@@ -91,26 +91,8 @@ extension Action {
         self is any _GroupAction
     }
 
-    var isContainer: Bool {
-        isBuilder || isGroup
-    }
-
     var isRegular: Bool {
-        !(isMain || isBuilder || isGroup)
-    }
-}
-
-extension ActionStack.Frame {
-    var firstNonContainerAncestor: ActionStack.Frame? {
-        var current = parent
-        while let c = current {
-            if !c.action.isBuilder {
-                return c
-            } else {
-                current = current?.parent
-            }
-        }
-        return nil
+        !(isMain || isBuilder)
     }
 }
 
@@ -156,8 +138,8 @@ public extension Action {
 
             // Only start a log group if:
             // - The action is a regular action
-            // - The action's first non-container ancestor is a main action
-            if action.isRegular, let ancestor = frame.firstNonContainerAncestor, ancestor.action.isMain {
+            // - The action is not already running inside of a group
+            if action.isRegular, !action.isRunningInsideGroup {
                 context.platform.startLogGroup(named: actionName)
                 output = try await action.run()
             } else {

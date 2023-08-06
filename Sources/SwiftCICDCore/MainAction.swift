@@ -137,8 +137,8 @@ extension MainAction {
     static func cleanUp(error: Error?) async {
         context.platform.startLogGroup(named: "Cleaning up...")
         while let action = context.stack.pop()?.action {
-            // Don't clean up after container actions.
-            guard !action.isContainer else {
+            // Don't clean up after build actions.
+            guard !action.isBuilder else {
                 continue
             }
 
