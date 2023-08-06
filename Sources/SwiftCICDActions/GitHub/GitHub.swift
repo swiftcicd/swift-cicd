@@ -11,6 +11,9 @@ public extension Action {
 }
 
 public extension GitHub {
+    typealias Run = SwiftCICDPlatforms.Run
+    typealias Job = SwiftCICDPlatforms.Job
+
     var gitHubPullRequestNumber: Int {
         get throws {
             guard let pullRequestNumber = context.environment.github.pullRequestNumber ?? context.environment.github.event?.pullRequest?.number else {
