@@ -10,6 +10,14 @@ public struct Recover<A: Action, R: Action>: _BuilderAction {
         self.recoveryAction = recoveryAction
     }
 
+    public init(
+        @ActionBuilder action: @escaping () -> A,
+        @ActionBuilder `catch` recoveryAction: @escaping () -> R
+    ) {
+        self.action = action
+        self.recoveryAction = { _ in recoveryAction() }
+    }
+
     public func run() async throws {
         let action = action()
         do {
