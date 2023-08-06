@@ -5,19 +5,10 @@ struct Demo: MainAction {
     @Value var simulatorBuild: Xcode.Build.Output?
 
     var body: some Action {
-        Xcode.Build()
-            .storeOutput(in: $simulatorBuild)
-
-        if let build = simulatorBuild?.product {
-            GitHub.UploadActionArtifact(build.url, named: build.name)
-        }
-
-        RequireValue($simulatorBuild, \.product) { build in
-            GitHub.UploadActionArtifact(build.url, named: build.name)
-        }
-
-        WithOutput(\.latestXcodeBuildProduct?.product) { build in
-            GitHub.UploadActionArtifact(build.url, named: build.name)
+        Recover {
+            Fail()
+        } catch: { error in
+            PrintHello(to: "Recovery")
         }
     }
 }
@@ -45,5 +36,11 @@ struct Count: Action {
 
     func run() async throws {
         print("\((0...upperLimit).map { "\($0)" }.joined(separator: ", "))")
+    }
+}
+
+struct Fail: Action {
+    func run() async throws -> () {
+        throw ActionError("forced failure")
     }
 }
