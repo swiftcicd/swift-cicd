@@ -35,8 +35,8 @@ public struct SlackMessage: Encodable {
         self.init([Attachments(color: color, blocks: blocks)])
     }
 
-    public init(color: String? = nil, @AttachmentsBuilder attachments: () -> [SlackMessage.Attachments]) {
-        self.init(attachments())
+    public init(color: String? = nil, @BlocksBuilder attachments: () -> [GenericBlock]) {
+        self.init([Attachments(color: color, blocks: attachments())])
     }
 }
 

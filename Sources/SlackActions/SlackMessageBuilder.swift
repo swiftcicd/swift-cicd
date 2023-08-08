@@ -9,7 +9,6 @@ extension SlackMessage {
         case context(ContextBlock)
         case section(SectionBlock)
         case message(GenericBlock)
-        case attachments(SlackMessage.Attachments)
     }
 }
 
@@ -77,10 +76,6 @@ extension GenericBlock: SlackBlockBuildable {
     public var block: SlackMessage._BuilderBlock { .message(self) }
 }
 
-extension SlackMessage.Attachments: SlackBlockBuildable {
-    public var block: SlackMessage._BuilderBlock { .attachments(self) }
-}
-
 @resultBuilder
 public enum StringBuilder {
     public static func buildArray(_ components: [String]) -> String {
@@ -114,6 +109,10 @@ public enum StringBuilder {
 
 @resultBuilder
 public enum TextBlocksBuilder {
+    public static func buildArray(_ components: [[TextBlockBuildable]]) -> [TextBlockBuildable] {
+        components.flatMap { $0 }
+    }
+
     public static func buildBlock(_ blocks: TextBlockBuildable...) -> [TextBlockBuildable] {
         blocks
     }
@@ -141,6 +140,10 @@ public enum TextBlocksBuilder {
 
 @resultBuilder
 public enum ButtonBlocksBuilder {
+    public static func buildArray(_ components: [[ButtonBlockBuildable]]) -> [ButtonBlockBuildable] {
+        components.flatMap { $0 }
+    }
+
     public static func buildBlock(_ blocks: ButtonBlockBuildable...) -> [ButtonBlockBuildable] {
         blocks
     }
@@ -167,104 +170,58 @@ public enum ButtonBlocksBuilder {
 }
 
 @resultBuilder
-public enum AttachmentsBuilder {
+public enum BlocksBuilder {
+    public static func buildArray(_ components: [[SlackBlockBuildable]]) -> [SlackBlockBuildable] {
+        components.flatMap { $0 }
+    }
+
     public static func buildBlock(_ components: SlackBlockBuildable...) -> [SlackBlockBuildable] {
         components
     }
 
-    public static func buildFinalResult(_ components: [SlackBlockBuildable]) -> [SlackMessage.Attachments] {
-        var attachments = [SlackMessage.Attachments]()
-        var attachment = SlackMessage.Attachments(blocks: [])
+    public static func buildBlock(_ blocks: [SlackBlockBuildable]...) -> [SlackBlockBuildable] {
+        blocks.flatMap { $0 }
+    }
+
+    public static func buildExpression(_ expression: SlackBlockBuildable) -> [SlackBlockBuildable] {
+        [expression]
+    }
+
+    public static func buildExpression(_ expression: [SlackBlockBuildable]) -> [SlackBlockBuildable] {
+        expression
+    }
+
+
+    public static func buildOptional(_ component: [SlackBlockBuildable]?) -> [SlackBlockBuildable] {
+        component ?? []
+    }
+
+    public static func buildFinalResult(_ components: [SlackBlockBuildable]) -> [GenericBlock] {
+        var blocks = [GenericBlock]()
 
         for component in components {
             switch component.block {
             case .link(let linkButton):
-                attachment.blocks.append(.actions(ActionsBlock(buttons: [.link(linkButton)])))
+                blocks.append(.actions(ActionsBlock(buttons: [.link(linkButton)])))
             case .button(let buttonBlock):
-                attachment.blocks.append(.actions(ActionsBlock(buttons: [buttonBlock])))
+                blocks.append(.actions(ActionsBlock(buttons: [buttonBlock])))
             case .markdownText(let markdownTextBlock):
-                attachment.blocks.append(.section(SectionBlock(text: .markdown(markdownTextBlock))))
+                blocks.append(.section(SectionBlock(text: .markdown(markdownTextBlock))))
             case .plainText(let plainTextBlock):
-                attachment.blocks.append(.section(SectionBlock(text: .text(plainTextBlock))))
+                blocks.append(.section(SectionBlock(text: .text(plainTextBlock))))
             case .text(let textBlock):
-                attachment.blocks.append(.section(SectionBlock(text: textBlock)))
+                blocks.append(.section(SectionBlock(text: textBlock)))
             case .actions(let actionsBlock):
-                attachment.blocks.append(.actions(actionsBlock))
+                blocks.append(.actions(actionsBlock))
             case .context(let contextBlock):
-                attachment.blocks.append(.context(contextBlock))
+                blocks.append(.context(contextBlock))
             case .section(let sectionBlock):
-                attachment.blocks.append(.section(sectionBlock))
+                blocks.append(.section(sectionBlock))
             case .message(let messageBlock):
-                attachment.blocks.append(messageBlock)
-            case .attachments(let _attachment):
-                // If the current attachment has blocks
-                if !attachment.blocks.isEmpty {
-                    // Store the attachment and then reset it
-                    attachments.append(attachment)
-                    attachment = SlackMessage.Attachments(blocks: [])
-                }
-                // Add the attachment
-                attachments.append(_attachment)
+                blocks.append(messageBlock)
             }
         }
 
-        // If the current attachment has blocks, add the attachment
-        if !attachment.blocks.isEmpty {
-            attachments.append(attachment)
-        }
-
-        return attachments
+        return blocks
     }
 }
-
-//@resultBuilder
-//public enum SlackMessageBuilder {
-//    public static func buildBlock(_ components: SlackBlockBuildable...) -> [SlackBlockBuildable] {
-//        components
-//    }
-//
-//    public static func buildFinalResult(_ components: [SlackBlockBuildable]) -> SlackMessage {
-//        var blocks = [GenericBlock]()
-//        var attachments = [SlackMessage.Attachments]()
-//
-//        for component in components {
-//            switch component.block {
-//            case .link(let linkButton):
-//                blocks.append(.actions(ActionsBlock(buttons: [.link(linkButton)])))
-//            case .button(let buttonBlock):
-//                blocks.append(.actions(ActionsBlock(buttons: [buttonBlock])))
-//            case .markdownText(let markdownTextBlock):
-//                blocks.append(.section(SectionBlock(text: .markdown(markdownTextBlock))))
-//            case .plainText(let plainTextBlock):
-//                blocks.append(.section(SectionBlock(text: .text(plainTextBlock))))
-//            case .text(let textBlock):
-//                blocks.append(.section(SectionBlock(text: textBlock)))
-//            case .actions(let actionsBlock):
-//                blocks.append(.actions(actionsBlock))
-//            case .context(let contextBlock):
-//                blocks.append(.context(contextBlock))
-//            case .section(let sectionBlock):
-//                blocks.append(.section(sectionBlock))
-//            case .message(let messageBlock):
-//                blocks.append(messageBlock)
-//            case .attachments(let _attachments):
-//                // If there is an attachment, and there are pending blocks
-//                if !blocks.isEmpty {
-//                    // Add the blocks to an attachment
-//                    attachments.append(SlackMessage.Attachments(blocks: blocks))
-//                    // Reset the blocks
-//                    blocks = []
-//                }
-//                // Add the attachment
-//                attachments.append(_attachments)
-//            }
-//        }
-//
-//        // If there are any blocks remaining, add them to an attachment.
-//        if !blocks.isEmpty {
-//            attachments.append(SlackMessage.Attachments(blocks: blocks))
-//        }
-//
-//        return SlackMessage(attachments)
-//    }
-//}

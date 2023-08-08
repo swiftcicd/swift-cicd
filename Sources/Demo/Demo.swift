@@ -9,7 +9,7 @@ struct Demo: MainAction {
         let uploadedBuildNumber = "42"
         let pr: String? = "pr value"
 
-        let message = SlackMessage {
+        let message = SlackMessage(color: "#FFF") {
             MarkdownBlock {
                 """
                 *New TestFlight Build Available*
@@ -18,6 +18,12 @@ struct Demo: MainAction {
 
                 if let pr {
                     "pr: \(pr)"
+                }
+            }
+
+            if let pr {
+                MarkdownBlock {
+                    "PR: \(pr)"
                 }
             }
 
