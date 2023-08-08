@@ -11,6 +11,7 @@ let package = Package(
         .library(name: "SwiftCICDCore", targets: ["SwiftCICDCore"]),
         .library(name: "SwiftCICDActions", targets: ["SwiftCICDActions"]),
         .library(name: "SwiftCICDPlatforms", targets: ["SwiftCICDPlatforms"]),
+        .library(name: "SlackActions", targets: ["SlackActions"]),
         .executable(name: "Demo", targets: ["Demo"])
     ],
     dependencies: [
@@ -55,6 +56,13 @@ let package = Package(
                 .product(name: "SwiftEnvironment", package: "swift-environment"),
             ]
         ),
+        .target(
+            name: "SlackActions",
+            dependencies: [
+                .target(name: "SwiftCICDCore"),
+                .product(name: "Logging", package: "swift-log")
+            ]
+        ),
         .testTarget(
             name: "SwiftCICDTests",
             dependencies: ["SwiftCICD"]
@@ -63,6 +71,7 @@ let package = Package(
             name: "Demo",
             dependencies: [
                 .target(name: "SwiftCICD"),
+                .target(name: "SlackActions"),
                 .product(name: "Logging", package: "swift-log")
             ]
         )

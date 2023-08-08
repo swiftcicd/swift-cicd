@@ -96,6 +96,21 @@ extension Action {
     }
 }
 
+extension Action {
+    var isRunByMain: Bool {
+        var current = context.currentStackFrame?.parent
+        while let c = current {
+            // Skip builder actions
+            if c.action.isBuilder {
+                current = current?.parent
+            } else {
+                return c.action.isMain
+            }
+        }
+        return false
+    }
+}
+
 public extension Action {
     // TODO: Re-enable this syntax:
     // try await run("Build for Simulator") { try await xcode.build() }
@@ -136,10 +151,14 @@ public extension Action {
             let output: A.Output
             let actionName = "Action: \(name ?? action.name)"
 
+            // TODO: Maybe the logic for whether an action should be logged or not should be added
+            // to the action protocol. 
+
             // Only start a log group if:
             // - The action is a regular action
             // - The action is not already running inside of a group
-            if action.isRegular, !action.isRunningInsideGroup {
+            // - The action is run by a main action
+            if action.isRegular, !action.isRunningInsideGroup, action.isRunByMain {
                 context.platform.startLogGroup(named: actionName)
                 output = try await action.run()
             } else {

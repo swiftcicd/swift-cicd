@@ -5,7 +5,7 @@ extension Slack {
     public struct SendMessage: Action {
         enum _Message {
             case legacy(LegacyMessage)
-            case blocks(Message)
+            case blocks(SlackMessage)
         }
 
         let message: _Message
@@ -16,7 +16,7 @@ extension Slack {
             self.webhook = webhook
         }
 
-        public init(to webhook: String, message: Message) {
+        public init(to webhook: String, message: SlackMessage) {
             self.init(message: .blocks(message), webhook: webhook)
         }
 
@@ -55,7 +55,7 @@ public extension Slack {
         try await run(SendMessage(to: webhook, message: message))
     }
 
-    func message(to webhook: String, message: Message) async throws {
+    func message(to webhook: String, message: SlackMessage) async throws {
         try await run(SendMessage(to: webhook, message: message))
     }
 }

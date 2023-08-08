@@ -1,46 +1,68 @@
+import Foundation
 import SwiftCICD
+import SlackActions
 
 @main
 struct Demo: MainAction {
-    @Value var simulatorBuild: Xcode.Build.Output?
+    func run() async throws {
+        let uploadedBuildVersion = "1.0.0"
+        let uploadedBuildNumber = "42"
+        let pr: String? = "pr value"
 
-    var body: some Action {
-        Recover {
-            Fail()
-        } catch: { error in
-            PrintHello(to: "Recovery")
+        let message = SlackMessage {
+            MarkdownBlock {
+                """
+                *New TestFlight Build Available*
+                HX \(uploadedBuildVersion) (\(uploadedBuildNumber))
+                """
+
+                if let pr {
+                    "pr: \(pr)"
+                }
+            }
+
+            ContextBlock {
+                MarkdownBlock {
+                    "Markdown"
+                }
+
+                TextBlock {
+                    "Plain text"
+                }
+
+                "Does this work"
+
+                if let pr {
+                    MarkdownBlock {
+                        "pr: \(pr)"
+                    }
+
+                    TextBlock {
+                        "this"
+                    }
+
+                    "that"
+                }
+            }
+
+            ActionsBlock {
+                LinkButton(url: "https://link.com") {
+                    "Link 1"
+                }
+
+                LinkButton(url: "https://link.com") {
+                    "Link 2"
+                }
+            }
+
+            LinkButton(url: "https://link.com") {
+                "This is a link outside of an explicit action block"
+            }
         }
-    }
-}
 
-struct PrintHello: Action {
-    var person: String
-    var greeting: String
-
-    init(to person: String, greeting: String = "Hello") {
-        self.person = person
-        self.greeting = greeting
-    }
-
-    func run() async throws {
-        print("\(greeting), \(person)")
-    }
-}
-
-struct Count: Action {
-    var upperLimit: Int
-
-    init(to upperLimit: Int) {
-        self.upperLimit = upperLimit
-    }
-
-    func run() async throws {
-        print("\((0...upperLimit).map { "\($0)" }.joined(separator: ", "))")
-    }
-}
-
-struct Fail: Action {
-    func run() async throws -> () {
-        throw ActionError("forced failure")
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.sortedKeys, .prettyPrinted]
+        let messageJSON = try encoder.encode(message).string
+        print(messageJSON)
     }
 }
