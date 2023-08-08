@@ -20,6 +20,10 @@ extension Slack {
             self.init(message: .blocks(message), webhook: webhook)
         }
 
+        public init(to webhook: String, color: String? = nil, @BlocksBuilder message: () -> [GenericBlock]) {
+            self.init(to: webhook, message: SlackMessage(color: color, attachments: message))
+        }
+
         public init(to webhook: String, message: LegacyMessage) {
             self.init(message: .legacy(message), webhook: webhook)
         }
@@ -56,6 +60,11 @@ public extension Slack {
     }
 
     func message(to webhook: String, message: SlackMessage) async throws {
+        try await run(SendMessage(to: webhook, message: message))
+    }
+
+    func message(to webhook: String, color: String? = nil, @BlocksBuilder message: () -> [GenericBlock]) async throws {
+        let message = SlackMessage(color: color, attachments: message)
         try await run(SendMessage(to: webhook, message: message))
     }
 }
