@@ -21,6 +21,12 @@ public struct Group<Wrapped: Action>: _GroupAction {
     }
 }
 
+public extension Action {
+    func logGroup(_ name: String) -> some Action {
+        Group(name) { self }
+    }
+}
+
 extension Action {
     var isRunningInsideGroup: Bool {
         var current = context.currentStackFrame?.parent
