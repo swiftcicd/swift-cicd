@@ -27,7 +27,7 @@ public extension URL {
         lhs.appendingCompat(rhs)
     }
 
-    mutating func appendQueryItems(_ items: [URLQueryItem]) {
+    mutating func appendQueryItemsCompat(_ items: [URLQueryItem]) {
         if #available(macOS 13.0, *) {
             self.append(queryItems: items)
         } else {
@@ -40,7 +40,7 @@ public extension URL {
 
     func appendingQueryItemsCompat(_ items: [URLQueryItem]) -> URL {
         var copy = self
-        copy.appendQueryItems(items)
+        copy.appendQueryItemsCompat(items)
         return copy
     }
 
