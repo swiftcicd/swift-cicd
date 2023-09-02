@@ -48,10 +48,12 @@ public extension ContextValues {
             guard let xcodeAction = inherit((any XcodeAction).self) else {
                 let workingDirectory = try self.workingDirectory
                 let contents = try fileManager.contentsOfDirectory(atPath: workingDirectory)
-                if let project = contents.first(where: { $0.hasSuffix(".xcodeproj") }) {
-                    return .project(workingDirectory/project)
-                } else if let workspace = contents.first(where: { $0.hasSuffix(".xcworkspace") }) {
+                // Check for a workspace first.
+                // Usually if both a workspace and a project exist, the workspace is the intended result.
+                if let workspace = contents.first(where: { $0.hasSuffix(".xcworkspace") }) {
                     return .workspace(workingDirectory/workspace)
+                } else if let project = contents.first(where: { $0.hasSuffix(".xcodeproj") }) {
+                    return .project(workingDirectory/project)
                 }
                 return nil
             }
