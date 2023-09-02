@@ -80,6 +80,7 @@ extension Xcode {
             )
         }
 
+        @_disfavoredOverload
         public init(
             workspace: String? = nil,
             scheme: String? = nil,
@@ -245,6 +246,7 @@ public extension Xcode {
         )
     }
 
+    @_disfavoredOverload
     @discardableResult
     func build(
         workspace: String? = nil,
@@ -307,6 +309,7 @@ public extension Xcode {
         )
     }
 
+    @_disfavoredOverload
     @discardableResult
     func archive(
         workspace: String? = nil,

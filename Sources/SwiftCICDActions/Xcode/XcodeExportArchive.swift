@@ -56,6 +56,7 @@ extension Xcode {
             self.xcbeautify = xcbeautify
         }
 
+        @_disfavoredOverload
         public init(
             workspace: String? = nil,
             archivePath: String,
@@ -125,6 +126,7 @@ extension Xcode {
             )
         }
 
+        @_disfavoredOverload
         public init(
             workspace: String? = nil,
             archivePath: String,
@@ -228,6 +230,7 @@ public extension Xcode {
         )
     }
 
+    @_disfavoredOverload
     func exportArchive(
         _ archivePath: String,
         workspace: String? = nil,
@@ -294,6 +297,7 @@ public extension Xcode {
         )
     }
 
+    @_disfavoredOverload
     func exportArchive(
         _ archivePath: String,
         workspace: String? = nil,

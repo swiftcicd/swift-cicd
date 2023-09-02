@@ -34,6 +34,7 @@ extension Xcode {
             )
         }
 
+        @_disfavoredOverload
         public init(
             in localizationsDirectory: String,
             workspace: String? = nil,
@@ -58,24 +59,25 @@ extension Xcode {
 
         public init(
             at localizationPath: String,
-            workspace: String? = nil,
-            xcbeautify: Bool = Xcbeautify.default
-        ) {
-            self.init(
-                at: localizationPath,
-                container: workspace.map { .workspace($0) },
-                xcbeautify: xcbeautify
-            )
-        }
-
-        public init(
-            at localizationPath: String,
             project: String? = nil,
             xcbeautify: Bool = Xcbeautify.default
         ) {
             self.init(
                 at: localizationPath,
                 container: project.map { .project($0) },
+                xcbeautify: xcbeautify
+            )
+        }
+
+        @_disfavoredOverload
+        public init(
+            at localizationPath: String,
+            workspace: String? = nil,
+            xcbeautify: Bool = Xcbeautify.default
+        ) {
+            self.init(
+                at: localizationPath,
+                container: workspace.map { .workspace($0) },
                 xcbeautify: xcbeautify
             )
         }
@@ -125,6 +127,7 @@ public extension Xcode {
         )
     }
 
+    @_disfavoredOverload
     func importLocalizations(
         in localizationsDirectory: String,
         workspace: String? = nil,
@@ -153,6 +156,7 @@ public extension Xcode {
         )
     }
 
+    @_disfavoredOverload
     func importLocalizations(
         at localizationPath: String,
         workspace: String? = nil,

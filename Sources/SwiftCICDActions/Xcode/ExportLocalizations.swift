@@ -24,6 +24,7 @@ extension Xcode {
             self.xcbeautify = xcbeautify
         }
 
+        @_disfavoredOverload
         public init(
             to localizationPath: String,
             workspace: String? = nil,
@@ -124,6 +125,7 @@ public extension Xcode {
         )
     }
 
+    @_disfavoredOverload
     @discardableResult
     func exportLocalizations(
         to localizationPath: String,

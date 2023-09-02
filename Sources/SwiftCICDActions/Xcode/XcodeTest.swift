@@ -36,6 +36,7 @@ extension Xcode {
             self.xcbeautify = xcbeautify
         }
 
+        @_disfavoredOverload
         public init(
             workspace: String? = nil,
             scheme: String? = nil,
@@ -100,6 +101,7 @@ public extension Xcode {
         )
     }
 
+    @_disfavoredOverload
     func test(
         workspace: String? = nil,
         scheme: String? = nil,

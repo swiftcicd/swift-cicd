@@ -40,6 +40,7 @@ extension Xcode {
             self.xcbeautify = xcbeautify
         }
 
+        @_disfavoredOverload
         public init(
             workspace: String? = nil,
             scheme: String? = nil,
@@ -76,6 +77,7 @@ extension Xcode {
             self.xcbeautify = xcbeautify
         }
 
+        @_disfavoredOverload
         public init(
             workspace: String? = nil,
             scheme: String? = nil,
@@ -267,6 +269,7 @@ public extension Xcode {
         )
     }
 
+    @_disfavoredOverload
     @discardableResult
     func archiveExportUpload(
         workspace: String? = nil,
@@ -313,6 +316,7 @@ public extension Xcode {
         )
     }
 
+    @_disfavoredOverload
     @discardableResult
     func archiveExportUpload(
         workspace: String? = nil,

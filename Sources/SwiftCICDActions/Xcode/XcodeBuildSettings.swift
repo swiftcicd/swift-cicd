@@ -133,6 +133,7 @@ public extension Xcode {
         )
     }
 
+    @_disfavoredOverload
     func getBuildSettings(
         workspace: String? = nil,
         scheme: String? = nil,
