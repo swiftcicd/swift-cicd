@@ -30,7 +30,7 @@ extension Xcode {
         public func run() async throws {
             var command = ShellCommand("xcodebuild clean")
             // TODO: Default the project
-            let scheme = self.scheme ?? context.defaultXcodeProjectScheme
+            let scheme = self.scheme ?? context.xcodeScheme
             let container = try self.container ?? context.xcodeContainer
             command.append(container?.flag)
             command.append("-scheme", ifLet: scheme)
