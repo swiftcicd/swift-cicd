@@ -3,7 +3,7 @@ import SwiftCICDCore
 
 extension Xcode {
     public struct ArchiveExportUpload: Action {
-        let project: String?
+        let container: Xcode.Container?
         let scheme: String?
         let destination: XcodeBuild.Destination?
         var profile: ProvisioningProfile?
@@ -30,7 +30,27 @@ extension Xcode {
             includeDSYMs: Bool? = nil,
             xcbeautify: Bool = Xcbeautify.default
         ) {
-            self.project = project
+            self.container = project.map { .project($0) }
+            self.scheme = scheme
+            self.destination = destination
+            self.profile = profile
+            self.appStoreConnectKey = appStoreConnectKey
+            self.buildNumberStrategy = buildNumberStrategy
+            self.includeDSYMs = includeDSYMs
+            self.xcbeautify = xcbeautify
+        }
+
+        public init(
+            workspace: String? = nil,
+            scheme: String? = nil,
+            destination: XcodeBuild.Destination? = .generic(platform: .iOS),
+            profile: ProvisioningProfile,
+            appStoreConnectKey: AppStoreConnect.Key,
+            buildNumberStrategy: BuildNumberStrategy = .autoIncrementingInteger,
+            includeDSYMs: Bool? = nil,
+            xcbeautify: Bool = Xcbeautify.default
+        ) {
+            self.container = workspace.map { .workspace($0) }
             self.scheme = scheme
             self.destination = destination
             self.profile = profile
@@ -48,7 +68,23 @@ extension Xcode {
             includeDSYMs: Bool? = nil,
             xcbeautify: Bool = Xcbeautify.default
         ) {
-            self.project = project
+            self.container = project.map(Xcode.Container.project)
+            self.scheme = scheme
+            self.destination = destination
+            self.buildNumberStrategy = buildNumberStrategy
+            self.includeDSYMs = includeDSYMs
+            self.xcbeautify = xcbeautify
+        }
+
+        public init(
+            workspace: String? = nil,
+            scheme: String? = nil,
+            destination: XcodeBuild.Destination? = .generic(platform: .iOS),
+            buildNumberStrategy: BuildNumberStrategy = .autoIncrementingInteger,
+            includeDSYMs: Bool? = nil,
+            xcbeautify: Bool = Xcbeautify.default
+        ) {
+            self.container = workspace.map { .workspace($0) }
             self.scheme = scheme
             self.destination = destination
             self.buildNumberStrategy = buildNumberStrategy
@@ -65,10 +101,10 @@ extension Xcode {
         }
 
         public func run() async throws -> Output {
-            let project = try self.project ?? context.xcodeProject
+            let container = try self.container ?? context.xcodeContainer
             let scheme = self.scheme ?? context.defaultXcodeProjectScheme
 
-            guard let project else {
+            guard let container else {
                 throw ActionError("Missing Xcode project. Either pass an explicit xcodeProject or call this step from an XcodeProjectWorkflow.")
             }
 
@@ -88,7 +124,7 @@ extension Xcode {
             }
 
             let temporaryDirectory = context.fileManager.temporaryDirectory.path
-            let buildSettings = try await xcode.getBuildSettings(project: project, scheme: scheme, destination: destination)
+            let buildSettings = try await xcode.getBuildSettings(container: container, scheme: scheme, destination: destination)
             let productName = try buildSettings.require(.productName)
             let archivePath = temporaryDirectory/"Archive/\(productName).xcarchive"
             let exportPath = temporaryDirectory/"Export"
@@ -142,14 +178,14 @@ extension Xcode {
             }
 
             // Call xcodebuild from the project's parent directory
-            let sourceRoot = project.removingLastPathComponent
+            let sourceRoot = container.value.removingLastPathComponent
             if currentDirectory != sourceRoot {
                 try context.fileManager.changeCurrentDirectory(sourceRoot)
             }
 
             // Archive the build
             try await xcode.archive(
-                project: project,
+                container: container,
                 scheme: scheme,
                 configuration: .release,
                 destination: destination,
@@ -163,7 +199,7 @@ extension Xcode {
             // Export the archive
             try await xcode.exportArchive(
                 archivePath,
-                project: project,
+                container: container,
                 to: exportPath,
                 allowProvisioningUpdates: false,
                 options: .init(
@@ -183,6 +219,7 @@ extension Xcode {
 
             let uploadOutput = try await appStoreConnect.upload(
                 ipa: ipa,
+                container: container,
                 scheme: scheme,
                 bundleID: bundleID,
                 bundleVersion: overrideProjectVersion,
@@ -232,6 +269,31 @@ public extension Xcode {
 
     @discardableResult
     func archiveExportUpload(
+        workspace: String? = nil,
+        scheme: String? = nil,
+        destination: XcodeBuild.Destination? = .generic(platform: .iOS),
+        profile: ProvisioningProfile,
+        appStoreConnectKey: AppStoreConnect.Key,
+        buildNumberStrategy: ArchiveExportUpload.BuildNumberStrategy = .autoIncrementingInteger,
+        includeDSYMs: Bool? = nil,
+        xcbeautify: Bool = Xcbeautify.default
+    ) async throws -> ArchiveExportUpload.Output {
+        try await run(
+            ArchiveExportUpload(
+                workspace: workspace,
+                scheme: scheme,
+                destination: destination,
+                profile: profile,
+                appStoreConnectKey: appStoreConnectKey,
+                buildNumberStrategy: buildNumberStrategy,
+                includeDSYMs: includeDSYMs,
+                xcbeautify: xcbeautify
+            )
+        )
+    }
+
+    @discardableResult
+    func archiveExportUpload(
         project: String? = nil,
         scheme: String? = nil,
         destination: XcodeBuild.Destination? = .generic(platform: .iOS),
@@ -242,6 +304,27 @@ public extension Xcode {
         try await run(
             ArchiveExportUpload(
                 project: project,
+                scheme: scheme,
+                destination: destination,
+                buildNumberStrategy: buildNumberStrategy,
+                includeDSYMs: includeDSYMs,
+                xcbeautify: xcbeautify
+            )
+        )
+    }
+
+    @discardableResult
+    func archiveExportUpload(
+        workspace: String? = nil,
+        scheme: String? = nil,
+        destination: XcodeBuild.Destination? = .generic(platform: .iOS),
+        buildNumberStrategy: ArchiveExportUpload.BuildNumberStrategy = .autoIncrementingInteger,
+        includeDSYMs: Bool? = nil,
+        xcbeautify: Bool = Xcbeautify.default
+    ) async throws -> ArchiveExportUpload.Output {
+        try await run(
+            ArchiveExportUpload(
+                workspace: workspace,
                 scheme: scheme,
                 destination: destination,
                 buildNumberStrategy: buildNumberStrategy,

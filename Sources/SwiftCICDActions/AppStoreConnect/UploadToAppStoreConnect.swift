@@ -6,8 +6,8 @@ extension AppStoreConnect {
         /// Path to .ipa file.
         let ipa: String
 
-        /// The Xcode project the .ipa file was exported from.
-        var project: String?
+        /// The Xcode container the .ipa file was exported from.
+        var container: Xcode.Container?
 
         /// The Xcode project scheme the .ipa file was exported from.
         var scheme: String?
@@ -46,6 +46,30 @@ extension AppStoreConnect {
 
         public init(
             ipa: String,
+            container: Xcode.Container? = nil,
+            scheme: String? = nil,
+            type: PackageType = .iOS,
+            appAppleID: String? = nil,
+            bundleID: String? = nil,
+            bundleVersion: String? = nil,
+            bundleShortVersion: String? = nil,
+            ascPublicID: String? = nil,
+            appStoreConnectKey: AppStoreConnect.Key
+        ) {
+            self.ipa = ipa
+            self.container = container
+            self.scheme = scheme
+            self.type = type
+            self.appAppleID = appAppleID
+            self.bundleID = bundleID
+            self.bundleVersion = bundleVersion
+            self.bundleShortVersion = bundleShortVersion
+            self.ascPublicID = ascPublicID
+            self.appStoreConnectKey = appStoreConnectKey
+        }
+
+        public init(
+            ipa: String,
             project: String? = nil,
             scheme: String? = nil,
             type: PackageType = .iOS,
@@ -57,7 +81,7 @@ extension AppStoreConnect {
             appStoreConnectKey: AppStoreConnect.Key
         ) {
             self.ipa = ipa
-            self.project = project
+            self.container = project.map { .project($0) }
             self.scheme = scheme
             self.type = type
             self.appAppleID = appAppleID
@@ -69,7 +93,7 @@ extension AppStoreConnect {
         }
 
         public func run() async throws -> Output {
-            let project = try self.project ?? context.xcodeProject
+            let container = try self.container ?? context.xcodeContainer
             let scheme = self.scheme ?? context.defaultXcodeProjectScheme
 
             // TODO: Allow for the build version to be specified by an environment variable. (This could be useful on a system like Bitrise that has its own build numbers.)
@@ -85,12 +109,12 @@ extension AppStoreConnect {
             var bundleID = self.bundleID
 
             versions: if bundleShortVersion == nil || bundleVersion == nil || bundleID == nil {
-                guard let project else {
+                guard let container else {
                     logger.debug("Couldn't detect bundle short version or bundle version because Xcode project wasn't specified explicitly or contextually.")
                     break versions
                 }
 
-                guard let buildSettings = try? await xcode.getBuildSettings(project: project, scheme: scheme) else {
+                guard let buildSettings = try? await xcode.getBuildSettings(container: container, scheme: scheme) else {
                     logger.debug("Couldn't detect bundle short version or bundle version because couldn't get build settings from Xcode project.")
                     break versions
                 }
@@ -168,6 +192,34 @@ extension AppStoreConnect {
 }
 
 public extension AppStoreConnect {
+    func upload(
+        ipa: String,
+        container: Xcode.Container? = nil,
+        scheme: String? = nil,
+        type: Upload.PackageType = .iOS,
+        appAppleID: String? = nil,
+        bundleID: String? = nil,
+        bundleVersion: String? = nil,
+        bundleShortVersion: String? = nil,
+        ascPublicID: String? = nil,
+        appStoreConnectKey: AppStoreConnect.Key
+    ) async throws -> Upload.Output {
+        try await run(
+            Upload(
+                ipa: ipa,
+                container: container,
+                scheme: scheme,
+                type: type,
+                appAppleID: appAppleID,
+                bundleID: bundleID,
+                bundleVersion: bundleVersion,
+                bundleShortVersion: bundleShortVersion,
+                ascPublicID: ascPublicID,
+                appStoreConnectKey: appStoreConnectKey
+            )
+        )
+    }
+
     func upload(
         ipa: String,
         project: String? = nil,

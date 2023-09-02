@@ -2,11 +2,11 @@ import SwiftCICDCore
 
 extension Xcode {
     public struct Clean: Action {
-        let container: XcodeBuild.Container?
+        let container: Xcode.Container?
         let scheme: String?
 
         internal init(
-            container: XcodeBuild.Container? = nil,
+            container: Xcode.Container? = nil,
             scheme: String? = nil
         ) {
             self.container = container
@@ -31,7 +31,7 @@ extension Xcode {
             var command = ShellCommand("xcodebuild clean")
             // TODO: Default the project
             let scheme = self.scheme ?? context.defaultXcodeProjectScheme
-            let container = try self.container ?? context.xcodeProject.map { .project($0) }
+            let container = try self.container ?? context.xcodeContainer
             command.append(container?.flag)
             command.append("-scheme", ifLet: scheme)
 //            command.append("-derivedDataPath \(XcodeBuild.derivedData.filePath)")
@@ -46,10 +46,10 @@ public extension Xcode {
     ///   - project: The project to clean. If a project isn't specified, the contextual Xcode project will be used (if it can be found.)
     ///   - scheme: The scheme to clean, if specified.
     func clean(project: String? = nil, scheme: String? = nil) async throws {
-        let project = try? project ?? context.xcodeProject
+        let container = try? project.map { .project($0) } ?? context.xcodeContainer
         try await run(
             Clean(
-                container: project.map(XcodeBuild.Container.project),
+                container: container,
                 scheme: scheme
             )
         )

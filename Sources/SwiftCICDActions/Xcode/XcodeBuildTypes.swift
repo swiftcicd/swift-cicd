@@ -1,14 +1,19 @@
 import Foundation
 import SwiftCICDCore
 
-public enum XcodeBuild {
-//    static var derivedData: URL {
-//        context.fileManager.temporaryDirectory/"DerivedData"
-//    }
-
-    public enum Container {
+public extension Xcode {
+    enum Container: ExpressibleByStringLiteral {
         case project(String)
         case workspace(String)
+
+        public var value: String {
+            switch self {
+            case .project(let project): 
+                return project
+            case .workspace(let workspace): 
+                return workspace
+            }
+        }
 
         public var flag: ShellCommand.Component {
             switch self {
@@ -18,7 +23,17 @@ public enum XcodeBuild {
                 return "-workspace \(workspace)"
             }
         }
+
+        public init(stringLiteral value: String) {
+            self = .project(value)
+        }
     }
+}
+
+public enum XcodeBuild {
+//    static var derivedData: URL {
+//        context.fileManager.temporaryDirectory/"DerivedData"
+//    }
 
     public struct Configuration: ExpressibleByStringLiteral {
         public static let debug = Configuration(name: "Debug")

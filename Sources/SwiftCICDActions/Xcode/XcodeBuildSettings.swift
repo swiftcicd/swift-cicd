@@ -44,7 +44,7 @@ public extension XcodeBuild {
         }
 
         init(
-            project: String? = nil,
+            container: Xcode.Container? = nil,
             scheme: String? = nil,
             configuration: XcodeBuild.Configuration? = nil,
             destination: XcodeBuild.Destination? = nil,
@@ -52,7 +52,7 @@ public extension XcodeBuild {
             derivedDataPath: String? = nil
         ) async throws {
             var command = ShellCommand("xcodebuild")
-            command.append("-project", ifLet: project)
+            command.append(container?.flag)
             command.append("-scheme", ifLet: scheme)
             command.append("-configuration", ifLet: configuration?.name)
             command.append("-destination", ifLet: destination?.value)
@@ -123,8 +123,44 @@ public extension Xcode {
         sdk: XcodeBuild.SDK? = nil,
         derivedDataPath: String? = nil
     ) async throws -> XcodeBuild.Settings {
+        try await getBuildSettings(
+            container: project.map(Xcode.Container.project),
+            scheme: scheme,
+            configuration: configuration,
+            destination: destination,
+            sdk: sdk,
+            derivedDataPath: derivedDataPath
+        )
+    }
+
+    func getBuildSettings(
+        workspace: String? = nil,
+        scheme: String? = nil,
+        configuration: XcodeBuild.Configuration? = nil,
+        destination: XcodeBuild.Destination? = nil,
+        sdk: XcodeBuild.SDK? = nil,
+        derivedDataPath: String? = nil
+    ) async throws -> XcodeBuild.Settings {
+        try await getBuildSettings(
+            container: workspace.map(Xcode.Container.workspace),
+            scheme: scheme,
+            configuration: configuration,
+            destination: destination,
+            sdk: sdk,
+            derivedDataPath: derivedDataPath
+        )
+    }
+
+    internal func getBuildSettings(
+        container: Xcode.Container? = nil,
+        scheme: String? = nil,
+        configuration: XcodeBuild.Configuration? = nil,
+        destination: XcodeBuild.Destination? = nil,
+        sdk: XcodeBuild.SDK? = nil,
+        derivedDataPath: String? = nil
+    ) async throws -> XcodeBuild.Settings {
         try await XcodeBuild.Settings(
-            project: project ?? self.project,
+            container: container ?? self.container,
             scheme: scheme ?? self.defaultScheme,
             configuration: configuration,
             destination: destination,
