@@ -10,8 +10,8 @@ public struct Xcode: ActionNamespace {
         }
     }
 
-    public var defaultScheme: String? {
-        context.defaultXcodeProjectScheme
+    public var scheme: String? {
+        context.xcodeScheme
     }
 }
 
@@ -23,17 +23,25 @@ public extension Action {
 
 public protocol XcodeAction: Action {
     /// Returns the default Xcode container (either a project or a workspace.) to use when Xcode actions are performed.
-    var xcodeContainer: Xcode.Container { get throws }
+    var xcodeContainer: Xcode.Container? { get throws }
 
     /// The default scheme to use when building the project.
-    var defaultScheme: String? { get }
+    var xcodeScheme: String? { get }
 }
 
 public extension XcodeAction {
-    var defaultScheme: String? { nil }
+    var xcodeContainer: Xcode.Container? {
+        get throws {
+            try context.xcodeContainer
+        }
+    }
+    
+    var xcodeScheme: String? { nil }
 }
 
 public extension ContextValues {
+    struct XcodeContainerNotFound: Error {}
+
     /// Returns the Xcode container (either a project or a workspace) when accessed during an `XcodeProjectAction` run.
     var xcodeContainer: Xcode.Container? {
         get throws {
@@ -52,7 +60,7 @@ public extension ContextValues {
         }
     }
 
-    var defaultXcodeProjectScheme: String? {
-        inherit((any XcodeAction).self)?.defaultScheme
+    var xcodeScheme: String? {
+        inherit((any XcodeAction).self)?.xcodeScheme
     }
 }

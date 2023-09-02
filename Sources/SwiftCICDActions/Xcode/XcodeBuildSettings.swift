@@ -161,7 +161,7 @@ public extension Xcode {
     ) async throws -> XcodeBuild.Settings {
         try await XcodeBuild.Settings(
             container: container ?? self.container,
-            scheme: scheme ?? self.defaultScheme,
+            scheme: scheme ?? self.scheme,
             configuration: configuration,
             destination: destination,
             sdk: sdk,

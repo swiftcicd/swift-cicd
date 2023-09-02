@@ -102,7 +102,7 @@ extension Xcode {
 
         public func run() async throws -> Output {
             let container = try self.container ?? context.xcodeContainer
-            let scheme = self.scheme ?? context.defaultXcodeProjectScheme
+            let scheme = self.scheme ?? context.xcodeScheme
 
             guard let container else {
                 throw ActionError("Missing Xcode project. Either pass an explicit xcodeProject or call this step from an XcodeProjectWorkflow.")
