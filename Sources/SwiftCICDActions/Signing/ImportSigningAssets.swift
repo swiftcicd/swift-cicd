@@ -7,7 +7,7 @@ extension Signing {
     public struct ImportSigningAssets: Action {
         let appStoreConnectKeySecret: AppStoreConnectKeySecret
         let certificateSecret: CertificateSecret
-        let profileSecret: Secret
+        let profileSecret: ProfileSecret
 
         public struct AppStoreConnectKeySecret {
             public let p8: Secret
@@ -38,6 +38,14 @@ extension Signing {
             }
         }
 
+        public struct ProfileSecret {
+            public let mobileprovision: Secret
+
+            public init(mobileprovision: Secret) {
+                self.mobileprovision = mobileprovision
+            }
+        }
+
         public struct Output {
             public let appStoreConnectKey: AppStoreConnect.Key
             public let certificatePath: String
@@ -47,7 +55,7 @@ extension Signing {
         public init(
             appStoreConnectKeySecret: AppStoreConnectKeySecret,
             certificateSecret: CertificateSecret,
-            profileSecret: Secret
+            profileSecret: ProfileSecret
         ) {
             self.appStoreConnectKeySecret = appStoreConnectKeySecret
             self.certificateSecret = certificateSecret
@@ -71,7 +79,7 @@ extension Signing {
             let savedCertificate = try await saveFile(name: "Certificate.p12", contents: certificateContents)
             try await signing.installCertificate(savedCertificate.filePath, password: certificatePassword)
 
-            let profileContents = try await profileSecret.get()
+            let profileContents = try await profileSecret.mobileprovision.get()
             let savedProfile = try await saveFile(name: "Profile.mobileprovision", contents: profileContents)
             let profile = try await signing.addProvisioningProfile(savedProfile.filePath)
 
@@ -133,7 +141,7 @@ public extension Signing {
     func `import`(
         appStoreConnectKeySecret: ImportSigningAssets.AppStoreConnectKeySecret,
         certificateSecret: ImportSigningAssets.CertificateSecret,
-        profileSecret: Secret
+        profileSecret: ImportSigningAssets.ProfileSecret
     ) async throws -> ImportSigningAssets.Output {
         try await run(ImportSigningAssets(
             appStoreConnectKeySecret: appStoreConnectKeySecret,
