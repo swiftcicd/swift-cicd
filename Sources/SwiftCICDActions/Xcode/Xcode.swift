@@ -4,9 +4,9 @@ import SwiftCICDCore
 public struct Xcode: ActionNamespace {
     public let caller: any Action
 
-    public var project: String? {
+    public var container: Container? {
         get throws {
-            try context.xcodeProject
+            try context.xcodeContainer
         }
     }
 
@@ -21,38 +21,38 @@ public extension Action {
 
 // MARK: - Specialized Action
 
-public protocol XcodeProjectAction: Action {
-    /// Path to Xcode project.
-    var xcodeProject: String { get throws }
+public protocol XcodeAction: Action {
+    /// Returns the default Xcode container (either a project or a workspace.) to use when Xcode actions are performed.
+    var xcodeContainer: Xcode.Container { get throws }
 
     /// The default scheme to use when building the project.
     var defaultScheme: String? { get }
 }
 
-public extension XcodeProjectAction {
+public extension XcodeAction {
     var defaultScheme: String? { nil }
 }
 
 public extension ContextValues {
-    /// Returns the Xcode project when accessed during an `XcodeProjectAction` run.
-    var xcodeProject: String? {
+    /// Returns the Xcode container (either a project or a workspace) when accessed during an `XcodeProjectAction` run.
+    var xcodeContainer: Xcode.Container? {
         get throws {
-            guard let xcodeProjectAction = inherit((any XcodeProjectAction).self) else {
+            guard let xcodeAction = inherit((any XcodeAction).self) else {
                 let workingDirectory = try self.workingDirectory
                 let contents = try fileManager.contentsOfDirectory(atPath: workingDirectory)
                 if let project = contents.first(where: { $0.hasSuffix(".xcodeproj") }) {
-                    return workingDirectory/project
+                    return .project(workingDirectory/project)
                 } else if let workspace = contents.first(where: { $0.hasSuffix(".xcworkspace") }) {
-                    return workingDirectory/workspace
+                    return .workspace(workingDirectory/workspace)
                 }
                 return nil
             }
 
-            return try xcodeProjectAction.xcodeProject
+            return try xcodeAction.xcodeContainer
         }
     }
 
     var defaultXcodeProjectScheme: String? {
-        inherit((any XcodeProjectAction).self)?.defaultScheme
+        inherit((any XcodeAction).self)?.defaultScheme
     }
 }

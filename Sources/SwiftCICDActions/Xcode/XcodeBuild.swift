@@ -12,7 +12,7 @@ extension Xcode {
             public let product: Product?
         }
 
-        var project: String?
+        var container: Xcode.Container?
         var scheme: String?
         var configuration: XcodeBuild.Configuration?
         let destination: XcodeBuild.Destination?
@@ -23,6 +23,33 @@ extension Xcode {
         var projectVersion: String?
         var includeDSYMs: Bool?
         let xcbeautify: Bool
+
+        init(
+            container: Xcode.Container? = nil,
+            scheme: String? = nil,
+            // FIXME: xcodebuild's actual default is RELEASE. Should we mirror that?
+            configuration: XcodeBuild.Configuration? = .debug,
+            destination: XcodeBuild.Destination? = .iOSSimulator,
+            sdk: XcodeBuild.SDK? = nil,
+            cleanBuild: Bool = false,
+            archivePath: String? = nil,
+            codeSignStyle: XcodeBuild.CodeSignStyle? = nil,
+            projectVersion: String? = nil,
+            includeDSYMs: Bool? = nil,
+            xcbeautify: Bool = Xcbeautify.default
+        ) {
+            self.container = container
+            self.scheme = scheme
+            self.configuration = configuration
+            self.destination = destination
+            self.sdk = sdk ?? destination?.sdk
+            self.cleanBuild = cleanBuild
+            self.archivePath = archivePath
+            self.codeSignStyle = codeSignStyle
+            self.projectVersion = projectVersion
+            self.includeDSYMs = includeDSYMs
+            self.xcbeautify = xcbeautify
+        }
 
         public init(
             project: String? = nil,
@@ -38,25 +65,56 @@ extension Xcode {
             includeDSYMs: Bool? = nil,
             xcbeautify: Bool = Xcbeautify.default
         ) {
-            self.project = project
-            self.scheme = scheme
-            self.configuration = configuration
-            self.destination = destination
-            self.sdk = sdk ?? destination?.sdk
-            self.cleanBuild = cleanBuild
-            self.archivePath = archivePath
-            self.codeSignStyle = codeSignStyle
-            self.projectVersion = projectVersion
-            self.includeDSYMs = includeDSYMs
-            self.xcbeautify = xcbeautify
+            self.init(
+                container: project.map { .project($0) },
+                scheme: scheme,
+                configuration: configuration,
+                destination: destination,
+                sdk: sdk,
+                cleanBuild: cleanBuild,
+                archivePath: archivePath,
+                codeSignStyle: codeSignStyle,
+                projectVersion: projectVersion,
+                includeDSYMs: includeDSYMs,
+                xcbeautify: xcbeautify
+            )
+        }
+
+        public init(
+            workspace: String? = nil,
+            scheme: String? = nil,
+            // FIXME: xcodebuild's actual default is RELEASE. Should we mirror that?
+            configuration: XcodeBuild.Configuration? = .debug,
+            destination: XcodeBuild.Destination? = .iOSSimulator,
+            sdk: XcodeBuild.SDK? = nil,
+            cleanBuild: Bool = false,
+            archivePath: String? = nil,
+            codeSignStyle: XcodeBuild.CodeSignStyle? = nil,
+            projectVersion: String? = nil,
+            includeDSYMs: Bool? = nil,
+            xcbeautify: Bool = Xcbeautify.default
+        ) {
+            self.init(
+                container: workspace.map { .workspace($0) },
+                scheme: scheme,
+                configuration: configuration,
+                destination: destination,
+                sdk: sdk,
+                cleanBuild: cleanBuild,
+                archivePath: archivePath,
+                codeSignStyle: codeSignStyle,
+                projectVersion: projectVersion,
+                includeDSYMs: includeDSYMs,
+                xcbeautify: xcbeautify
+            )
         }
 
         public func run() async throws -> Output {
             var xcodebuild = ShellCommand("xcodebuild")
-            let project = try self.project ?? context.xcodeProject
+            let container = try self.container ?? context.xcodeContainer
             let scheme = self.scheme ?? context.defaultXcodeProjectScheme
             // TODO: Support -workspace as well. Use XcodeBuild.XcodeContainer.
-            xcodebuild.append("-project", ifLet: project)
+            xcodebuild.append(container?.flag)
             xcodebuild.append("-scheme", ifLet: scheme)
             xcodebuild.append("-destination", ifLet: destination?.value)
             xcodebuild.append("-configuration", ifLet: configuration?.name)
@@ -113,11 +171,10 @@ extension Xcode {
                 )
             }
 
-
             try await xcbeautify(xcodebuild, if: xcbeautify)
 
             let settings = try await xcode.getBuildSettings(
-                project: project,
+                container: container,
                 scheme: scheme,
                 configuration: configuration,
                 destination: destination,
@@ -189,6 +246,37 @@ public extension Xcode {
     }
 
     @discardableResult
+    func build(
+        workspace: String? = nil,
+        scheme: String? = nil,
+        configuration: XcodeBuild.Configuration? = .debug,
+        destination: XcodeBuild.Destination? = .iOSSimulator,
+        sdk: XcodeBuild.SDK? = nil,
+        cleanBuild: Bool = false,
+        archivePath: String? = nil,
+        codeSignStyle: XcodeBuild.CodeSignStyle? = nil,
+        projectVersion: String? = nil,
+        includeDSYMs: Bool? = nil,
+        xcbeautify: Bool = Xcbeautify.default
+    ) async throws -> Build.Output {
+        try await run(
+            Build(
+                workspace: workspace,
+                scheme: scheme,
+                configuration: configuration,
+                destination: destination,
+                sdk: sdk,
+                cleanBuild: cleanBuild,
+                archivePath: archivePath,
+                codeSignStyle: codeSignStyle,
+                projectVersion: projectVersion,
+                includeDSYMs: includeDSYMs,
+                xcbeautify: xcbeautify
+            )
+        )
+    }
+
+    @discardableResult
     func archive(
         project: String? = nil,
         scheme: String? = nil,
@@ -205,6 +293,68 @@ public extension Xcode {
         try await run(
             Build(
                 project: project,
+                scheme: scheme,
+                configuration: configuration,
+                destination: destination,
+                sdk: sdk,
+                cleanBuild: cleanBuild,
+                archivePath: archivePath,
+                codeSignStyle: codeSignStyle,
+                projectVersion: projectVersion,
+                includeDSYMs: includeDSYMs,
+                xcbeautify: xcbeautify
+            )
+        )
+    }
+
+    @discardableResult
+    func archive(
+        workspace: String? = nil,
+        scheme: String? = nil,
+        configuration: XcodeBuild.Configuration? = .debug,
+        destination: XcodeBuild.Destination? = .iOSSimulator,
+        sdk: XcodeBuild.SDK? = nil,
+        cleanBuild: Bool = false,
+        archivePath: String,
+        codeSignStyle: XcodeBuild.CodeSignStyle? = nil,
+        projectVersion: String? = nil,
+        includeDSYMs: Bool? = nil,
+        xcbeautify: Bool = Xcbeautify.default
+    ) async throws -> Build.Output {
+        try await run(
+            Build(
+                workspace: workspace,
+                scheme: scheme,
+                configuration: configuration,
+                destination: destination,
+                sdk: sdk,
+                cleanBuild: cleanBuild,
+                archivePath: archivePath,
+                codeSignStyle: codeSignStyle,
+                projectVersion: projectVersion,
+                includeDSYMs: includeDSYMs,
+                xcbeautify: xcbeautify
+            )
+        )
+    }
+
+    @discardableResult
+    internal func archive(
+        container: Xcode.Container? = nil,
+        scheme: String? = nil,
+        configuration: XcodeBuild.Configuration? = .debug,
+        destination: XcodeBuild.Destination? = .iOSSimulator,
+        sdk: XcodeBuild.SDK? = nil,
+        cleanBuild: Bool = false,
+        archivePath: String,
+        codeSignStyle: XcodeBuild.CodeSignStyle? = nil,
+        projectVersion: String? = nil,
+        includeDSYMs: Bool? = nil,
+        xcbeautify: Bool = Xcbeautify.default
+    ) async throws -> Build.Output {
+        try await run(
+            Build(
+                container: container,
                 scheme: scheme,
                 configuration: configuration,
                 destination: destination,

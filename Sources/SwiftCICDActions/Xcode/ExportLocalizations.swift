@@ -7,7 +7,7 @@ extension Xcode {
         // -exportLanguage (specifies multiple optional ISO 639-1 languages included in a localization export)
         // We may be able to detect support languages from the project file and then pass those supported languages
 
-        var project: String?
+        var container: Xcode.Container?
         let localizationPath: String
         let failOnWarnings: Bool
         let xcbeautify: Bool
@@ -18,7 +18,19 @@ extension Xcode {
             failOnWarnings: Bool = true,
             xcbeautify: Bool = Xcbeautify.default
         ) {
-            self.project = project
+            self.container = project.map { .project($0) }
+            self.localizationPath = localizationPath
+            self.failOnWarnings = failOnWarnings
+            self.xcbeautify = xcbeautify
+        }
+
+        public init(
+            to localizationPath: String,
+            workspace: String? = nil,
+            failOnWarnings: Bool = true,
+            xcbeautify: Bool = Xcbeautify.default
+        ) {
+            self.container = workspace.map { .workspace($0) }
             self.localizationPath = localizationPath
             self.failOnWarnings = failOnWarnings
             self.xcbeautify = xcbeautify
@@ -44,9 +56,9 @@ extension Xcode {
 
         public func run() async throws -> Output {
             logger.info("Exporting localizations")
-            let project = try self.project ?? context.xcodeProject
+            let container = try self.container ?? context.xcodeContainer
             var xcodebuild = ShellCommand("xcodebuild -exportLocalizations -localizationPath \(localizationPath)")
-            xcodebuild.append("-project", ifLet: project)
+            xcodebuild.append(container?.flag)
 
             let commandOutput = try await xcbeautify(xcodebuild, if: xcbeautify)
 
@@ -105,10 +117,28 @@ public extension Xcode {
         try await run(
             ExportLocalizations(
                 to: localizationPath,
-                project: localizationPath,
+                project: project,
                 failOnWarnings: failOnWarnings,
                 xcbeautify: xcbeautify
             )
         )
     }
+
+    @discardableResult
+    func exportLocalizations(
+        to localizationPath: String,
+        workspace: String? = nil,
+        failOnWarnings: Bool = true,
+        xcbeautify: Bool = Xcbeautify.default
+    ) async throws -> ExportLocalizations.Output {
+        try await run(
+            ExportLocalizations(
+                to: localizationPath,
+                workspace: workspace,
+                failOnWarnings: failOnWarnings,
+                xcbeautify: xcbeautify
+            )
+        )
+    }
+
 }

@@ -8,18 +8,64 @@ extension Xcode {
             case directory(String)
         }
 
-        var project: String?
+        var container: Xcode.Container?
         let localizationSource: Source
         let xcbeautify: Bool
+
+        init(
+            in localizationsDirectory: String,
+            container: Xcode.Container? = nil,
+            xcbeautify: Bool = Xcbeautify.default
+        ) {
+            self.localizationSource = .directory(localizationsDirectory)
+            self.container = container
+            self.xcbeautify = xcbeautify
+        }
 
         public init(
             in localizationsDirectory: String,
             project: String? = nil,
             xcbeautify: Bool = Xcbeautify.default
         ) {
-            self.localizationSource = .directory(localizationsDirectory)
-            self.project = project
+            self.init(
+                in: localizationsDirectory,
+                container: project.map { .project($0) },
+                xcbeautify: xcbeautify
+            )
+        }
+
+        public init(
+            in localizationsDirectory: String,
+            workspace: String? = nil,
+            xcbeautify: Bool = Xcbeautify.default
+        ) {
+            self.init(
+                in: localizationsDirectory,
+                container: workspace.map { .workspace($0) },
+                xcbeautify: xcbeautify
+            )
+        }
+
+        init(
+            at localizationPath: String,
+            container: Xcode.Container? = nil,
+            xcbeautify: Bool = Xcbeautify.default
+        ) {
+            self.localizationSource = .file(localizationPath)
+            self.container = container
             self.xcbeautify = xcbeautify
+        }
+
+        public init(
+            at localizationPath: String,
+            workspace: String? = nil,
+            xcbeautify: Bool = Xcbeautify.default
+        ) {
+            self.init(
+                at: localizationPath,
+                container: workspace.map { .workspace($0) },
+                xcbeautify: xcbeautify
+            )
         }
 
         public init(
@@ -27,9 +73,11 @@ extension Xcode {
             project: String? = nil,
             xcbeautify: Bool = Xcbeautify.default
         ) {
-            self.localizationSource = .file(localizationPath)
-            self.project = project
-            self.xcbeautify = xcbeautify
+            self.init(
+                at: localizationPath,
+                container: project.map { .project($0) },
+                xcbeautify: xcbeautify
+            )
         }
 
         public func run() async throws {
@@ -54,9 +102,9 @@ extension Xcode {
 
         func importLocalizationFile(path: String) async throws {
             logger.info("Importing \(path)")
-            let project = try self.project ?? context.xcodeProject
+            let container = try self.container ?? context.xcodeContainer
             var xcodebuild = ShellCommand("xcodebuild -importLocalizations -localizationPath \(path)")
-            xcodebuild.append("-project", ifLet: project)
+            xcodebuild.append(container?.flag)
             try await xcbeautify(xcodebuild, if: xcbeautify)
         }
     }
@@ -78,6 +126,20 @@ public extension Xcode {
     }
 
     func importLocalizations(
+        in localizationsDirectory: String,
+        workspace: String? = nil,
+        xcbeautify: Bool = Xcbeautify.default
+    ) async throws {
+        try await run(
+            ImportLocalizations(
+                in: localizationsDirectory,
+                workspace: workspace,
+                xcbeautify: xcbeautify
+            )
+        )
+    }
+
+    func importLocalizations(
         at localizationPath: String,
         project: String? = nil,
         xcbeautify: Bool = Xcbeautify.default
@@ -86,6 +148,20 @@ public extension Xcode {
             ImportLocalizations(
                 at: localizationPath,
                 project: project,
+                xcbeautify: xcbeautify
+            )
+        )
+    }
+
+    func importLocalizations(
+        at localizationPath: String,
+        workspace: String? = nil,
+        xcbeautify: Bool = Xcbeautify.default
+    ) async throws {
+        try await run(
+            ImportLocalizations(
+                at: localizationPath,
+                workspace: workspace,
                 xcbeautify: xcbeautify
             )
         )
