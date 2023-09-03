@@ -207,8 +207,8 @@ extension Xcode {
         }
 
         public func cleanUp(error: Error?) async throws {
-            if let archivePath, context.fileManager.fileExists(atPath: archivePath) {
-                try context.fileManager.removeItem(atPath: archivePath)
+            if let archivePath {
+                try context.fileManager.removeItemIfItExists(atPath: archivePath)
             }
         }
     }

@@ -45,7 +45,7 @@ public struct UpdateFile: Action {
 
     public func cleanUp(error: Error?) async throws {
         if createFile {
-            try context.fileManager.removeItem(atPath: filePath)
+            try context.fileManager.removeItemIfItExists(atPath: filePath)
             logger.debug("Deleted \(filePath)")
         } else if let previousFileContents {
             context.fileManager.createFile(atPath: filePath, contents: previousFileContents)

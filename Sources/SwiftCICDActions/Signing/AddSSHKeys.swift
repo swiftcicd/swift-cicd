@@ -174,7 +174,7 @@ extension Signing {
 
         public func cleanUp(error: Error?) async throws {
             for file in createdFiles {
-                try context.fileManager.removeItem(atPath: file)
+                try context.fileManager.removeItemIfItExists(atPath: file)
             }
 
             for section in addedSections {

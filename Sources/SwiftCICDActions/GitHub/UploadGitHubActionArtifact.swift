@@ -233,9 +233,7 @@ extension FileManager {
             .appendingPathExtension("zip")
             .fileURL
 
-        if fileExists(atPath: output.filePath) {
-            try removeItem(at: output)
-        }
+        try removeItemIfItExists(at: output)
 
         let readURL: URL
         let isReadURLTemporary: Bool

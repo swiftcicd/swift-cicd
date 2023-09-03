@@ -177,10 +177,10 @@ extension Xcode {
 
         public func cleanUp(error: Error?) async throws {
             if isExportOptionsSynthesized {
-                try context.fileManager.removeItem(atPath: exportOptionsPlist)
+                try context.fileManager.removeItemIfItExists(atPath: exportOptionsPlist)
             }
 
-            try context.fileManager.removeItem(atPath: archivePath)
+            try context.fileManager.removeItemIfItExists(atPath: archivePath)
         }
     }
 }

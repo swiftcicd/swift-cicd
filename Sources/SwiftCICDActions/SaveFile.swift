@@ -35,7 +35,7 @@ public struct SaveFile: Action {
 
     public func cleanUp(error: Error?) async throws {
         if let savedFilePath {
-            try context.fileManager.removeItem(atPath: savedFilePath)
+            try context.fileManager.removeItemIfItExists(atPath: savedFilePath)
         }
     }
 }

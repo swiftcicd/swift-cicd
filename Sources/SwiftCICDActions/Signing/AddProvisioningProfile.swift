@@ -45,7 +45,7 @@ extension Signing {
 
         public func cleanUp(error: Error?) async throws {
             if let addedProfilePath {
-                try context.fileManager.removeItem(atPath: addedProfilePath)
+                try context.fileManager.removeItemIfItExists(atPath: addedProfilePath)
             }
         }
     }
