@@ -9,6 +9,24 @@ public protocol Tool: ContextAware {
 
 public extension Tool {
     static var name: String { "\(Self.self)" }
+
+    static var isInstalled: Bool {
+        get async {
+            do {
+                let output = try await context.shell("which \(name)", quiet: true)
+                return !output.contains("not found")
+            } catch {
+                return false
+            }
+        }
+    }
+
+    /// Requires that the tool is installed. If the tool is not installed, an error is thrown.
+    static func require() async throws {
+        guard await isInstalled else {
+            throw ActionError("\(name) is required but not installed.")
+        }
+    }
 }
 
 public final class Tools: ContextAware {

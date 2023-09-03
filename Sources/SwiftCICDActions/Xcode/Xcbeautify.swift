@@ -44,18 +44,8 @@ public struct Xcbeautify: Tool {
 
     public static let name = "xcbeautify"
 
-    public static var isInstalled: Bool {
-        get async {
-            do {
-                let output = try await context.shell("which xcbeautify", quiet: true)
-                return !output.contains("not found")
-            } catch {
-                return false
-            }
-        }
-    }
-
     public static func install() async throws {
+        try await Brew.require()
         try await context.shell("brew install xcbeautify")
     }
 

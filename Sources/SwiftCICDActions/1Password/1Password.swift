@@ -15,6 +15,7 @@ public enum OnePassword: Tool {
     }
 
     public static func install() async throws {
+        try await Brew.require()
         try await context.shell("brew install --cask 1password/tap/1password-cli")
     }
 
