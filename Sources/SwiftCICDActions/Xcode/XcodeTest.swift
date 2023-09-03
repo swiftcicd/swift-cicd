@@ -55,7 +55,7 @@ extension Xcode {
             let container = try self.container ?? context.xcodeContainer
             let scheme = self.scheme ?? context.xcodeScheme
             var test = ShellCommand("xcodebuild \(withoutBuilding ? "test-without-building" : "test")")
-            test.append(container?.flag)
+            try test.append(container?.flag)
             test.append("-scheme", ifLet: scheme)
             test.append("-destination", ifLet: destination?.value)
 //            test.append("-derivedDataPath \(XcodeBuild.derivedData.filePath)")

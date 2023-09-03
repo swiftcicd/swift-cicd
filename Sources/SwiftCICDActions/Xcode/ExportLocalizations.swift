@@ -59,7 +59,7 @@ extension Xcode {
             logger.info("Exporting localizations")
             let container = try self.container ?? context.xcodeContainer
             var xcodebuild = ShellCommand("xcodebuild -exportLocalizations -localizationPath \(localizationPath)")
-            xcodebuild.append(container?.flag)
+            try xcodebuild.append(container?.flag)
 
             let commandOutput = try await xcbeautify(xcodebuild, if: xcbeautify)
 

@@ -106,7 +106,7 @@ extension Xcode {
             logger.info("Importing \(path)")
             let container = try self.container ?? context.xcodeContainer
             var xcodebuild = ShellCommand("xcodebuild -importLocalizations -localizationPath \(path)")
-            xcodebuild.append(container?.flag)
+            try xcodebuild.append(container?.flag)
             try await xcbeautify(xcodebuild, if: xcbeautify)
         }
     }

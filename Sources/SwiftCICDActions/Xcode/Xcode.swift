@@ -23,6 +23,8 @@ public extension Action {
 
 public protocol XcodeAction: Action {
     /// Returns the default Xcode container (either a project or a workspace.) to use when Xcode actions are performed.
+    /// - Important: The value should a path relative to the working directory.
+    /// - Note: `Xcode.Container` is `ExpressibleByStringLiteral` so you can return a string literal as a convenience.
     var xcodeContainer: Xcode.Container? { get throws }
 
     /// The default scheme to use when building the project.

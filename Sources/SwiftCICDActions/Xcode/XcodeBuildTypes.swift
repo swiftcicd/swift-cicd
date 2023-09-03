@@ -2,6 +2,11 @@ import Foundation
 import SwiftCICDCore
 
 public extension Xcode {
+
+    // TODO: We can run into problems if the Container's path isn't a full file path.
+    // It's better if we always ensure that it is.
+    // Check if the supplied path has
+
     enum Container {
         case project(String)
         case workspace(String)
@@ -20,21 +25,29 @@ public extension Xcode {
             }
         }
 
-        public var value: String {
-            switch self {
-            case .project(let project): 
-                return project
-            case .workspace(let workspace): 
-                return workspace
+        public var path: String {
+            get throws {
+                let relativePath: String
+                switch self {
+                case .project(let project):
+                    relativePath = project
+                case .workspace(let workspace):
+                    relativePath = workspace
+                }
+
+                return try context.workingDirectory/relativePath
             }
         }
 
         public var flag: ShellCommand.Component {
-            switch self {
-            case .project(let project):
-                return "-project \(project)"
-            case .workspace(let workspace):
-                return "-workspace \(workspace)"
+            get throws {
+                let path = try self.path
+                switch self {
+                case .project:
+                    return "-project \(path)"
+                case .workspace:
+                    return "-workspace \(path)"
+                }
             }
         }
     }

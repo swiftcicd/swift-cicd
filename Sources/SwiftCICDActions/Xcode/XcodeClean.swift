@@ -32,7 +32,7 @@ extension Xcode {
             // TODO: Default the project
             let scheme = self.scheme ?? context.xcodeScheme
             let container = try self.container ?? context.xcodeContainer
-            command.append(container?.flag)
+            try command.append(container?.flag)
             command.append("-scheme", ifLet: scheme)
 //            command.append("-derivedDataPath \(XcodeBuild.derivedData.filePath)")
             try await shell(command)

@@ -52,7 +52,7 @@ public extension XcodeBuild {
             derivedDataPath: String? = nil
         ) async throws {
             var command = ShellCommand("xcodebuild")
-            command.append(container?.flag)
+            try command.append(container?.flag)
             command.append("-scheme", ifLet: scheme)
             command.append("-configuration", ifLet: configuration?.name)
             command.append("-destination", ifLet: destination?.value)

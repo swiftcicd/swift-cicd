@@ -115,7 +115,7 @@ extension Xcode {
             let container = try self.container ?? context.xcodeContainer
             let scheme = self.scheme ?? context.xcodeScheme
             // TODO: Support -workspace as well. Use XcodeBuild.XcodeContainer.
-            xcodebuild.append(container?.flag)
+            try xcodebuild.append(container?.flag)
             xcodebuild.append("-scheme", ifLet: scheme)
             xcodebuild.append("-destination", ifLet: destination?.value)
             xcodebuild.append("-configuration", ifLet: configuration?.name)

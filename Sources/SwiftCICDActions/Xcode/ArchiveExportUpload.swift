@@ -177,9 +177,9 @@ extension Xcode {
             }
 
             // Call xcodebuild from the project's parent directory
-            let sourceRoot = container.value.removingLastPathComponent
-            if currentDirectory != sourceRoot {
-                try context.fileManager.changeCurrentDirectory(sourceRoot)
+            let enclosingDirectory = try container.path.removingLastPathComponent
+            if currentDirectory != enclosingDirectory {
+                try context.fileManager.changeCurrentDirectory(enclosingDirectory)
             }
 
             // Archive the build

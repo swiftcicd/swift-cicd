@@ -150,7 +150,7 @@ extension Xcode {
         public func run() async throws {
             let container = try self.container ?? context.xcodeContainer
             var xcodebuild = ShellCommand("xcodebuild -exportArchive -archivePath \(archivePath) -exportOptionsPlist \(exportOptionsPlist)")
-            xcodebuild.append(container?.flag)
+            try xcodebuild.append(container?.flag)
             xcodebuild.append("-allowProvisioningUpdates", if: allowProvisioningUpdates)
             xcodebuild.append("-exportPath", ifLet: exportPath)
 
