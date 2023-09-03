@@ -73,11 +73,15 @@ final class ActionStack {
         return trace(frame: lastFrame, includeBuilderActions: includeBuilderActions)
     }
 
-    func generateTable(finalActionFailed: Bool, includeBuilderActions: Bool = false) -> Table {
-        Table(
+    func generateTable(finalActionFailed: Bool, onlyIncludeActionsRunByMainAction: Bool = true, includeBuilderActions: Bool = false) -> Table {
+        let frames = stack
+            .filter { onlyIncludeActionsRunByMainAction ? $0.action.isRunByMain : true }
+            .filter { includeBuilderActions ? true : !$0.action.isBuilder }
+
+        return Table(
             headers: [nil, "Action"],
-            rows: stack.filter { includeBuilderActions ? true : !$0.action.isBuilder }.indices.map {
-                [$0 == stack.index(before: stack.endIndex) ? (finalActionFailed ? "x" : "✓") : "✓", stack[$0].action.name]
+            rows: frames.indices.map {
+                [$0 == frames.index(before: frames.endIndex) ? (finalActionFailed ? "x" : "✓") : "✓", frames[$0].action.name]
             }
         )
     }
