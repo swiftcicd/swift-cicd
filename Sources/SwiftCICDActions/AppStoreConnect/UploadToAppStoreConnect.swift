@@ -35,6 +35,7 @@ extension AppStoreConnect {
         let appStoreConnectKey: AppStoreConnect.Key
 
         public struct Output {
+            // TODO: Is it possible to get build id from the resulting shell output?
             public let buildNumber: String
         }
 
@@ -151,12 +152,12 @@ extension AppStoreConnect {
             guard let bundleShortVersion else { throw ActionError("Missing bundleShortVersion") }
             guard let bundleID else { throw ActionError("Missing bundleID") }
 
-            let apps = try await context.appStoreConnectAPI.getApps(key: appStoreConnectKey)
-            guard let app = apps.first(where: { $0.attributes.bundleId == bundleID }) else {
-                throw ActionError("No app with bundle id \(bundleID) found on App Store Connect. Either the bundle id isn't correct or the app hasn't been created on App Store Connect yet.")
-            }
-
             if appAppleID == nil {
+                logger.debug("Detecting app Apple ID from App Store Connect...")
+                let app = try await context.appStoreConnectAPI.getApp(
+                    bundleID: bundleID,
+                    key: appStoreConnectKey
+                )
                 appAppleID = app.id
                 logger.debug("Detected app Apple ID from App Store Connect: \(app.id)")
             }
