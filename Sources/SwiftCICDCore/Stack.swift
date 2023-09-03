@@ -14,9 +14,15 @@ final class ActionStack {
 
     struct Trace: CustomStringConvertible {
         var frames = [Frame]()
+        var traceBuilderActions: Bool = false
 
         var description: String {
-            frames.map(\.action.name).joined(separator: " → ")
+            frames
+                .filter {
+                    traceBuilderActions ? true : !$0.action.isBuilder
+                }
+                .map(\.action.name)
+                .joined(separator: " → ")
         }
     }
 
@@ -42,7 +48,7 @@ final class ActionStack {
         stack.last
     }
 
-    func trace(frame: Frame) -> Trace {
+    func trace(frame: Frame, traceBuilderActions: Bool = false) -> Trace {
         guard var frame = stack.first(where: { $0.id == frame.id }) else {
             return Trace()
         }
@@ -52,15 +58,19 @@ final class ActionStack {
             trace.append(parent)
             frame = parent
         }
-        return Trace(frames: trace.reversed())
+
+        return Trace(
+            frames: trace.reversed(),
+            traceBuilderActions: traceBuilderActions
+        )
     }
 
-    func traceLastFrame() -> Trace? {
+    func traceLastFrame(traceBuilderActions: Bool = false) -> Trace? {
         guard let lastFrame = peak() else {
             return nil
         }
 
-        return trace(frame: lastFrame)
+        return trace(frame: lastFrame, traceBuilderActions: traceBuilderActions)
     }
 }
 
