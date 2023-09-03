@@ -98,16 +98,7 @@ extension Action {
 
 extension Action {
     var isRunByMain: Bool {
-        var current = context.currentStackFrame?.parent
-        while let c = current {
-            // Skip builder actions
-            if c.action.isBuilder {
-                current = current?.parent
-            } else {
-                return c.action.isMain
-            }
-        }
-        return false
+        context.currentStackFrame?.isRunByMain ?? false
     }
 }
 

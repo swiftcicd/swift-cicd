@@ -75,7 +75,7 @@ final class ActionStack {
 
     func generateTable(finalActionFailed: Bool, onlyIncludeActionsRunByMainAction: Bool = true, includeBuilderActions: Bool = false) -> Table {
         let frames = stack
-            .filter { onlyIncludeActionsRunByMainAction ? $0.action.isRunByMain : true }
+            .filter { onlyIncludeActionsRunByMainAction ? $0.isRunByMain : true }
             .filter { includeBuilderActions ? true : !$0.action.isBuilder }
 
         return Table(
@@ -84,6 +84,21 @@ final class ActionStack {
                 [$0 == frames.index(before: frames.endIndex) ? (finalActionFailed ? "x" : "✓") : "✓", frames[$0].action.name]
             }
         )
+    }
+}
+
+extension ActionStack.Frame {
+    var isRunByMain: Bool {
+        var current = parent
+        while let c = current {
+            // Skip builder actions
+            if c.action.isBuilder {
+                current = current?.parent
+            } else {
+                return c.action.isMain
+            }
+        }
+        return false
     }
 }
 
