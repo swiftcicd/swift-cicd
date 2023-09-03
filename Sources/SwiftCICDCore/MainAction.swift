@@ -40,11 +40,14 @@ extension MainAction {
                 try context.fileManager.changeCurrentDirectory(platform.workingDirectory)
                 let mainAction = self.init()
                 try await mainAction.run(mainAction)
+                let table = context.stack.generateTable(finalActionFailed: false)
                 await cleanUp(error: nil)
                 await uninstallTools()
                 platform.endLogGroup()
+                print("\(table.textualDescription())")
                 exit(0)
             } catch {
+                let table = context.stack.generateTable(finalActionFailed: true)
                 let trace = context.stack.traceLastFrame()
                 logger.error("\n❌ \(errorMessage(from: error))")
                 await cleanUp(error: error)
@@ -61,6 +64,7 @@ extension MainAction {
                         )
                     }
                 }
+                print("\(table.textualDescription())")
                 exit(1)
             }
         }

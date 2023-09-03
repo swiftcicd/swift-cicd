@@ -14,12 +14,12 @@ final class ActionStack {
 
     struct Trace: CustomStringConvertible {
         var frames = [Frame]()
-        var traceBuilderActions: Bool = false
+        var includeBuilderActions: Bool = false
 
         var description: String {
             frames
                 .filter {
-                    traceBuilderActions ? true : !$0.action.isBuilder
+                    includeBuilderActions ? true : !$0.action.isBuilder
                 }
                 .map(\.action.name)
                 .joined(separator: " → ")
@@ -48,7 +48,7 @@ final class ActionStack {
         stack.last
     }
 
-    func trace(frame: Frame, traceBuilderActions: Bool = false) -> Trace {
+    func trace(frame: Frame, includeBuilderActions: Bool = false) -> Trace {
         guard var frame = stack.first(where: { $0.id == frame.id }) else {
             return Trace()
         }
@@ -61,16 +61,25 @@ final class ActionStack {
 
         return Trace(
             frames: trace.reversed(),
-            traceBuilderActions: traceBuilderActions
+            includeBuilderActions: includeBuilderActions
         )
     }
 
-    func traceLastFrame(traceBuilderActions: Bool = false) -> Trace? {
+    func traceLastFrame(includeBuilderActions: Bool = false) -> Trace? {
         guard let lastFrame = peak() else {
             return nil
         }
 
-        return trace(frame: lastFrame, traceBuilderActions: traceBuilderActions)
+        return trace(frame: lastFrame, includeBuilderActions: includeBuilderActions)
+    }
+
+    func generateTable(finalActionFailed: Bool, includeBuilderActions: Bool = false) -> Table {
+        Table(
+            headers: [nil, "Action"],
+            rows: stack.indices.map {
+                [$0 == stack.index(before: stack.endIndex) ? (finalActionFailed ? "x" : "✓") : "✓", stack[$0].action.name]
+            }
+        )
     }
 }
 
