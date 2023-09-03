@@ -76,7 +76,7 @@ final class ActionStack {
     func generateTable(finalActionFailed: Bool, includeBuilderActions: Bool = false) -> Table {
         Table(
             headers: [nil, "Action"],
-            rows: stack.indices.map {
+            rows: stack.filter { includeBuilderActions ? true : !$0.action.isBuilder }.indices.map {
                 [$0 == stack.index(before: stack.endIndex) ? (finalActionFailed ? "x" : "✓") : "✓", stack[$0].action.name]
             }
         )
