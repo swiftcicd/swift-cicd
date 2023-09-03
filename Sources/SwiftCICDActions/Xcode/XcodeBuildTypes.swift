@@ -2,7 +2,7 @@ import Foundation
 import SwiftCICDCore
 
 public extension Xcode {
-    enum Container: ExpressibleByStringLiteral {
+    enum Container {
         case project(String)
         case workspace(String)
 
@@ -37,8 +37,14 @@ public extension Xcode {
                 return "-workspace \(workspace)"
             }
         }
+    }
+}
 
-        public init(stringLiteral value: String) {
+extension Xcode.Container: ExpressibleByStringLiteral {
+    public init(stringLiteral value: String) {
+        if value.hasSuffix(".xcworkspace") {
+            self = .workspace(value)
+        } else {
             self = .project(value)
         }
     }

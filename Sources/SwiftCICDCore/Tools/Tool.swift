@@ -46,7 +46,7 @@ public final class Tools: ContextAware {
                     try await tool.install()
                     installedBySwiftCICD = true
                 } else {
-                    context.logger.info("Tool \(tool.name) is already installed")
+                    context.logger.debug("Tool \(tool.name) is already installed")
                 }
 
                 tools[tool.name] = Entry(
