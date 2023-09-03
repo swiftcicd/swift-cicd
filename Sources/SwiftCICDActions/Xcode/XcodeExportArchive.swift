@@ -157,7 +157,10 @@ extension Xcode {
 
                     If you ran Xcode.ArchiveExportUpload and encounter this error, it may because the \
                     internal archive step failed gracefully. Please check the logs to see if there are \
-                    any errors that you can resolve on your own. If not, please submit an issue.
+                    any errors in your project's build process that you can resolve on your own.
+
+                    If there aren't any errors, please submit an issue. (https://github.com/swiftcicd/swift-cicd/issues/new)
+
                     """
                 )
             }
