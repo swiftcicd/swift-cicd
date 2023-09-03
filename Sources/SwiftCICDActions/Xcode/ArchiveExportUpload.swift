@@ -107,7 +107,7 @@ extension Xcode {
             let scheme = self.scheme ?? context.xcodeScheme
 
             guard let container else {
-                throw ActionError("Missing Xcode project. Either pass an explicit xcodeProject or call this step from an XcodeProjectWorkflow.")
+                throw ActionError("Missing Xcode project/workspace. Either pass an explicit project/workspace or call this step from an XcodeAction.")
             }
 
             let profile: ProvisioningProfile

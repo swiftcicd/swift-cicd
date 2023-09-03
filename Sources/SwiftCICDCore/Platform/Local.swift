@@ -4,7 +4,13 @@ import Logging
 public enum LocalPlatform: Platform {
     public static let name = "Local"
     public static let isRunningCI = false
-    public static let workingDirectory = FileManager.default.currentDirectoryPath
+    public static let workingDirectory: String = {
+        if let override = ProcessInfo.processInfo.environment["LOCAL_WORKING_DIRECTORY"] {
+            return override
+        }
+
+        return FileManager.default.currentDirectoryPath
+    }()
 
     public static func detect() -> Bool {
         CommandLine.arguments.contains("local")
