@@ -102,11 +102,11 @@ extension AppStoreConnect {
                 self.groups.contains($0.attributes.name)
             }
 
-            logger.info("Adding build \(buildID) to groups: \(groups.map { "\($0.attributes.name) (\($0.id))" }.joined(separator: ", "))")
+            logger.info("Adding build \(buildID) to groups: \(groupsToAdd.map { "\($0.attributes.name) (\($0.id))" }.joined(separator: ", "))")
 
             try await context.appStoreConnectAPI.addBuild(
                 id: buildID,
-                toGroups: groups.map(\.id),
+                toGroups: groupsToAdd.map(\.id),
                 key: appStoreConnectKey
             )
         }

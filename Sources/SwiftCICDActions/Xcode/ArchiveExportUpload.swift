@@ -199,6 +199,7 @@ extension Xcode {
             try await xcode.exportArchive(
                 archivePath,
                 container: container,
+                scheme: scheme,
                 to: exportPath,
                 allowProvisioningUpdates: false,
                 options: .init(
