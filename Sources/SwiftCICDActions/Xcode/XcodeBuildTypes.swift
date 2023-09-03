@@ -44,16 +44,6 @@ public extension Xcode {
     }
 }
 
-extension Optional: ExpressibleByUnicodeScalarLiteral where Wrapped: ExpressibleByStringLiteral {
-    public init(stringLiteral value: Wrapped.StringLiteralType) {
-        self = Wrapped(stringLiteral: value)
-    }
-
-    public init(unicodeScalarLiteral value: Wrapped.UnicodeScalarLiteralType) {
-        self = Wrapped(unicodeScalarLiteral: value)
-    }
-}
-
 public enum XcodeBuild {
 //    static var derivedData: URL {
 //        context.fileManager.temporaryDirectory/"DerivedData"
