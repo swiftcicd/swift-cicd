@@ -30,18 +30,29 @@ public extension Tool {
 }
 
 public final class Tools: ContextAware {
-    private var tools = [String: any Tool.Type]()
+    private struct Entry {
+        let tool: any Tool.Type
+        let installedBySwiftCICD: Bool
+    }
+
+    private var tools = [String: Entry]()
 
     public subscript<T: Tool>(tool: T.Type) -> T.Type {
         get async throws {
             if tools[tool.name] == nil {
+                var installedBySwiftCICD = false
                 if await !tool.isInstalled {
                     context.logger.info("Installing \(tool.name)...")
                     try await tool.install()
+                    installedBySwiftCICD = true
                 } else {
                     context.logger.info("Tool \(tool.name) is already installed")
                 }
-                tools[tool.name] = tool
+
+                tools[tool.name] = Entry(
+                    tool: tool,
+                    installedBySwiftCICD: installedBySwiftCICD
+                )
             }
 
             return tool
@@ -55,14 +66,14 @@ public final class Tools: ContextAware {
 
         context.platform.startLogGroup(named: "Uninstalling tools...")
 
-        for tool in tools.values {
+        for entry in tools.values {
             do {
-                if await tool.isInstalled {
-                    context.logger.info("Uninstalling \(tool.name)")
-                    try await tool.uninstall()
+                if entry.installedBySwiftCICD, await entry.tool.isInstalled {
+                    context.logger.info("Uninstalling \(entry.tool.name)")
+                    try await entry.tool.uninstall()
                 }
             } catch {
-                context.logger.error("Failed to uninstall tool: \(tool.name)")
+                context.logger.error("Failed to uninstall tool: \(entry.tool.name)")
             }
         }
     }
