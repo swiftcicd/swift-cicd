@@ -44,7 +44,7 @@ extension MainAction {
                 await cleanUp(error: nil)
                 await uninstallTools()
                 platform.endLogGroup()
-                print("\(table.textualDescription())")
+                logger.info("\n\(table.textualDescription())")
                 exit(0)
             } catch {
                 let table = context.stack.generateTable(finalActionFailed: true)
@@ -53,7 +53,7 @@ extension MainAction {
                 await cleanUp(error: error)
                 await uninstallTools()
                 platform.endLogGroup()
-                print("\(table.textualDescription())")
+                logger.info("\n\(table.textualDescription())")
                 if let trace {
                     logger.error("\n❌ An error occurred while running action: \(trace)")
                     if let errorLines = errorPreview(from: error) {
