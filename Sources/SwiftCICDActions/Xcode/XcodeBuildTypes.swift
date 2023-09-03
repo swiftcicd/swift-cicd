@@ -6,6 +6,20 @@ public extension Xcode {
         case project(String)
         case workspace(String)
 
+        public var isProject: Bool {
+            switch self {
+            case .project: return true
+            case .workspace: return false
+            }
+        }
+
+        public var isWorkspace: Bool {
+            switch self {
+            case .workspace: return true
+            case .project: return false
+            }
+        }
+
         public var value: String {
             switch self {
             case .project(let project): 

@@ -7,7 +7,6 @@ import SwiftCICDCore
 extension Xcode {
     public struct ExportArchive: Action {
         var container: Xcode.Container?
-        var scheme: String?
         /// Specifies the directory where any created archives will be placed, or the archive that should be exported.
         let archivePath: String
         /// Specifies the destination for the product exported from an archive.
@@ -21,7 +20,6 @@ extension Xcode {
 
         internal init(
             container: Xcode.Container? = nil,
-            scheme: String? = nil,
             archivePath: String,
             exportPath: String? = nil,
             exportOptionsPlist: String,
@@ -30,7 +28,6 @@ extension Xcode {
             xcbeautify: Bool = Xcbeautify.default
         ) {
             self.container = container
-            self.scheme = scheme
             self.archivePath = archivePath
             self.exportPath = exportPath
             self.exportOptionsPlist = exportOptionsPlist
@@ -42,7 +39,6 @@ extension Xcode {
 
         public init(
             project: String? = nil,
-            scheme: String? = nil,
             archivePath: String,
             exportPath: String? = nil,
             exportOptionsPlist: String,
@@ -51,7 +47,6 @@ extension Xcode {
             xcbeautify: Bool = Xcbeautify.default
         ) {
             self.container = project.map { .project($0) }
-            self.scheme = scheme
             self.archivePath = archivePath
             self.exportPath = exportPath
             self.exportOptionsPlist = exportOptionsPlist
@@ -64,7 +59,6 @@ extension Xcode {
         @_disfavoredOverload
         public init(
             workspace: String? = nil,
-            scheme: String? = nil,
             archivePath: String,
             exportPath: String? = nil,
             exportOptionsPlist: String,
@@ -73,7 +67,6 @@ extension Xcode {
             xcbeautify: Bool = Xcbeautify.default
         ) {
             self.container = workspace.map { .workspace($0) }
-            self.scheme = scheme
             self.archivePath = archivePath
             self.exportPath = exportPath
             self.exportOptionsPlist = exportOptionsPlist
@@ -85,7 +78,6 @@ extension Xcode {
 
         internal init(
             container: Xcode.Container? = nil,
-            scheme: String? = nil,
             archivePath: String,
             exportPath: String? = nil,
             exportOptions: XcodeBuild.ExportArchiveOptions,
@@ -99,7 +91,6 @@ extension Xcode {
             Self.context.fileManager.createFile(atPath: plistPath, contents: plist)
             self.init(
                 container: container,
-                scheme: scheme,
                 archivePath: archivePath,
                 exportPath: exportPath,
                 exportOptionsPlist: plistPath,
@@ -117,7 +108,6 @@ extension Xcode {
 
         public init(
             project: String? = nil,
-            scheme: String? = nil,
             archivePath: String,
             exportPath: String? = nil,
             exportOptions: XcodeBuild.ExportArchiveOptions,
@@ -127,7 +117,6 @@ extension Xcode {
         ) throws {
             try self.init(
                 container: project.map { .project($0) },
-                scheme: scheme,
                 archivePath: archivePath,
                 exportPath: exportPath,
                 exportOptions: exportOptions,
@@ -140,7 +129,6 @@ extension Xcode {
         @_disfavoredOverload
         public init(
             workspace: String? = nil,
-            scheme: String? = nil,
             archivePath: String,
             exportPath: String? = nil,
             exportOptions: XcodeBuild.ExportArchiveOptions,
@@ -150,7 +138,6 @@ extension Xcode {
         ) throws {
             try self.init(
                 container: workspace.map { .workspace($0) },
-                scheme: scheme,
                 archivePath: archivePath,
                 exportPath: exportPath,
                 exportOptions: exportOptions,
@@ -164,7 +151,6 @@ extension Xcode {
             let container = try self.container ?? context.xcodeContainer
             var xcodebuild = ShellCommand("xcodebuild -exportArchive -archivePath \(archivePath) -exportOptionsPlist \(exportOptionsPlist)")
             xcodebuild.append(container?.flag)
-            xcodebuild.append("-scheme", ifLet: scheme)
             xcodebuild.append("-allowProvisioningUpdates", if: allowProvisioningUpdates)
             xcodebuild.append("-exportPath", ifLet: exportPath)
 
@@ -203,7 +189,6 @@ public extension Xcode {
     internal func exportArchive(
         _ archivePath: String,
         container: Xcode.Container? = nil,
-        scheme: String? = nil,
         to exportPath: String? = nil,
         allowProvisioningUpdates: Bool,
         optionsPlist: String,
@@ -213,7 +198,6 @@ public extension Xcode {
         try await run(
             ExportArchive(
                 container: container,
-                scheme: scheme,
                 archivePath: archivePath,
                 exportPath: exportPath,
                 exportOptionsPlist: optionsPlist,
@@ -227,7 +211,6 @@ public extension Xcode {
     func exportArchive(
         _ archivePath: String,
         project: String? = nil,
-        scheme: String? = nil,
         to exportPath: String? = nil,
         allowProvisioningUpdates: Bool,
         optionsPlist: String,
@@ -237,7 +220,6 @@ public extension Xcode {
         try await run(
             ExportArchive(
                 project: project,
-                scheme: scheme,
                 archivePath: archivePath,
                 exportPath: exportPath,
                 exportOptionsPlist: optionsPlist,
@@ -252,7 +234,6 @@ public extension Xcode {
     func exportArchive(
         _ archivePath: String,
         workspace: String? = nil,
-        scheme: String? = nil,
         to exportPath: String? = nil,
         allowProvisioningUpdates: Bool,
         optionsPlist: String,
@@ -262,7 +243,6 @@ public extension Xcode {
         try await run(
             ExportArchive(
                 workspace: workspace,
-                scheme: scheme,
                 archivePath: archivePath,
                 exportPath: exportPath,
                 exportOptionsPlist: optionsPlist,
@@ -276,7 +256,6 @@ public extension Xcode {
     internal func exportArchive(
         _ archivePath: String,
         container: Xcode.Container? = nil,
-        scheme: String? = nil,
         to exportPath: String? = nil,
         allowProvisioningUpdates: Bool,
         options: XcodeBuild.ExportArchiveOptions,
@@ -286,7 +265,6 @@ public extension Xcode {
         try await run(
             ExportArchive(
                 container: container,
-                scheme: scheme,
                 archivePath: archivePath,
                 exportPath: exportPath,
                 exportOptions: options,
@@ -300,7 +278,6 @@ public extension Xcode {
     func exportArchive(
         _ archivePath: String,
         project: String? = nil,
-        scheme: String? = nil,
         to exportPath: String? = nil,
         allowProvisioningUpdates: Bool,
         options: XcodeBuild.ExportArchiveOptions,
@@ -310,7 +287,6 @@ public extension Xcode {
         try await run(
             ExportArchive(
                 project: project,
-                scheme: scheme,
                 archivePath: archivePath,
                 exportPath: exportPath,
                 exportOptions: options,
@@ -325,7 +301,6 @@ public extension Xcode {
     func exportArchive(
         _ archivePath: String,
         workspace: String? = nil,
-        scheme: String? = nil,
         to exportPath: String? = nil,
         allowProvisioningUpdates: Bool,
         options: XcodeBuild.ExportArchiveOptions,
@@ -335,7 +310,6 @@ public extension Xcode {
         try await run(
             ExportArchive(
                 workspace: workspace,
-                scheme: scheme,
                 archivePath: archivePath,
                 exportPath: exportPath,
                 exportOptions: options,
