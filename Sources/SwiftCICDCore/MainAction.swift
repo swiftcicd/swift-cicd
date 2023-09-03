@@ -53,6 +53,7 @@ extension MainAction {
                 await cleanUp(error: error)
                 await uninstallTools()
                 platform.endLogGroup()
+                print("\(table.textualDescription())")
                 if let trace {
                     logger.error("\n❌ An error occurred while running action: \(trace)")
                     if let errorLines = errorPreview(from: error) {
@@ -64,7 +65,6 @@ extension MainAction {
                         )
                     }
                 }
-                print("\(table.textualDescription())")
                 exit(1)
             }
         }
