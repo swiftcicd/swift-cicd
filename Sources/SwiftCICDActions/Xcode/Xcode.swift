@@ -60,13 +60,15 @@ public extension ContextValues {
     internal func getDefaultXcodeContainer() throws -> Xcode.Container? {
         let workingDirectory = try self.workingDirectory
         let contents = try fileManager.contentsOfDirectory(atPath: workingDirectory)
-        
-        // Check for a workspace first.
-        // Usually if both a workspace and a project exist, the workspace is the intended result.
-        if let workspace = contents.first(where: { $0.hasSuffix(".xcworkspace") }) {
-            return .workspace(workingDirectory/workspace)
-        } else if let project = contents.first(where: { $0.hasSuffix(".xcodeproj") }) {
+
+        // Check for project first, even if there is a workspace present.
+        // There are actions that require a project over a workspace, such as exporting an archive.
+        // Defaulting to project will allow these actions to run smoothly even if the user didn't specify
+        // an explict Xcode Container.
+        if let project = contents.first(where: { $0.hasSuffix(".xcodeproj") }) {
             return .project(workingDirectory/project)
+        } else if let workspace = contents.first(where: { $0.hasSuffix(".xcworkspace") }) {
+            return .workspace(workingDirectory/workspace)
         }
 
         return nil
