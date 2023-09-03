@@ -148,6 +148,20 @@ extension Xcode {
         }
 
         public func run() async throws {
+            guard context.fileManager.fileExists(atPath: archivePath) else {
+                throw ActionError(
+                    """
+                    No archive found at \(archivePath)
+
+                    Did you forget to run Xcode.Build with an archivePath (or run xcode.archive(...))?
+
+                    If you ran Xcode.ArchiveExportUpload and encounter this error, it may because the \
+                    internal archive step failed gracefully. Please check the logs to see if there are \
+                    any errors that you can resolve on your own. If not, please submit an issue.
+                    """
+                )
+            }
+
             let container = try self.container ?? context.xcodeContainer
             var xcodebuild = ShellCommand("xcodebuild -exportArchive -archivePath \(archivePath) -exportOptionsPlist \(exportOptionsPlist)")
             try xcodebuild.append(container?.flag)
