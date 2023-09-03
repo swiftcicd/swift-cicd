@@ -98,6 +98,6 @@ extension ActionStack {
 
 public extension ContextValues {
     func inherit<A>(_ action: A.Type) -> A? {
-        action as? A ?? stack.inherit(action)
+        stack.inherit(action)
     }
 }
