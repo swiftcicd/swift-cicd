@@ -134,10 +134,7 @@ extension Xcode {
             let buildShortVersion = try buildSettings.require(.version)
 
             // Look up the app on App Store Connect early so this step can fail early without performing other steps just to fail.
-            let apps = try await context.appStoreConnectAPI.getApps(key: appStoreConnectKey)
-            guard let app = apps.first(where: { $0.attributes.bundleId == bundleID }) else {
-                throw ActionError("No app with bundle id \(bundleID) found on App Store Connect. Either the bundle id isn't correct or the app hasn't been created on App Store Connect yet.")
-            }
+            let app = try await context.appStoreConnectAPI.getApp(bundleID: bundleID, key: appStoreConnectKey)
 
             var overrideProjectVersion: String?
             switch buildNumberStrategy {
