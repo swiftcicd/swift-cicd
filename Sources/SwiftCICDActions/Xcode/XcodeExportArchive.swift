@@ -6,7 +6,6 @@ import SwiftCICDCore
 
 extension Xcode {
     public struct ExportArchive: Action {
-        var container: Xcode.Container?
         /// Specifies the directory where any created archives will be placed, or the archive that should be exported.
         let archivePath: String
         /// Specifies the destination for the product exported from an archive.
@@ -18,8 +17,7 @@ extension Xcode {
         var isExportOptionsSynthesized: Bool
         let xcbeautify: Bool
 
-        internal init(
-            container: Xcode.Container? = nil,
+        public init(
             archivePath: String,
             exportPath: String? = nil,
             exportOptionsPlist: String,
@@ -27,7 +25,6 @@ extension Xcode {
             appStoreConnectKey: AppStoreConnect.Key? = nil,
             xcbeautify: Bool = Xcbeautify.default
         ) {
-            self.container = container
             self.archivePath = archivePath
             self.exportPath = exportPath
             self.exportOptionsPlist = exportOptionsPlist
@@ -38,46 +35,6 @@ extension Xcode {
         }
 
         public init(
-            project: String? = nil,
-            archivePath: String,
-            exportPath: String? = nil,
-            exportOptionsPlist: String,
-            allowProvisioningUpdates: Bool,
-            appStoreConnectKey: AppStoreConnect.Key? = nil,
-            xcbeautify: Bool = Xcbeautify.default
-        ) {
-            self.container = project.map { .project($0) }
-            self.archivePath = archivePath
-            self.exportPath = exportPath
-            self.exportOptionsPlist = exportOptionsPlist
-            self.allowProvisioningUpdates = allowProvisioningUpdates
-            self.appStoreConnectKey = appStoreConnectKey
-            self.isExportOptionsSynthesized = false
-            self.xcbeautify = xcbeautify
-        }
-
-        @_disfavoredOverload
-        public init(
-            workspace: String? = nil,
-            archivePath: String,
-            exportPath: String? = nil,
-            exportOptionsPlist: String,
-            allowProvisioningUpdates: Bool,
-            appStoreConnectKey: AppStoreConnect.Key? = nil,
-            xcbeautify: Bool = Xcbeautify.default
-        ) {
-            self.container = workspace.map { .workspace($0) }
-            self.archivePath = archivePath
-            self.exportPath = exportPath
-            self.exportOptionsPlist = exportOptionsPlist
-            self.allowProvisioningUpdates = allowProvisioningUpdates
-            self.appStoreConnectKey = appStoreConnectKey
-            self.isExportOptionsSynthesized = false
-            self.xcbeautify = xcbeautify
-        }
-
-        internal init(
-            container: Xcode.Container? = nil,
             archivePath: String,
             exportPath: String? = nil,
             exportOptions: XcodeBuild.ExportArchiveOptions,
@@ -90,7 +47,6 @@ extension Xcode {
             let plistPath = temporaryDirectory/"exportOptions.plist"
             Self.context.fileManager.createFile(atPath: plistPath, contents: plist)
             self.init(
-                container: container,
                 archivePath: archivePath,
                 exportPath: exportPath,
                 exportOptionsPlist: plistPath,
@@ -104,47 +60,6 @@ extension Xcode {
             Created export options files from options:
             \(exportOptions)
             """)
-        }
-
-        public init(
-            project: String? = nil,
-            archivePath: String,
-            exportPath: String? = nil,
-            exportOptions: XcodeBuild.ExportArchiveOptions,
-            allowProvisioningUpdates: Bool,
-            appStoreConnectKey: AppStoreConnect.Key? = nil,
-            xcbeautify: Bool = Xcbeautify.default
-        ) throws {
-            try self.init(
-                container: project.map { .project($0) },
-                archivePath: archivePath,
-                exportPath: exportPath,
-                exportOptions: exportOptions,
-                allowProvisioningUpdates: allowProvisioningUpdates,
-                appStoreConnectKey: appStoreConnectKey,
-                xcbeautify: xcbeautify
-            )
-        }
-
-        @_disfavoredOverload
-        public init(
-            workspace: String? = nil,
-            archivePath: String,
-            exportPath: String? = nil,
-            exportOptions: XcodeBuild.ExportArchiveOptions,
-            allowProvisioningUpdates: Bool,
-            appStoreConnectKey: AppStoreConnect.Key? = nil,
-            xcbeautify: Bool = Xcbeautify.default
-        ) throws {
-            try self.init(
-                container: workspace.map { .workspace($0) },
-                archivePath: archivePath,
-                exportPath: exportPath,
-                exportOptions: exportOptions,
-                allowProvisioningUpdates: allowProvisioningUpdates,
-                appStoreConnectKey: appStoreConnectKey,
-                xcbeautify: xcbeautify
-            )
         }
 
         public func run() async throws {
@@ -165,10 +80,7 @@ extension Xcode {
                 )
             }
 
-            let container = try self.container ?? context.xcodeContainer
             var xcodebuild = ShellCommand("xcodebuild -exportArchive -archivePath \(archivePath) -exportOptionsPlist \(exportOptionsPlist)")
-            try xcodebuild.append(container?.flag)
-            xcodebuild.append("-scheme seer-mobile")
             xcodebuild.append("-allowProvisioningUpdates", if: allowProvisioningUpdates)
             xcodebuild.append("-exportPath", ifLet: exportPath)
 
@@ -204,9 +116,8 @@ extension Xcode {
 }
 
 public extension Xcode {
-    internal func exportArchive(
+    func exportArchive(
         _ archivePath: String,
-        container: Xcode.Container? = nil,
         to exportPath: String? = nil,
         allowProvisioningUpdates: Bool,
         optionsPlist: String,
@@ -215,7 +126,6 @@ public extension Xcode {
     ) async throws {
         try await run(
             ExportArchive(
-                container: container,
                 archivePath: archivePath,
                 exportPath: exportPath,
                 exportOptionsPlist: optionsPlist,
@@ -227,51 +137,6 @@ public extension Xcode {
     }
 
     func exportArchive(
-        _ archivePath: String,
-        project: String? = nil,
-        to exportPath: String? = nil,
-        allowProvisioningUpdates: Bool,
-        optionsPlist: String,
-        appStoreConnectKey: AppStoreConnect.Key? = nil,
-        xcbeautify: Bool = Xcbeautify.default
-    ) async throws {
-        try await run(
-            ExportArchive(
-                project: project,
-                archivePath: archivePath,
-                exportPath: exportPath,
-                exportOptionsPlist: optionsPlist,
-                allowProvisioningUpdates: allowProvisioningUpdates,
-                appStoreConnectKey: appStoreConnectKey,
-                xcbeautify: xcbeautify
-            )
-        )
-    }
-
-    @_disfavoredOverload
-    func exportArchive(
-        _ archivePath: String,
-        workspace: String? = nil,
-        to exportPath: String? = nil,
-        allowProvisioningUpdates: Bool,
-        optionsPlist: String,
-        appStoreConnectKey: AppStoreConnect.Key? = nil,
-        xcbeautify: Bool = Xcbeautify.default
-    ) async throws {
-        try await run(
-            ExportArchive(
-                workspace: workspace,
-                archivePath: archivePath,
-                exportPath: exportPath,
-                exportOptionsPlist: optionsPlist,
-                allowProvisioningUpdates: allowProvisioningUpdates,
-                appStoreConnectKey: appStoreConnectKey,
-                xcbeautify: xcbeautify
-            )
-        )
-    }
-
-    internal func exportArchive(
         _ archivePath: String,
         container: Xcode.Container? = nil,
         to exportPath: String? = nil,
@@ -282,52 +147,6 @@ public extension Xcode {
     ) async throws {
         try await run(
             ExportArchive(
-                container: container,
-                archivePath: archivePath,
-                exportPath: exportPath,
-                exportOptions: options,
-                allowProvisioningUpdates: allowProvisioningUpdates,
-                appStoreConnectKey: appStoreConnectKey,
-                xcbeautify: xcbeautify
-            )
-        )
-    }
-
-    func exportArchive(
-        _ archivePath: String,
-        project: String? = nil,
-        to exportPath: String? = nil,
-        allowProvisioningUpdates: Bool,
-        options: XcodeBuild.ExportArchiveOptions,
-        appStoreConnectKey: AppStoreConnect.Key? = nil,
-        xcbeautify: Bool = Xcbeautify.default
-    ) async throws {
-        try await run(
-            ExportArchive(
-                project: project,
-                archivePath: archivePath,
-                exportPath: exportPath,
-                exportOptions: options,
-                allowProvisioningUpdates: allowProvisioningUpdates,
-                appStoreConnectKey: appStoreConnectKey,
-                xcbeautify: xcbeautify
-            )
-        )
-    }
-
-    @_disfavoredOverload
-    func exportArchive(
-        _ archivePath: String,
-        workspace: String? = nil,
-        to exportPath: String? = nil,
-        allowProvisioningUpdates: Bool,
-        options: XcodeBuild.ExportArchiveOptions,
-        appStoreConnectKey: AppStoreConnect.Key? = nil,
-        xcbeautify: Bool = Xcbeautify.default
-    ) async throws {
-        try await run(
-            ExportArchive(
-                workspace: workspace,
                 archivePath: archivePath,
                 exportPath: exportPath,
                 exportOptions: options,
