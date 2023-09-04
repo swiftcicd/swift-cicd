@@ -168,6 +168,7 @@ extension Xcode {
             let container = try self.container ?? context.xcodeContainer
             var xcodebuild = ShellCommand("xcodebuild -exportArchive -archivePath \(archivePath) -exportOptionsPlist \(exportOptionsPlist)")
             try xcodebuild.append(container?.flag)
+            xcodebuild.append("-scheme seer-mobile")
             xcodebuild.append("-allowProvisioningUpdates", if: allowProvisioningUpdates)
             xcodebuild.append("-exportPath", ifLet: exportPath)
 
