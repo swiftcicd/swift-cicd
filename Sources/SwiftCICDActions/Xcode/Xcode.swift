@@ -74,7 +74,7 @@ public extension ContextValues {
         }
 
         if containers.isEmpty {
-            logger.info(
+            logger.notice(
                 """
                 There wasn't an Xcode container (either an .xcodeproj or an .xcworkspace) at \
                 the root of the working directory. Please specify an Xcode container either by \
@@ -88,7 +88,7 @@ public extension ContextValues {
             let projects = containers.filter(\.isProject)
 
             if workspaces.count == 0 {
-                logger.info(
+                logger.notice(
                     """
                     Multiple .xcodeproj files were found at the root of the working directory. \
                     Please specify which .xcodeproj to use by making your main action conform to \
@@ -100,7 +100,7 @@ public extension ContextValues {
             } else if workspaces.count == 1 {
                 // Prefer workspaces over projects. 
                 // Normally, if both are present, the workspace is the intended container.
-                logger.info(
+                logger.notice(
                     """
                     Multiple Xcode containers (either an .xcodeproj or an .xcworkspace) were found at \
                     the root of the working directory. There was only one .xcworkspace (\(workspaces[0])) \
@@ -109,7 +109,7 @@ public extension ContextValues {
                 )
                 return workspaces[0]
             } else {
-                logger.info(
+                logger.notice(
                     """
                     Multiple .xcodeproj and .xcworkspaces were found at the root of the working directory. \
                     Please specify which one to use by making your main action conform to `XcodeAction` and \
