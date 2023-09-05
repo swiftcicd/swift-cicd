@@ -39,6 +39,15 @@ public extension Xcode {
             }
         }
 
+        public var name: String {
+            switch self {
+            case .project(let project):
+                return project
+            case .workspace(let workspace):
+                return workspace
+            }
+        }
+
         public var flag: ShellCommand.Component {
             get throws {
                 let path = try self.path

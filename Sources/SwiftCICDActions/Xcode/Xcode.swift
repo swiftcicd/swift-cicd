@@ -103,7 +103,7 @@ public extension ContextValues {
                 logger.notice(
                     """
                     Multiple Xcode containers (either an .xcodeproj or an .xcworkspace) were found at \
-                    the root of the working directory. There was only one .xcworkspace (\(workspaces[0])) \
+                    the root of the working directory. There was only one .xcworkspace (\(workspaces[0].name)) \
                     which will be used by default.
                     """
                 )
