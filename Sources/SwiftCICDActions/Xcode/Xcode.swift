@@ -63,16 +63,63 @@ public extension ContextValues {
         let workingDirectory = try self.workingDirectory
         let contents = try fileManager.contentsOfDirectory(atPath: workingDirectory)
 
-        // Check for project first, even if there is a workspace present.
-        // There are actions that require a project over a workspace, such as exporting an archive.
-        // Defaulting to project will allow these actions to run smoothly even if the user didn't specify
-        // an explict Xcode Container.
-        if let project = contents.first(where: { $0.hasSuffix(".xcodeproj") }) {
-            return .project(workingDirectory/project)
-        } else if let workspace = contents.first(where: { $0.hasSuffix(".xcworkspace") }) {
-            return .workspace(workingDirectory/workspace)
+        let containers = contents.compactMap { file -> Xcode.Container? in
+            if file.hasSuffix(".xcodeproj") {
+                return .project(file)
+            } else if file.hasSuffix(".xcworkspace") {
+                return .workspace(file)
+            } else {
+                return nil
+            }
         }
 
-        return nil
+        if containers.isEmpty {
+            logger.info(
+                """
+                There wasn't an Xcode container (either an .xcodeproj or an .xcworkspace) at \
+                the root of the working directory. Please specify an Xcode container either by \
+                making your main action conform to `XcodeAction` and return one from `xcodeContainer` \
+                or pass the container to the action you're trying to run.
+                """
+            )
+            return nil
+        } else if containers.count > 1 {
+            let workspaces = containers.filter(\.isWorkspace)
+            let projects = containers.filter(\.isProject)
+
+            if workspaces.count == 0 {
+                logger.info(
+                    """
+                    Multiple .xcodeproj files were found at the root of the working directory. \
+                    Please specify which .xcodeproj to use by making your main action conform to \
+                    `XcodeAction` and return one from `xcodeContainer` or pass the project to the \
+                    action you're trying to run.
+                    """
+                )
+                return nil
+            } else if workspaces.count == 1 {
+                // Prefer workspaces over projects. 
+                // Normally, if both are present, the workspace is the intended container.
+                logger.info(
+                    """
+                    Multiple Xcode containers (either an .xcodeproj or an .xcworkspace) were found at \
+                    the root of the working directory. There was only one .xcworkspace (\(workspaces[0])) \
+                    which will be used by default.
+                    """
+                )
+                return workspaces[0]
+            } else {
+                logger.info(
+                    """
+                    Multiple .xcodeproj and .xcworkspaces were found at the root of the working directory. \
+                    Please specify which one to use by making your main action conform to `XcodeAction` and \
+                    return one from `xcodeContainer` or pass one to the action you're trying to run.
+                    """
+                )
+                return nil
+            }
+        } else {
+            return containers[0]
+        }
     }
 }
