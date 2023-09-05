@@ -57,7 +57,7 @@ extension Xcode {
             self.isExportOptionsSynthesized = true
 
             logger.debug("""
-            Created export options files from options:
+            Created export options file from options:
             \(exportOptions)
             """)
         }
