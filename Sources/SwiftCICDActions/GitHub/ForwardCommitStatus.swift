@@ -27,7 +27,7 @@ extension GitHub {
         }
 
         public func run() async throws {
-            guard let latestCommitSHA = try await git.latestCommitSHA else {
+            guard let latestCommitSHA = try await context.git.latestCommitSHA else {
                 throw ActionError("Couldn't get latest commit sha")
             }
 
