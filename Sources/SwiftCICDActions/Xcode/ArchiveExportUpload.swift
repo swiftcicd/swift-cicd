@@ -206,7 +206,16 @@ extension Xcode {
                     // As a workaround, we'll upload using the UploadToAppStoreConnect step (uses altool as of now.)
                     export: .appStore(uploadToAppStore: false),
                     // TODO: We should be able to derive the the bundle id and profile uuid somehow
-                    signing: .manual(provisioningProfiles: [bundleID: profile.uuid]),
+                    signing: .manual(provisioningProfiles: [
+                        bundleID: profile.uuid,
+
+                        // TODO: Do we need to specify the app clip's bundle identifier and provisioning profile in order for it to be picked up here?
+                        // How would we detect that an app has an app clip? I think it's probably the wrong move to open the .ipa and check if there's an AppClips directory.
+                        // https://developer.apple.com/documentation/bundleresources/entitlements/com_apple_developer_parent-application-identifiers
+                        // https://developer.apple.com/documentation/bundleresources/entitlements/com_apple_developer_associated-appclip-app-identifiers
+                        // https://developer.apple.com/documentation/bundleresources/entitlements/com_apple_developer_on-demand-install-capable
+
+                    ]),
                     teamID: profile.requireTeamIdentifier()
                 ),
                 appStoreConnectKey: appStoreConnectKey,
