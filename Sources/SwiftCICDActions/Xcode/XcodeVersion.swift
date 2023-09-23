@@ -13,7 +13,12 @@ extension Xcode {
         }
 
         public func run() async throws {
-            try await shell("xcversion select \(version)")
+            do {
+                try await shell("xcversion select \(version)")
+            } catch {
+                try await shell("xcversion installed")
+                throw error
+            }
         }
     }
 }
