@@ -56,6 +56,11 @@ extension Xcode {
                     throw ActionError("There isn't a version of Xcode installed that satisfies the condition. Installed versions:\n\(installed)")
                 }
 
+                if newerOrSame != version {
+                    logger.info("There is a newer version of Xcode installed than the one specified. Selecting Xcode \(newerOrSame.versionString())")
+                    logger.info("Installed versions:\n\(versions.map { $0.versionString() }.joined(separator: "\n"))")
+                }
+
                 try await selectExact(version: newerOrSame)
             }
         }
