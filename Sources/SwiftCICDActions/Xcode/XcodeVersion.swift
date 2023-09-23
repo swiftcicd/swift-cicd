@@ -146,12 +146,12 @@ private struct Version: Equatable, Comparable {
     }
 
     static func < (lhs: Self, rhs: Self) -> Bool {
-        if lhs.major < rhs.major {
-            return true
-        } else if lhs.minor < rhs.minor {
-            return true
+        if lhs.major > rhs.major {
+            return false
+        } else if lhs.minor > rhs.minor {
+            return false
         } else {
-            return lhs.patch < lhs.patch
+            return lhs.patch < rhs.patch
         }
     }
 }
