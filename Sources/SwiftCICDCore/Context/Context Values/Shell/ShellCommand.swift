@@ -88,6 +88,18 @@ extension ShellCommand {
                     appendInterpolation(argument, escapingWith: escapeStyle)
                 }
             }
+
+            public mutating func appendInterpolation(_ option: StaticString, if condition: Bool) {
+                if condition {
+                    output.append(" \(option)")
+                } else if output.hasSuffix(" ") {
+                    // Because of the way that this particular interpolation will often be formed:
+                    // e.g.: `"some command \("--flag", if: useFlag)"`
+                    // there may be an extra space (' ') at the end of the command when the condition is false.
+                    // We should trim that trailing space in that case.
+                    output = String(output.dropLast(1))
+                }
+            }
         }
 
         public let value: String

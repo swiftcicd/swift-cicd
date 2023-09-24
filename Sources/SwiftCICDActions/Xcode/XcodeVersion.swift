@@ -1,68 +1,28 @@
 import SwiftCICDCore
 
-// https://github.com/xcpretty/xcode-install
-
 extension Xcode {
     public struct Select: Action {
         public let name = "Select Xcode Version"
 
-        private enum Strategy {
-            case exact(Version)
-            case from(Version)
-        }
+        private let version: String
 
-        private let strategy: Strategy
 
         public init(_ version: String) throws {
-            strategy = try .exact(Version(version))
-        }
-
-        public init(from version: String) throws {
-            strategy = try .from(Version(version))
+            self.version = version
         }
 
         public func run() async throws {
-            switch strategy {
-            case .exact(let version):
-                try await selectExact(version: version)
+            // Opting to use `xcodes` instead of just `xcode-select -s` so that
+            // users can just specify a version of Xcode instead of a path.
 
-            case .from(let version):
-                try await selectFrom(version: version)
+            let xcodes = try await context.tools.xcodes
+            let isInstalled = try await xcodes.isVersionInstalled(version)
+            guard isInstalled else {
+                let installedVersions = try await xcodes.listInstalledVersions()
+                throw ActionError("Xcode \(version) is not installed. Available installations are:\n\(installedVersions)")
             }
-        }
 
-        private func selectExact(version: Version) async throws {
-            do {
-                try await shell("xcversion select \(version.versionString())")
-            } catch {
-                logger.info("Installed versions:")
-                try await shell("xcversion installed")
-                throw error
-            }
-        }
-
-        private func selectFrom(version: Version) async throws {
-            do {
-                try await shell("xcversion select \(version.versionString())")
-            } catch {
-                let installed = try await shell("xcversion installed", log: false)
-                let versions = installed
-                    .components(separatedBy: "\n")
-                    .map { String($0.prefix { !$0.isWhitespace }) }
-                    .compactMap { try? Version($0) }
-                    .sorted(by: >)
-
-                guard let newerOrSame = versions.first(where: { $0 >= version }) else {
-                    throw ActionError("There isn't a version of Xcode installed that satisfies the condition. Installed versions:\n\(installed)")
-                }
-
-                if newerOrSame != version {
-                    logger.info("There is a newer version of Xcode installed than the one specified. Selecting Xcode \(newerOrSame.versionString())")
-                    logger.info("Installed versions:\n\(versions.map { $0.versionString() }.joined(separator: "\n"))")
-                }
-
-                try await selectExact(version: newerOrSame)
-            }
+            try await xcodes.select(version)
         }
     }
 }
@@ -71,87 +31,70 @@ extension Xcode {
     public func select(_ version: String) async throws {
         try await run(Select(version))
     }
-
-    public func select(from version: String) async throws {
-        try await run(Select(from: version))
-    }
 }
 
-public enum XcodeVersionError: Error {
-    case invalidVersionString(String)
-}
+// Using `xcodes install` on a CI machine doesn't work because Apple requires a 2FA code.
+// There are potential solutions to this by following what fastlane outlines here: https://docs.fastlane.tools/getting-started/ios/authentication/
+// If we can figure out a way to do something similar to what fastlane spaceship is doing with storing
+// an authenticated cookie and then injecting it into the calls to download Xcode inside of xcodes then
+// we could potentially restore this functionality:
 
-/// A simple, extremely naive semantic version.
-private struct Version: Equatable, Comparable {
-    let major: Int
-    let minor: Int
-    let patch: Int
+// Inside Xcode.Select:
+//        private let installCredentials: InstallCredentials?
+//
+//        public struct InstallCredentials {
+//            let appleID: String
+//            let password: Secret
+//            let useExperimentalUnxip: Bool
+//
+//            public init(appleID: String, password: Secret, useExperimentalUnxip: Bool = false) {
+//                self.appleID = appleID
+//                self.password = password
+//                self.useExperimentalUnxip = useExperimentalUnxip
+//            }
+//        }
+//        public init(_ version: String, installIfNeededUsing installCredentials: InstallCredentials? = nil) throws {
+//            self.version = version
+//            self.installCredentials = installCredentials
+//        }
+//
+//        public func run() async throws {
+//            let xcodes = try await context.tools.xcodes
+//
+//            let isInstalled = try await xcodes.isVersionInstalled(version)
+//            if !isInstalled {
+//                logger.warning("Xcode \(version) is not installed.")
+//                let installedVersions = try await xcodes.listInstalledVersions()
+//                logger.warning("Available installations are:\n\(installedVersions)")
+//
+//                guard let installCredentials else {
+//                    throw ActionError("""
+//                        Xcode \(version) is not installed and can't be selected. Try passing InstallCredentials \
+//                        to this action to install that version of Xcode if it's available.
+//                        """
+//                    )
+//                }
+//
+//                if try await !xcodes.isVersionListed(version) {
+//                    logger.warning("Xcode \(version) isn't listed as available to install. Will attempt to install regardless.")
+//                }
+//
+//                logger.info("Attempting to install Xcode \(version)")
+//                try await xcodes.install(
+//                    version,
+//                    appleID: installCredentials.appleID,
+//                    password: installCredentials.password,
+//                    useExperimentalUnxip: installCredentials.useExperimentalUnxip
+//                )
+//            }
+//
+//            try await xcodes.select(version)
+//        }
 
-    enum TrimOptions: Hashable {
-        case minor
-        case patch
-    }
-
-    var fullVersionString: String {
-        "\(major).\(minor).\(patch)"
-    }
-
-    func versionString(trimmingZeroes options: Set<TrimOptions> = [.patch]) -> String {
-        var string = "\(major)"
-        
-        if minor > 0 || !options.contains(.minor) {
-            string.append(".\(minor)")
-        }
-
-        if patch > 0 || !options.contains(.patch) {
-            string.append(".\(patch)")
-        }
-
-        return string
-    }
-
-    init(major: Int, minor: Int, patch: Int) {
-        self.major = major
-        self.minor = minor
-        self.patch = patch
-    }
-
-    init(_ string: String) throws {
-        let components = string.components(separatedBy: ".")
-        var ints = components.compactMap(Int.init).filter { $0 >= 0 }
-
-        guard components.count == ints.count else {
-            throw XcodeVersionError.invalidVersionString(string)
-        }
-
-        switch ints.count {
-        case 3:
-            major = ints[0]
-            minor = ints[1]
-            patch = ints[2]
-
-        case 2:
-            major = ints[0]
-            minor = ints[1]
-            patch = 0
-
-        case 1:
-            major = ints[0]
-            minor = 0
-            patch = 0
-
-        default:
-            throw XcodeVersionError.invalidVersionString(string)
-        }
-    }
-
-    static func < (lhs: Self, rhs: Self) -> Bool {
-        if lhs.major != rhs.major {
-            return lhs.major < rhs.major
-        } else if lhs.minor != rhs.minor {
-            return lhs.minor < rhs.minor
-        } else {
-            return lhs.patch < rhs.patch
-        }
-    }
-}
+// Action extension:
+//    public func select(
+//        _ version: String,
+//        installIfNeededUsing installCredentials: Xcode.Select.InstallCredentials? = nil
+//    ) async throws {
+//        try await run(Select(version, installIfNeededUsing: installCredentials))
+//    }

@@ -34,6 +34,7 @@ public struct Shell {
     @discardableResult
     public func callAsFunction(
         _ command: ShellCommand,
+        environment: [String: String] = [:],
         shell: String = Shell.default,
         log: Bool = true,
         quiet: Bool = false
@@ -47,6 +48,7 @@ public struct Shell {
         task.executableURL = URL(filePathCompat: shell)
         task.arguments = ["--login", "-c", command.command]
         task.environment = ProcessInfo.processInfo.environment
+            .merging(environment, uniquingKeysWith: { process, input in input })
 
         let outputPipe = Pipe()
         task.standardOutput = outputPipe
@@ -75,6 +77,7 @@ public struct Shell {
     @discardableResult
     public func callAsFunction(
         _ command: ShellCommand,
+        environment: [String: String] = [:],
         shell: String = Shell.default,
         log: Bool = true,
         quiet: Bool = false
@@ -126,12 +129,12 @@ extension ContextValues {
 public extension Action {
     @_disfavoredOverload
     @discardableResult
-    func shell(_ command: ShellCommand, shell: String = Shell.default, log: Bool = true, quiet: Bool = false) async throws -> Data {
-        try await context.shell(command, log: log, quiet: quiet)
+    func shell(_ command: ShellCommand, environment: [String: String] = [:], shell: String = Shell.default, log: Bool = true, quiet: Bool = false) async throws -> Data {
+        try await context.shell(command, environment: environment, log: log, quiet: quiet)
     }
 
     @discardableResult
-    func shell(_ command: ShellCommand, shell: String = Shell.default, log: Bool = true, quiet: Bool = false) async throws -> String {
-        try await context.shell(command, log: log, quiet: quiet)
+    func shell(_ command: ShellCommand, environment: [String: String] = [:], shell: String = Shell.default, log: Bool = true, quiet: Bool = false) async throws -> String {
+        try await context.shell(command, environment: environment, log: log, quiet: quiet)
     }
 }

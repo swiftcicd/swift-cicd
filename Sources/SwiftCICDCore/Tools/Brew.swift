@@ -1,4 +1,4 @@
-public struct Brew: Tool {
+public enum Brew: Tool {
     public static let name = "brew"
 
     public static func install() async throws {
@@ -19,6 +19,10 @@ public struct Brew: Tool {
     public static func install(_ package: String) async throws {
         try await context.shell("brew install \(package)")
     }
+
+    public static func uninstall(_ package: String) async throws {
+        try await context.shell("brew uninstall \(package)")
+    }
 }
 
 public extension Tools {
@@ -26,5 +30,29 @@ public extension Tools {
         get async throws {
             try await self[Brew.self]
         }
+    }
+}
+
+public protocol BrewPackage: ContextAware {
+    static var formula: String { get }
+}
+
+public extension BrewPackage {
+    static func installFormula() async throws {
+        try await context.tools.brew.install(formula)
+    }
+
+    static func uninstallFormula() async throws {
+        try await context.tools.brew.uninstall(formula)
+    }
+}
+
+public extension BrewPackage where Self: Tool {
+    static func install() async throws {
+        try await installFormula()
+    }
+
+    static func uninstall() async throws {
+        try await uninstallFormula()
     }
 }
