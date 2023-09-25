@@ -6,8 +6,7 @@ extension Xcode {
 
         private let version: String
 
-
-        public init(_ version: String) throws {
+        public init(version: String) {
             self.version = version
         }
 
@@ -28,8 +27,8 @@ extension Xcode {
 }
 
 extension Xcode {
-    public func select(_ version: String) async throws {
-        try await run(Select(version))
+    public func select(version: String) async throws {
+        try await run(Select(version: version))
     }
 }
 
