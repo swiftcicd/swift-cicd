@@ -2,9 +2,9 @@ import Foundation
 import SwiftCICDCore
 
 // TODO: Make the export available in Xcode Organizer
-// TODO: Automatically detect project, schemes, etc.
 
 extension Xcode {
+    /// - Important: Run ``Xcode/Build`` with `configuration: .release` and a `.generic` `destination` before running this step.
     public struct ExportArchive: Action {
         /// Specifies the directory where any created archives will be placed, or the archive that should be exported.
         let archivePath: String
