@@ -2,8 +2,8 @@ import SwiftCICDCore
 import RegexBuilder
 
 extension Xcode {
-    public struct OutputVersion: Action {
-        public let name = "Output Xcode Version"
+    public struct Info: Action {
+        public let name = "Current Xcode Info"
 
         public struct Output {
             public let version: String
@@ -52,7 +52,8 @@ extension String {
 }
 
 public extension Xcode {
-    func outputVersion() async throws -> OutputVersion.Output {
-        try await run(OutputVersion())
+    @discardableResult
+    func outputInfo() async throws -> Info.Output {
+        try await run(Info())
     }
 }

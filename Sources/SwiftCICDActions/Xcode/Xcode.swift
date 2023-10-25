@@ -2,6 +2,7 @@ import SwiftCICDCore
 
 /// Namespace for Xcode actions.
 public struct Xcode: ActionNamespace {
+    private static var hasOutputXcodeInfo = false
     public let caller: any Action
 
     public var container: Container? {
@@ -12,6 +13,18 @@ public struct Xcode: ActionNamespace {
 
     public var scheme: String? {
         context.xcodeScheme
+    }
+
+    @discardableResult
+    func run<A: Action>(_ action: A) async throws -> A.Output {
+        // The first time that an Xcode action is run, automatically output the current Xcode info.
+        if !Self.hasOutputXcodeInfo {
+            Self.hasOutputXcodeInfo = true
+            // Throw away any errors that might occur.
+            _ = try? await caller.run(Info())
+        }
+
+        return try await caller.run(action)
     }
 }
 
