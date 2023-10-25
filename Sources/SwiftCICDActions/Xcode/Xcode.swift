@@ -15,17 +15,17 @@ public struct Xcode: ActionNamespace {
         context.xcodeScheme
     }
 
-    @discardableResult
-    func run<A: Action>(_ action: A) async throws -> A.Output {
-        // The first time that an Xcode action is run, automatically output the current Xcode info.
-        if !Self.hasOutputXcodeInfo {
-            Self.hasOutputXcodeInfo = true
-            // Throw away any errors that might occur.
-            _ = try? await caller.run(Info())
-        }
-
-        return try await caller.run(action)
-    }
+//    @discardableResult
+//    func run<A: Action>(_ action: A) async throws -> A.Output {
+//        // The first time that an Xcode action is run, automatically output the current Xcode info.
+//        if !Self.hasOutputXcodeInfo {
+//            Self.hasOutputXcodeInfo = true
+//            // Throw away any errors that might occur.
+//            _ = try? await caller.run(Info())
+//        }
+//
+//        return try await caller.run(action)
+//    }
 }
 
 public extension Action {
