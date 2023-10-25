@@ -72,26 +72,17 @@ Next, create a file in `.github/workflows/cicd` named `CICD.swift`. This is the 
 import SwiftCICD
 
 @main
-struct CICD: MainAction {
-    func run() async throws {
-        let project = try context.workingDirectory/"GettingStarted.xcodeproj"
-
-        try await xcode.build(
-            project: project,
-            configuration: .debug,
-            destination: .iOSSimulator
-        )
-
-        try await xcode.test(
-            project: project,
-            destination: .iOSSimulator,
-            withoutBuilding: true
-        )
+struct CICD: MainAction, XcodeAction {
+    var body: some Action {
+        Xcode.Build()
+        Xcode.Test(withoutBuilding: true)
     }
 }
 ```
 
-In this CICD file we define a main action named `CICD`. When it runs, it will build and then test the "GettingStarted" Xcode project found in the working directory of the workflow. This will be the root directory of your repo. You should provide the path to your own Xcode project.
+In this CICD file we define a main action named `CICD`. When it runs, it will build and then test the project found at the root of the repository.
+
+> // TODO: Make a section that describes the automatic discovery logic of Xcode containers. (Xcode.swift, ContextValues.getDefaultXcodeContainer.)
 
 #### 3. GitHub Action Workflow
 
@@ -118,3 +109,35 @@ jobs:
 This workflow file has two steps that use pre-built actions. The first step checks out the repo. The second step (`- uses: swiftcicd/github-action@main`) runs SwiftCICD. This action has an input parameter `package-path` which is the path to the directory containing your SwiftCICD executable (the directory which contains your `Package.swift`).
 
 With that, whenever a new commit is pushed to `main`, GitHub Actions will run your SwiftCICD action which builds and tests the Xcode project. There's a lot more that you can do with SwiftCICD like importing signing assets and uploading release builds to App Store Connect, and on. Feel free to explore the built-in actions in [`Sources/SwiftCICDActions/`](/Sources/SwiftCICDActions/). 
+
+### Next Steps
+
+At this point, you should have a working CICD workflow running in GitHub Actions. Albeit, a very simple one. As with any CICD workflow, things can get complex quite quickly. You may want to check out the following sections for more information on what you can do next.
+
+- Signing
+- Uploading to App Store Connect
+- Troubleshooting
+
+## Signing
+
+> // TODO: Secrets needed: App Store Connect API Key, Certificate, Provisioning Profile. How to get each one.
+
+### 1. GitHub Action Secrets
+
+> // TODO: Overview of how to add secrets, and which secrets to add. Tips (including base64 encoding non-text files.) Inject secrets into the environment in the cicd.yml file.
+
+#### 2. Import Signing Assets
+
+> // TODO: Overview of the Signing.ImportSigningAssets step. How to read secrets.
+
+#### 3. Using Signing Assets
+
+> // TODO:
+
+## Uploading to App Store Connect
+
+> // TODO: Overview of Xcode.ArchiveExportUpload step. Prequisites.
+
+## Troublehsooting
+
+> // TODO: Common errors right now. Need to manually choose Xcode 15 by running Xcode.Select(version: "15.0") while the macos13 GitHub Runner defaults to Xcode 14.3
