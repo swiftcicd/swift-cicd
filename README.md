@@ -26,7 +26,14 @@ In order to get started with SwiftCICD using GitHub Actions, you'll first need t
 
 > You can name and place your package wherever you want, but if you use `.github/workflows/cicd` you won't have to specify the `package-path` parameter later in your workflow file since that is the default value.
 
-Once you've created your package's directory, create a package manifest:
+Once you've created your package's directory, create the package with an empty manifest by running:
+
+```
+cd .github/workflows/cicd
+swift package init --type empty
+```
+
+Then paste the following into the package manifest:
 
 > **.github/workflows/cicd/Package.swift**
 
