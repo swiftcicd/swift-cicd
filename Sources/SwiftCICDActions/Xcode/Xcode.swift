@@ -177,10 +177,30 @@ public extension ContextValues {
             return cached
         }
 
-        let info = try await XcodeBuild.getInfo()
-        // The only reasonable default is to return the first scheme in the list
-        let scheme = info.schemes.first
-        Self.cachedDefaultXcodeScheme = scheme
-        return scheme
+        let schemes = try await XcodeBuild.getInfo().schemes
+
+        if schemes.isEmpty {
+            logger.notice("""
+                There weren't any schemes found in your project or workspace. \
+                Please specify a scheme by making your main action conform to `XcodeAction` and \
+                return one from `xcodeScheme` or pass one to the action you're trying to run.
+                """
+            )
+            return nil
+        } else if schemes.count > 1 {
+            logger.notice("""
+                There were multiples schemes found in your project or workspace: \
+                \(schemes.map { "\t- \($0)" }.joined(separator: "\n"))
+
+                Please specify which scheme to use by making your main action conform to `XcodeAction` and \
+                return one from `xcodeScheme` or pass one to the action you're trying to run.
+                """
+            )
+            return nil
+        } else {
+            let scheme = schemes[0]
+            Self.cachedDefaultXcodeScheme = scheme
+            return scheme
+        }
     }
 }
