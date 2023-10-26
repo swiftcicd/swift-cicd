@@ -122,7 +122,7 @@ At this point, you should have a working CICD workflow running in GitHub Actions
 
 > // TODO: Secrets needed: App Store Connect API Key, Certificate, Provisioning Profile. How to get each one.
 
-### 1. GitHub Action Secrets
+#### 1. GitHub Action Secrets
 
 > // TODO: Overview of how to add secrets, and which secrets to add. Tips (including base64 encoding non-text files.) Inject secrets into the environment in the cicd.yml file.
 
