@@ -12,11 +12,11 @@ public struct TransformedSecret: Secret {
 }
 
 public extension Secret {
-    func transform(_ transformation: @escaping (Data) async throws -> Data) -> some Secret {
+    func transform(_ transformation: @escaping (Data) async throws -> Data) -> TransformedSecret {
         TransformedSecret(base: self, transform: transformation)
     }
 
-    func base64Decoded() -> some Secret {
+    func base64Decoded() -> TransformedSecret {
         self.transform {
             guard let data = Data(base64Encoded: $0, options: .ignoreUnknownCharacters) else {
                 throw ActionError("Failed to base64-decode secret")
@@ -26,7 +26,7 @@ public extension Secret {
         }
     }
 
-    func decoding<T: Decodable>(as type: T.Type, decoder: JSONDecoder = JSONDecoder(), map: @escaping (T) -> Data) -> some Secret {
+    func decoding<T: Decodable>(as type: T.Type, decoder: JSONDecoder = JSONDecoder(), map: @escaping (T) -> Data) -> TransformedSecret {
         self.transform {
             let decoded = try decoder.decode(T.self, from: $0)
             return map(decoded)

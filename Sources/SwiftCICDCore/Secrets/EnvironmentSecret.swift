@@ -25,23 +25,23 @@ public struct EnvironmentSecret: Secret {
 }
 
 public extension EnvironmentSecret {
-    static func value(_ key: String) -> some Secret {
+    static func value(_ key: String) -> EnvironmentSecret {
         EnvironmentSecret(key: key)
     }
 
-    static func base64EncodedValue(_ key: String) -> some Secret {
+    static func base64EncodedValue(_ key: String) -> TransformedSecret {
         EnvironmentSecret(key: key).base64Decoded()
     }
 }
 
 public extension Secret where Self == EnvironmentSecret {
-    static func environmentValue(_ key: String) -> some Secret {
+    static func environmentValue(_ key: String) -> EnvironmentSecret {
         EnvironmentSecret.value(key)
     }
 }
 
 public extension Secret where Self == TransformedSecret {
-    static func base64EncodedEnvironmentValue(_ key: String) -> some Secret {
+    static func base64EncodedEnvironmentValue(_ key: String) -> TransformedSecret {
         EnvironmentSecret.base64EncodedValue(key)
     }
 }
