@@ -98,7 +98,6 @@ public extension ContextValues {
             return nil
         } else if containers.count > 1 {
             let workspaces = containers.filter(\.isWorkspace)
-            let projects = containers.filter(\.isProject)
 
             if workspaces.count == 0 {
                 logger.notice(

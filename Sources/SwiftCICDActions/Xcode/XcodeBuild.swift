@@ -126,6 +126,25 @@ extension Xcode {
 
             if let archivePath {
                 xcodebuild.append("archive -archivePath \(archivePath)")
+
+                guard scheme != nil else {
+                    throw ActionError("""
+                        A scheme is required when archiving but scheme was nil. \
+
+                        - If you ran Xcode.Build directly without passing a scheme, this means that a default scheme was not detected. \
+                        See the "Correction" section below.
+
+                        - If you did not run Xcode.Build directly and are using the Xcode.ArchiveExportUpload action, this means that a \
+                        default scheme was not detected. See the "Correction" section below.
+
+                        * Correction: If a default scheme was not detected this is likely because your project has multiple schemes. \
+                        To correct this, either pass a scheme directly as a parameter to the action that failed, or, if your main action \
+                        is an XcodeAction, declare a the xcodeScheme property to provide one.
+
+                        xcodebuild error: The flag -scheme is required when specifying -archivePath but not -exportArchive.
+                        """
+                    )
+                }
             } else {
                 xcodebuild.append("build")
             }
