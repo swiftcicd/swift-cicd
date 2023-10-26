@@ -21,7 +21,7 @@ public extension MainAction {
 extension MainAction {
     public static func main() async {
         guard let platform = self.platform ?? detectPlatform() else {
-            print("❌ Failed to detect platform")
+            print("❌ Failed to detect supported platform.")
             exit(1)
         }
 

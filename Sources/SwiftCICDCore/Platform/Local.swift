@@ -13,7 +13,7 @@ public enum LocalPlatform: Platform {
     }()
 
     public static func detect() -> Bool {
-        CommandLine.arguments.contains("local")
+        !ProcessInfo.processInfo.environment.keys.contains("SWIFT_CICD_CI")
     }
 
     public static func startLogGroup(named groupName: String) {
