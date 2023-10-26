@@ -13,8 +13,12 @@ extension Signing {
             public let profile: ProvisioningProfile
         }
 
-        init(secrets: Secrets) {
+        public init(secrets: Secrets) {
             self.secrets = secrets
+        }
+
+        public init(secretsFile: Secret) {
+            self.secrets = Secrets(file: secretsFile)
         }
 
         public init(
@@ -229,7 +233,7 @@ extension Signing.ImportSigningAssets.Secrets {
     ///    }
     /// }
     /// ```
-    public init(file: Secret) throws {
+    public init(file: Secret) {
         func decodedFile() async throws -> Self {
             try await JSONDecoder().decode(Self.self, from: file.get())
         }
