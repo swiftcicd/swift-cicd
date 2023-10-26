@@ -17,10 +17,6 @@ extension Signing {
             self.secrets = secrets
         }
 
-        public init(secretsFile: Secret) {
-            self.secrets = Secrets(file: secretsFile)
-        }
-
         public init(
             appStoreConnectKey: Secrets.AppStoreConnectKey,
             certificate: Secrets.Certificate,
@@ -241,6 +237,33 @@ extension Signing.ImportSigningAssets.Secrets {
         self.appStoreConnectKey = { try await decodedFile().appStoreConnectKey() }
         self.certificate = { try await decodedFile().certificate() }
         self.profile = { try await decodedFile().profile() }
+    }
+}
+
+extension Signing.ImportSigningAssets {
+    /// Imports the signing assets by reading the necessary assets a secret JSON file following the expected format below.
+    ///
+    /// - Parameter file: A secret containing the JSON file.
+    ///
+    /// ### File format:
+    /// ```json
+    /// {
+    ///    "appStoreConnectKey": {
+    ///        "p8": "p8 file contents (string)",
+    ///        "keyID": "string",
+    ///        "keyIssuerID": "string"
+    ///    },
+    ///    "certificate": {
+    ///        "p12": "base64Encoded file contents (string)",
+    ///        "password": "string"
+    ///    },
+    ///    "profile":  {
+    ///        "mobileprovision": "base64Encoded file contents (string)"
+    ///    }
+    /// }
+    /// ```
+    public init(file: Secret) {
+        self.secrets = Secrets(file: file)
     }
 }
 
