@@ -34,7 +34,7 @@ public struct Xcbeautify: Tool {
             self.quiet = quiet
             self.quieter = quieter
             self.preserveUnbeautified = preserveUnbeautified
-            self.isCI = isCI ?? ContextValues.current.environment.github.isCI
+            self.isCI = isCI ?? ContextValues.current.platform.isRunningCI
             self.disableColoredOutput = disableColoredOutput
             self.report = report
             self.reportPath = reportPath
