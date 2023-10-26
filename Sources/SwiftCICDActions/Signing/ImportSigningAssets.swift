@@ -166,11 +166,11 @@ extension Signing.ImportSigningAssets {
         }
 
         public struct Certificate: Decodable {
-            let p12: () async throws -> String
+            let p12: () async throws -> Data
             let password: () async throws -> String
 
             public init(p12: Secret, password: Secret) {
-                self.p12 = { try await p12.get().string }
+                self.p12 = { try await p12.get() }
                 self.password = { try await password.get().string }
             }
 
@@ -181,16 +181,16 @@ extension Signing.ImportSigningAssets {
 
             public init(from decoder: Decoder) throws {
                 let container: KeyedDecodingContainer<CodingKeys> = try decoder.container(keyedBy: CodingKeys.self)
-                self.p12 = { try container.decode(String.self, forKey: .p12) }
+                self.p12 = { try container.decode(Data.self, forKey: .p12) }
                 self.password = { try container.decode(String.self, forKey: .password) }
             }
         }
 
         public struct Profile: Decodable {
-            let mobileprovision: () async throws -> String
+            let mobileprovision: () async throws -> Data
 
             public init(mobileprovision: Secret) {
-                self.mobileprovision = { try await mobileprovision.get().string }
+                self.mobileprovision = { try await mobileprovision.get() }
             }
 
             enum CodingKeys: CodingKey {
@@ -199,7 +199,7 @@ extension Signing.ImportSigningAssets {
 
             public init(from decoder: Decoder) throws {
                 let container: KeyedDecodingContainer<CodingKeys> = try decoder.container(keyedBy: CodingKeys.self)
-                self.mobileprovision = { try container.decode(String.self, forKey: .mobileprovision) }
+                self.mobileprovision = { try container.decode(Data.self, forKey: .mobileprovision) }
             }
         }
     }
@@ -230,8 +230,11 @@ extension Signing.ImportSigningAssets.Secrets {
     /// }
     /// ```
     public init(file: Secret) {
+        let decoder = JSONDecoder()
+        decoder.dataDecodingStrategy = .base64
+
         func decodedFile() async throws -> Self {
-            try await JSONDecoder().decode(Self.self, from: file.get())
+            try await decoder.decode(Self.self, from: file.get())
         }
 
         self.appStoreConnectKey = { try await decodedFile().appStoreConnectKey() }
@@ -249,16 +252,16 @@ extension Signing.ImportSigningAssets {
     /// ```json
     /// {
     ///    "appStoreConnectKey": {
-    ///        "p8": "p8 file contents (string)",
+    ///        "p8": "file contents (string)",
     ///        "keyID": "string",
     ///        "keyIssuerID": "string"
     ///    },
     ///    "certificate": {
-    ///        "p12": "base64Encoded file contents (string)",
+    ///        "p12": "file contents (base64)",
     ///        "password": "string"
     ///    },
     ///    "profile":  {
-    ///        "mobileprovision": "base64Encoded file contents (string)"
+    ///        "mobileprovision": "file contents (base64)"
     ///    }
     /// }
     /// ```
@@ -289,16 +292,16 @@ public extension Signing {
     /// ```json
     /// {
     ///    "appStoreConnectKey": {
-    ///        "p8": "p8 file contents (string)",
+    ///        "p8": "file contents (string)",
     ///        "keyID": "string",
     ///        "keyIssuerID": "string"
     ///    },
     ///    "certificate": {
-    ///        "p12": "base64Encoded file contents (string)",
+    ///        "p12": "file contents (base64)",
     ///        "password": "string"
     ///    },
     ///    "profile":  {
-    ///        "mobileprovision": "base64Encoded file contents (string)"
+    ///        "mobileprovision": "file contents (base64)"
     ///    }
     /// }
     /// ```
