@@ -160,9 +160,10 @@ public extension Xcode {
         sdk: XcodeBuild.SDK? = nil,
         derivedDataPath: String? = nil
     ) async throws -> XcodeBuild.Settings {
-        try await XcodeBuild.Settings(
-            container: container ?? self.container,
-            scheme: scheme ?? self.scheme,
+        let (container, scheme) = try await caller.getDefault(container: container, scheme: scheme)
+        return try await XcodeBuild.Settings(
+            container: container,
+            scheme: scheme,
             configuration: configuration,
             destination: destination,
             sdk: sdk,

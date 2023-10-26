@@ -94,8 +94,7 @@ extension AppStoreConnect {
         }
 
         public func run() async throws -> Output {
-            let container = try self.container ?? context.xcodeContainer
-            let scheme = self.scheme ?? context.xcodeScheme
+            let (container, scheme) = try await getDefault(container: container, scheme: scheme)
 
             // TODO: Allow for the build version to be specified by an environment variable. (This could be useful on a system like Bitrise that has its own build numbers.)
             // Then a build number could be specified from the outside. It would always win out over what's detected internally.

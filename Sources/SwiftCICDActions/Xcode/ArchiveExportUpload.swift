@@ -103,8 +103,7 @@ extension Xcode {
         }
 
         public func run() async throws -> Output {
-            let container = try self.container ?? context.xcodeContainer
-            let scheme = self.scheme ?? context.xcodeScheme
+            let (container, scheme) = try await getDefault(container: container, scheme: scheme)
 
             guard let container else {
                 throw ActionError("Missing Xcode project/workspace. Either pass an explicit project/workspace or call this step from an XcodeAction.")

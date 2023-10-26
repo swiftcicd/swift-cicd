@@ -44,8 +44,7 @@ extension AppStoreConnect {
         }
 
         public func run() async throws {
-            let container = try self.container ?? xcode.container
-            let scheme = self.scheme ?? xcode.scheme
+            let (container, scheme) = try await getDefault(container: container, scheme: scheme)
             var bundleID = self.bundleID
             var buildID = self.buildID
 

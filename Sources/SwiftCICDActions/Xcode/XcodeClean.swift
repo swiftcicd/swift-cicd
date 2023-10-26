@@ -29,9 +29,7 @@ extension Xcode {
 
         public func run() async throws {
             var command = ShellCommand("xcodebuild clean")
-            // TODO: Default the project
-            let scheme = self.scheme ?? context.xcodeScheme
-            let container = try self.container ?? context.xcodeContainer
+            let (container, scheme) = try await getDefault(container: container, scheme: scheme)
             try command.append(container?.flag)
             command.append("-scheme", ifLet: scheme)
 //            command.append("-derivedDataPath \(XcodeBuild.derivedData.filePath)")

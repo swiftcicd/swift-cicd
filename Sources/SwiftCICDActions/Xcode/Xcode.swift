@@ -12,7 +12,9 @@ public struct Xcode: ActionNamespace {
     }
 
     public var scheme: String? {
-        context.xcodeScheme
+        get async throws {
+            try await context.xcodeScheme
+        }
     }
 
 //    @discardableResult
@@ -34,6 +36,8 @@ public extension Action {
 
 // MARK: - Specialized Action
 
+public typealias MainXcodeAction = MainAction & XcodeAction
+
 public protocol XcodeAction: Action {
     /// Returns the default Xcode container (either a project or a workspace.) to use when Xcode actions are performed.
     /// - Important: The value should a path relative to the working directory.
@@ -41,7 +45,7 @@ public protocol XcodeAction: Action {
     var xcodeContainer: Xcode.Container? { get throws }
 
     /// The default scheme to use when building the project.
-    var xcodeScheme: String? { get }
+    var xcodeScheme: String? { get async throws }
 }
 
 public extension XcodeAction {
@@ -51,13 +55,28 @@ public extension XcodeAction {
         }
     }
     
-    var xcodeScheme: String? { nil }
+    var xcodeScheme: String? {
+        get async throws {
+            try await context.getDefaultXcodeScheme()
+        }
+    }
+}
+
+public extension Action {
+    func getDefault(container: Xcode.Container?, scheme: String?) async throws -> (container: Xcode.Container?, scheme: String?) {
+        let c = try container ?? self.context.xcodeContainer
+        let s = try await nilCoalesce(scheme) { try await self.context.xcodeScheme }
+        return (c, s)
+    }
 }
 
 public extension ContextValues {
+    private static var cachedDefaultXcodeContainer: Xcode.Container?
+    private static var cachedDefaultXcodeScheme: String?
+
     struct XcodeContainerNotFound: Error {}
 
-    /// Returns the Xcode container (either a project or a workspace) when accessed during an `XcodeProjectAction` run.
+    /// Returns the Xcode container (either a project or a workspace) when accessed during an `XcodeAction` run.
     var xcodeContainer: Xcode.Container? {
         get throws {
             guard let xcodeAction = inherit((any XcodeAction).self) else {
@@ -69,18 +88,32 @@ public extension ContextValues {
     }
 
     var xcodeScheme: String? {
-        inherit((any XcodeAction).self)?.xcodeScheme
+        get async throws {
+            guard let xcodeAction = inherit((any XcodeAction).self) else {
+                return try await getDefaultXcodeScheme()
+            }
+
+            return try await xcodeAction.xcodeScheme
+        }
     }
 
     internal func getDefaultXcodeContainer() throws -> Xcode.Container? {
+        if let cached = Self.cachedDefaultXcodeContainer {
+            return cached
+        }
+
         let workingDirectory = try self.workingDirectory
         let contents = try fileManager.contentsOfDirectory(atPath: workingDirectory)
 
         let containers = contents.compactMap { file -> Xcode.Container? in
             if file.hasSuffix(".xcodeproj") {
-                return .project(file)
+                let container = Xcode.Container.project(file)
+                Self.cachedDefaultXcodeContainer = container
+                return container
             } else if file.hasSuffix(".xcworkspace") {
-                return .workspace(file)
+                let container = Xcode.Container.workspace(file)
+                Self.cachedDefaultXcodeContainer = container
+                return container
             } else {
                 return nil
             }
@@ -119,7 +152,9 @@ public extension ContextValues {
                     which will be used by default.
                     """
                 )
-                return workspaces[0]
+                let container = workspaces[0]
+                Self.cachedDefaultXcodeContainer = container
+                return container
             } else {
                 logger.notice(
                     """
@@ -131,7 +166,21 @@ public extension ContextValues {
                 return nil
             }
         } else {
-            return containers[0]
+            let container = containers[0]
+            Self.cachedDefaultXcodeContainer = container
+            return container
         }
+    }
+
+    internal func getDefaultXcodeScheme() async throws -> String? {
+        if let cached = Self.cachedDefaultXcodeScheme {
+            return cached
+        }
+
+        let info = try await XcodeBuild.getInfo()
+        // The only reasonable default is to return the first scheme in the list
+        let scheme = info.schemes.first
+        Self.cachedDefaultXcodeScheme = scheme
+        return scheme
     }
 }

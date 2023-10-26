@@ -52,8 +52,7 @@ extension Xcode {
         }
 
         public func run() async throws {
-            let container = try self.container ?? context.xcodeContainer
-            let scheme = self.scheme ?? context.xcodeScheme
+            let (container, scheme) = try await getDefault(container: container, scheme: scheme)
             var test = ShellCommand("xcodebuild \(withoutBuilding ? "test-without-building" : "test")")
             try test.append(container?.flag)
             test.append("-scheme", ifLet: scheme)

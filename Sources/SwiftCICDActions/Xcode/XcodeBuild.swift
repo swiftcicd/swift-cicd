@@ -113,7 +113,7 @@ extension Xcode {
         public func run() async throws -> Output {
             var xcodebuild = ShellCommand("xcodebuild")
             let container = try self.container ?? context.xcodeContainer
-            let scheme = self.scheme ?? context.xcodeScheme
+            let scheme = try await nilCoalesce(self.scheme) { try await context.xcodeScheme }
             // TODO: Support -workspace as well. Use XcodeBuild.XcodeContainer.
             try xcodebuild.append(container?.flag)
             xcodebuild.append("-scheme", ifLet: scheme)
