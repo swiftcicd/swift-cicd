@@ -5,46 +5,7 @@ import SwiftCICDCore
 
 extension Signing {
     public struct ImportSigningAssets: Action {
-        let appStoreConnectKeySecret: AppStoreConnectKeySecret
-        let certificateSecret: CertificateSecret
-        let profileSecret: ProfileSecret
-
-        public struct AppStoreConnectKeySecret {
-            public let p8: Secret
-            public let keyID: String
-            public let keyIssuerID: String
-
-            public init(
-                p8: Secret,
-                keyID: String,
-                keyIssuerID: String
-            ) {
-                self.p8 = p8
-                self.keyID = keyID
-                self.keyIssuerID = keyIssuerID
-            }
-        }
-
-        public struct CertificateSecret {
-            public let p12: Secret
-            public let password: Secret
-
-            public init(
-                p12: Secret,
-                password: Secret
-            ) {
-                self.p12 = p12
-                self.password = password
-            }
-        }
-
-        public struct ProfileSecret {
-            public let mobileprovision: Secret
-
-            public init(mobileprovision: Secret) {
-                self.mobileprovision = mobileprovision
-            }
-        }
+        let secrets: Secrets
 
         public struct Output {
             public let appStoreConnectKey: AppStoreConnect.Key
@@ -52,20 +13,34 @@ extension Signing {
             public let profile: ProvisioningProfile
         }
 
+        init(secrets: Secrets) {
+            self.secrets = secrets
+        }
+
         public init(
-            appStoreConnectKeySecret: AppStoreConnectKeySecret,
-            certificateSecret: CertificateSecret,
-            profileSecret: ProfileSecret
+            appStoreConnectKey: Secrets.AppStoreConnectKey,
+            certificate: Secrets.Certificate,
+            profile: Secrets.Profile
         ) {
-            self.appStoreConnectKeySecret = appStoreConnectKeySecret
-            self.certificateSecret = certificateSecret
-            self.profileSecret = profileSecret
+            self.init(secrets: Secrets(
+                appStoreConnectKey: appStoreConnectKey,
+                certificate: certificate,
+                profile: profile
+            ))
         }
 
         public func run() async throws -> Output {
-            let appStoreConnectKeyContents = try await appStoreConnectKeySecret.p8.get().string
+            let appStoreConnectKeySecret = try await secrets.appStoreConnectKey()
+            let certificateSecret = try await secrets.certificate()
+            let profileSecret = try await secrets.profile()
+
+            let appStoreConnectKeyContents = try await appStoreConnectKeySecret.p8()
 //            try validateP8(pem: appStoreConnectKeyContents)
-            let saveAppStoreConnectP8 = try await saveFile(name: "AuthKey_\(appStoreConnectKeySecret.keyID).p8", contents: appStoreConnectKeyContents)
+            let saveAppStoreConnectP8 = try await saveFile(
+                name: "AuthKey_\(appStoreConnectKeySecret.keyID).p8",
+                contents: appStoreConnectKeyContents
+            )
+
             let appStoreConnectKey = AppStoreConnect.Key(
                 id: appStoreConnectKeySecret.keyID,
                 issuerID: appStoreConnectKeySecret.keyIssuerID,
@@ -73,13 +48,13 @@ extension Signing {
                 path: saveAppStoreConnectP8.filePath
             )
 
-            let certificateContents = try await certificateSecret.p12.get()
-            let certificatePassword = try await certificateSecret.password.get().string
+            let certificateContents = try await certificateSecret.p12()
+            let certificatePassword = try await certificateSecret.password()
 //            try validateP12(data: certificateContents, password: certificatePassword)
             let savedCertificate = try await saveFile(name: "Certificate.p12", contents: certificateContents)
             try await signing.installCertificate(savedCertificate.filePath, password: certificatePassword)
 
-            let profileContents = try await profileSecret.mobileprovision.get()
+            let profileContents = try await profileSecret.mobileprovision()
             let savedProfile = try await saveFile(name: "Profile.mobileprovision", contents: profileContents)
             let profile = try await signing.addProvisioningProfile(savedProfile.filePath)
 
@@ -136,18 +111,175 @@ extension Signing {
     }
 }
 
+extension Signing.ImportSigningAssets {
+    public struct Secrets: Decodable {
+        let appStoreConnectKey: () async throws -> AppStoreConnectKey
+        let certificate: () async throws -> Certificate
+        let profile: () async throws -> Profile
+
+        public init(
+            appStoreConnectKey: AppStoreConnectKey,
+            certificate: Certificate,
+            profile: Profile
+        ) {
+            self.appStoreConnectKey = { appStoreConnectKey }
+            self.certificate = { certificate }
+            self.profile = { profile }
+        }
+
+        enum CodingKeys: CodingKey {
+            case appStoreConnectKey
+            case certificate
+            case profile
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container: KeyedDecodingContainer<CodingKeys> = try decoder.container(keyedBy: CodingKeys.self)
+            self.appStoreConnectKey = { try container.decode(AppStoreConnectKey.self, forKey: .appStoreConnectKey) }
+            self.certificate = { try container.decode(Certificate.self, forKey: .certificate) }
+            self.profile = { try container.decode(Profile.self, forKey: .profile) }
+        }
+
+        public struct AppStoreConnectKey: Decodable {
+            let p8: () async throws -> String
+            let keyID: String
+            let keyIssuerID: String
+
+            public init(p8: Secret, keyID: String, keyIssuerID: String) {
+                self.p8 = { try await p8.get().string }
+                self.keyID = keyID
+                self.keyIssuerID = keyIssuerID
+            }
+
+            enum CodingKeys: CodingKey {
+                case p8
+                case keyID
+                case keyIssuerID
+            }
+
+            public init(from decoder: Decoder) throws {
+                let container: KeyedDecodingContainer<CodingKeys> = try decoder.container(keyedBy: CodingKeys.self)
+                self.p8 = { try container.decode(String.self, forKey: .p8) }
+                self.keyID = try container.decode(String.self, forKey: .keyID)
+                self.keyIssuerID = try container.decode(String.self, forKey: .keyIssuerID)
+            }
+        }
+
+        public struct Certificate: Decodable {
+            let p12: () async throws -> String
+            let password: () async throws -> String
+
+            public init(p12: Secret, password: Secret) {
+                self.p12 = { try await p12.get().string }
+                self.password = { try await password.get().string }
+            }
+
+            enum CodingKeys: CodingKey {
+                case p12
+                case password
+            }
+
+            public init(from decoder: Decoder) throws {
+                let container: KeyedDecodingContainer<CodingKeys> = try decoder.container(keyedBy: CodingKeys.self)
+                self.p12 = { try container.decode(String.self, forKey: .p12) }
+                self.password = { try container.decode(String.self, forKey: .password) }
+            }
+        }
+
+        public struct Profile: Decodable {
+            let mobileprovision: () async throws -> String
+
+            public init(mobileprovision: Secret) {
+                self.mobileprovision = { try await mobileprovision.get().string }
+            }
+
+            enum CodingKeys: CodingKey {
+                case mobileprovision
+            }
+
+            public init(from decoder: Decoder) throws {
+                let container: KeyedDecodingContainer<CodingKeys> = try decoder.container(keyedBy: CodingKeys.self)
+                self.mobileprovision = { try container.decode(String.self, forKey: .mobileprovision) }
+            }
+        }
+    }
+}
+
+// MARK: - File
+
+extension Signing.ImportSigningAssets.Secrets {
+    /// Creates the necessary secrets by reading from a secret JSON file following the expected format below.
+    ///
+    /// - Parameter file: A secret containing the JSON file.
+    ///
+    /// ### File format:
+    /// ```json
+    /// {
+    ///    "appStoreConnectKey": {
+    ///        "p8": "p8 file contents (string)",
+    ///        "keyID": "string",
+    ///        "keyIssuerID": "string"
+    ///    },
+    ///    "certificate": {
+    ///        "p12": "base64Encoded file contents (string)",
+    ///        "password": "string"
+    ///    },
+    ///    "profile":  {
+    ///        "mobileprovision": "base64Encoded file contents (string)"
+    ///    }
+    /// }
+    /// ```
+    public init(file: Secret) throws {
+        func decodedFile() async throws -> Self {
+            try await JSONDecoder().decode(Self.self, from: file.get())
+        }
+
+        self.appStoreConnectKey = { try await decodedFile().appStoreConnectKey() }
+        self.certificate = { try await decodedFile().certificate() }
+        self.profile = { try await decodedFile().profile() }
+    }
+}
+
 public extension Signing {
     @discardableResult
     func `import`(
-        appStoreConnectKeySecret: ImportSigningAssets.AppStoreConnectKeySecret,
-        certificateSecret: ImportSigningAssets.CertificateSecret,
-        profileSecret: ImportSigningAssets.ProfileSecret
+        appStoreConnectKey: ImportSigningAssets.Secrets.AppStoreConnectKey,
+        certificateSecret: ImportSigningAssets.Secrets.Certificate,
+        profileSecret: ImportSigningAssets.Secrets.Profile
     ) async throws -> ImportSigningAssets.Output {
         try await run(ImportSigningAssets(
-            appStoreConnectKeySecret: appStoreConnectKeySecret,
-            certificateSecret: certificateSecret,
-            profileSecret: profileSecret
+            appStoreConnectKey: appStoreConnectKey,
+            certificate: certificateSecret,
+            profile: profileSecret
         ))
+    }
+
+    /// Creates the necessary secrets by reading from a secret JSON file following the expected format below.
+    ///
+    /// - Parameter file: A secret containing the JSON file.
+    ///
+    /// ### File format:
+    /// ```json
+    /// {
+    ///    "appStoreConnectKey": {
+    ///        "p8": "p8 file contents (string)",
+    ///        "keyID": "string",
+    ///        "keyIssuerID": "string"
+    ///    },
+    ///    "certificate": {
+    ///        "p12": "base64Encoded file contents (string)",
+    ///        "password": "string"
+    ///    },
+    ///    "profile":  {
+    ///        "mobileprovision": "base64Encoded file contents (string)"
+    ///    }
+    /// }
+    /// ```
+    @discardableResult
+    func `import`(
+        signingAssetsFromFile file: Secret
+    ) async throws -> ImportSigningAssets.Output {
+        try await run(ImportSigningAssets(secrets: .init(file: file)))
     }
 }
 
