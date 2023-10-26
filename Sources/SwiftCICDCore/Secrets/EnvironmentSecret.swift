@@ -25,23 +25,24 @@ public struct EnvironmentSecret: Secret {
 }
 
 public extension EnvironmentSecret {
-    static func value(_ key: String) -> EnvironmentSecret {
+    static func value(_ key: String) -> some Secret {
         EnvironmentSecret(key: key)
     }
 
-    static func base64EncodedValue(_ key: String) -> TransformedSecret {
+    static func base64EncodedValue(_ key: String) -> some Secret {
         EnvironmentSecret(key: key).base64Decoded()
     }
 }
 
+// FIXME: Auto-completion doesn't pick these up for some reason.
+// I know that the self-constraint is incorrect for the base64EncodedEnvironmentValue
+// but it is at least available while keeping TransformedSecret internal.
 public extension Secret where Self == EnvironmentSecret {
-    static func environmentValue(_ key: String) -> EnvironmentSecret {
+    static func environmentValue(_ key: String) -> some Secret {
         EnvironmentSecret.value(key)
     }
-}
 
-public extension Secret where Self == TransformedSecret {
-    static func base64EncodedEnvironmentValue(_ key: String) -> TransformedSecret {
+    static func base64EncodedEnvironmentValue(_ key: String) -> some Secret {
         EnvironmentSecret.base64EncodedValue(key)
     }
 }
