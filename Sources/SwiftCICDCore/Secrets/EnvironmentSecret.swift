@@ -34,11 +34,13 @@ public extension EnvironmentSecret {
     }
 }
 
-public extension Secret {
+public extension Secret where Self == EnvironmentSecret {
     static func environmentValue(_ key: String) -> some Secret {
         EnvironmentSecret.value(key)
     }
+}
 
+public extension Secret where Self == TransformedSecret {
     static func base64EncodedEnvironmentValue(_ key: String) -> some Secret {
         EnvironmentSecret.base64EncodedValue(key)
     }

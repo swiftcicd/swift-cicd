@@ -1,10 +1,10 @@
 import Foundation
 
-private struct TransformedSecret: Secret {
+public struct TransformedSecret: Secret {
     let base: Secret
     let transform: (Data) async throws -> Data
 
-    func get() async throws -> Data {
+    public func get() async throws -> Data {
         let baseData = try await base.get()
         let transformed = try await transform(baseData)
         return transformed
