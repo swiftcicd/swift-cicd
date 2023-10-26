@@ -248,7 +248,7 @@ extension Signing.ImportSigningAssets {
     ///
     /// - Parameter file: A secret containing the JSON file.
     ///
-    /// ### File format:
+    /// ## File format:
     /// ```json
     /// {
     ///    "appStoreConnectKey": {
@@ -265,6 +265,14 @@ extension Signing.ImportSigningAssets {
     ///    }
     /// }
     /// ```
+    ///
+    /// Some useful commands for creating the JSON file are below:
+    /// ```
+    /// cat AuthKey.p8 | sed 's/"/\\"/g; s/$/\\n/' | tr -d '\n' | pbcopy
+    /// base64 -i Certificate.p12 | tr -d '\n' | sed 's/"/\\"/g' | pbcopy
+    /// base64 -i Profile.mobileprovision | tr -d '\n' | sed 's/"/\\"/g' | pbcopy
+    /// ```
+    ///
     public init(file: Secret) {
         self.secrets = Secrets(file: file)
     }
@@ -288,7 +296,7 @@ public extension Signing {
     ///
     /// - Parameter file: A secret containing the JSON file.
     ///
-    /// ### File format:
+    /// ## File format:
     /// ```json
     /// {
     ///    "appStoreConnectKey": {
@@ -305,6 +313,14 @@ public extension Signing {
     ///    }
     /// }
     /// ```
+    ///
+    /// Some useful commands for creating the JSON file are below:
+    /// ```
+    /// cat AuthKey.p8 | sed 's/"/\\"/g; s/$/\\n/' | tr -d '\n' | pbcopy
+    /// base64 -i Certificate.p12 | tr -d '\n' | sed 's/"/\\"/g' | pbcopy
+    /// base64 -i Profile.mobileprovision | tr -d '\n' | sed 's/"/\\"/g' | pbcopy
+    /// ```
+    ///
     @discardableResult
     func `import`(
         signingAssetsFromFile file: Secret
