@@ -141,3 +141,8 @@ At this point, you should have a working CICD workflow running in GitHub Actions
 ## Troublehsooting
 
 > // TODO: Common errors right now. Need to manually choose Xcode 15 by running Xcode.Select(version: "15.0") while the macos13 GitHub Runner defaults to Xcode 14.3
+
+
+## Running Locally
+
+> // TODO: Edit scheme and add "local" to arguments, add secrets to environment variables, and either set the working directory (under scheme > options > Use custom working directory) to the root or provide the LOCAL_WORKING_DIRECTORY environment variable.
