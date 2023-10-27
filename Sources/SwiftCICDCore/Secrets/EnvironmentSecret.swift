@@ -25,11 +25,11 @@ public struct EnvironmentSecret: Secret {
 }
 
 public extension EnvironmentSecret {
-    static func value(_ key: String) -> some Secret {
+    static func value(_ key: String) -> EnvironmentSecret {
         EnvironmentSecret(key: key)
     }
 
-    static func base64EncodedValue(_ key: String) -> some Secret {
+    static func base64Value(_ key: String) -> TransformedSecret {
         EnvironmentSecret(key: key).base64Decoded()
     }
 }
@@ -38,11 +38,13 @@ public extension EnvironmentSecret {
 // I know that the self-constraint is incorrect for the base64EncodedEnvironmentValue
 // but it is at least available while keeping TransformedSecret internal.
 public extension Secret where Self == EnvironmentSecret {
-    static func environmentValue(_ key: String) -> some Secret {
+    static func environmentValue(_ key: String) -> EnvironmentSecret {
         EnvironmentSecret.value(key)
     }
+}
 
-    static func base64EncodedEnvironmentValue(_ key: String) -> some Secret {
-        EnvironmentSecret.base64EncodedValue(key)
+public extension Secret where Self == TransformedSecret {
+    static func base64EnvironmentValue(_ key: String) -> TransformedSecret {
+        EnvironmentSecret.base64Value(key)
     }
 }

@@ -6,7 +6,7 @@ import SlackActions
 struct Demo: MainAction {
     var body: some Action {
         Run {
-            _ = try await context.tools.xcbeautify
+            let s: Secret = .environmentValue("VALUE")
         }
     }
 }
