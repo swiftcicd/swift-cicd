@@ -145,4 +145,4 @@ At this point, you should have a working CICD workflow running in GitHub Actions
 
 ## Running Locally
 
-> // TODO: Edit scheme and add "local" to arguments, add secrets to environment variables, and either set the working directory (under scheme > options > Use custom working directory) to the root or provide the LOCAL_WORKING_DIRECTORY environment variable.
+Building and running locally is easy since SwiftCICD assumes it is running locally until a specific environment variable is added by the platform runner (`SWIFT_CICD_CI`). You can override the local working directory by providing a `LOCAL_WORKING_DIRECTORY` environment variable. Otherwise, the current directory is used as the working directory. 
