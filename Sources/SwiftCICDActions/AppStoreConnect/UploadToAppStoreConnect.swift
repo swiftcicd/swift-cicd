@@ -35,8 +35,8 @@ extension AppStoreConnect {
         let appStoreConnectKey: AppStoreConnect.Key
 
         public struct Output {
-            // TODO: Is it possible to get build id from the resulting shell output?
             public let buildNumber: String
+            public let build: AppStoreConnectAPI.Build?
         }
 
         public enum PackageType: String {
@@ -186,7 +186,21 @@ extension AppStoreConnect {
                 """
             )
 
-            return Output(buildNumber: bundleVersion)
+            let build = try await retry(every: 10, times: 6) {
+                guard let unwrapped = try await context.appStoreConnectAPI.getBuild(
+                    preReleaseVersion: bundleShortVersion,
+                    buildVersion: bundleVersion,
+                    platform: .iOS,
+                    appID: appAppleID,
+                    key: appStoreConnectKey
+                ) else {
+                    throw ActionError("Build not found. It may not be available yet.")
+                }
+
+                return unwrapped
+            }
+
+            return Output(buildNumber: bundleVersion, build: build)
         }
     }
 }

@@ -3,7 +3,7 @@ import SwiftCICDCore
 
 // TODO: Consider finding a Swift package for AppStoreConnect.
 
-public enum AppStoreConnectAPI {
+public enum AppStoreConnectAPI: ContextAware {
     public static func getApps(key: AppStoreConnect.Key) async throws -> [App] {
         try await response("/v1/apps", key: key, as: DataWrapper<[App]>.self).data
     }
@@ -37,7 +37,38 @@ public enum AppStoreConnectAPI {
     }
 
     public static func getBuilds(forApp app: App, key: AppStoreConnect.Key) async throws -> [Build] {
-        try await response("/v1/builds?filter[app]=\(app.id)", key: key, as: DataWrapper<[Build]>.self).data
+        try await getBuilds(appID: app.id, key: key)
+    }
+
+    public static func getBuilds(appID: String, key: AppStoreConnect.Key) async throws -> [Build] {
+        try await response("/v1/builds?filter[app]=\(appID)&include=preReleaseVersion&fields[preReleaseVersions]=platform,version", key: key, as: DataWrapper<[Build]>.self).data
+    }
+
+    public static func getBuild(
+        preReleaseVersion: String,
+        buildVersion: String,
+        platform: Platform = .iOS,
+        appID: String,
+        key: AppStoreConnect.Key
+    ) async throws -> Build? {
+        var path = "/v1/builds"
+        path.append("?filter[app]=\(appID)")
+        path.append("&filter[preReleaseVersion.version]=\(preReleaseVersion)")
+        path.append("&filter[version]=\(buildVersion)")
+        path.append("&filter[preReleaseVersion.platform]=\(platform.rawValue)")
+        path.append("&include=preReleaseVersion")
+        path.append("&fields[preReleaseVersions]=platform,version")
+        path.append("&limit=1")
+        let builds: DataWrapper<[Build]> = try await response(path, key: key)
+        return builds.data.first
+    }
+
+    public static func _endpoint(_ method: String, _ path: String, body: Data? = nil, key: AppStoreConnect.Key) async throws {
+        if let body {
+            try await response(method, path, body: body, key: key)
+        } else {
+            try await response(method, path, key: key)
+        }
     }
 }
 
@@ -58,6 +89,7 @@ extension AppStoreConnectAPI {
         key: AppStoreConnect.Key
     ) throws -> URLRequest {
         var request = URLRequest(url: URL(string: "https://api.appstoreconnect.apple.com\(path)")!)
+        request.httpMethod = method
         let token = AppStoreConnect.Token(
             keyID: key.id,
             issuerID: key.issuerID,
@@ -77,34 +109,115 @@ extension AppStoreConnectAPI {
         body: any Encodable,
         key: AppStoreConnect.Key
     ) throws -> URLRequest {
+        let bodyData = try JSONEncoder().encode(body)
+        return try request(method: method, path: path, body: bodyData, key: key)
+    }
+
+    private static func request(
+        method: String = "POST",
+        path: String,
+        body: Data,
+        key: AppStoreConnect.Key
+    ) throws -> URLRequest {
         var request = try request(method: method, path: path, key: key)
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
-        let bodyData = try JSONEncoder().encode(body)
-        request.httpBody = bodyData
+        request.httpBody = body
         return request
     }
 
     private static func response<Response: Decodable>(
-        method: String = "GET",
+        _ method: String,
         _ path: String,
         key: AppStoreConnect.Key,
         as response: Response.Type = Response.self
     ) async throws -> Response {
         let request = try request(method: method, path: path, key: key)
-        let (data, _) = try await URLSession.shared.data(for: request)
+        logRequest(request)
+        let (data, urlResponse) = try await URLSession.shared.data(for: request)
+        logResponse(urlResponse, bodyData: data, request: request)
         let response = try JSONDecoder().decode(Response.self, from: data)
         return response
     }
 
+    private static func response<Response: Decodable>(
+        _ path: String,
+        key: AppStoreConnect.Key,
+        as response: Response.Type = Response.self
+    ) async throws -> Response {
+        try await self.response("GET", path, key: key)
+    }
+
+    @discardableResult
+    private static func response(
+        _ method: String,
+        _ path: String,
+        key: AppStoreConnect.Key
+    ) async throws -> HTTPURLResponse {
+        let request = try request(method: method, path: path, key: key)
+        logRequest(request)
+        let (data, response) = try await URLSession.shared.data(for: request)
+        logResponse(response, bodyData: data, request: request)
+        return response as! HTTPURLResponse
+    }
+
+    @discardableResult
     private static func response<Request: Encodable>(
-        method: String = "POST",
+        _ method: String,
         _ path: String,
         body: Request,
         key: AppStoreConnect.Key
     ) async throws -> HTTPURLResponse {
         let request = try request(method: method, path: path, body: body, key: key)
-        let (_, response) = try await URLSession.shared.data(for: request)
+        logRequest(request)
+        let (data, response) = try await URLSession.shared.data(for: request)
+        logResponse(response, bodyData: data, request: request)
         return response as! HTTPURLResponse
+    }
+
+    @discardableResult
+    private static func response<Request: Encodable>(
+        _ path: String,
+        body: Request,
+        key: AppStoreConnect.Key
+    ) async throws -> HTTPURLResponse {
+        try await self.response("POST", path, body: body, key: key)
+    }
+}
+
+extension AppStoreConnectAPI {
+    private static func logRequest(_ request: URLRequest) {
+        var message = "Making request: \(request.formatted)"
+        if let httpBody = request.httpBody {
+            message.append("\n\(httpBody.formatted(writingOptions: [.prettyPrinted, .withoutEscapingSlashes, .sortedKeys]))")
+        }
+        context.logger.info("\(message)")
+    }
+
+    private static func logResponse(_ response: URLResponse, bodyData: Data?, request: URLRequest) {
+        let response = response as! HTTPURLResponse
+        var message = "Received response: (\(response.statusCode)) \(request.formatted)"
+        if let bodyData {
+            message.append("\n\(bodyData.formatted(writingOptions: [.prettyPrinted, .withoutEscapingSlashes ,.sortedKeys]))")
+        }
+        context.logger.info("\(message)")
+    }
+}
+
+private extension URLRequest {
+    var formatted: String {
+        "\(httpMethod ?? "GET") \(url!.absoluteString.removingPercentEncoding!)"
+    }
+}
+
+private extension Data {
+    func formatted(readingOptions: JSONSerialization.ReadingOptions = [], writingOptions: JSONSerialization.WritingOptions = []) -> String {
+        do {
+            let jsonObject = try JSONSerialization.jsonObject(with: self, options: readingOptions)
+            let jsonData = try JSONSerialization.data(withJSONObject: jsonObject, options: writingOptions)
+            return jsonData.string
+        } catch {
+            return self.string
+        }
     }
 }
 
@@ -117,8 +230,29 @@ extension AppStoreConnectAPI {
 extension AppStoreConnectAPI.DataWrapper: Encodable where T: Encodable {}
 extension AppStoreConnectAPI.DataWrapper: Decodable where T: Decodable {}
 
+@dynamicMemberLookup
+protocol AttributedModelLookup<Attributes> {
+    associatedtype Attributes
+    var attributes: Attributes { get }
+}
+
+extension AttributedModelLookup {
+    subscript<T>(dynamicMember keyPath: KeyPath<Attributes, T>) -> T {
+        attributes[keyPath: keyPath]
+    }
+}
+
 extension AppStoreConnectAPI {
-    public struct App: Decodable {
+
+    /// https://developer.apple.com/documentation/appstoreconnectapi/platform
+    public enum Platform: String, Decodable {
+        case iOS = "IOS"
+        case macOS = "MAC_OS"
+        case tvOS = "TV_OS"
+    }
+
+    /// https://developer.apple.com/documentation/appstoreconnectapi/app
+    public struct App: Decodable, AttributedModelLookup {
         public let id: String
         public let attributes: Attributes
 
@@ -128,9 +262,11 @@ extension AppStoreConnectAPI {
         }
     }
 
-    public struct Build: Decodable {
+    /// https://developer.apple.com/documentation/appstoreconnectapi/build
+    public struct Build: Decodable, AttributedModelLookup {
         public let id: String
         public let attributes: Attributes
+        public let included: [Included]?
 
         public struct Attributes: Decodable {
             public let expired: Bool
@@ -143,6 +279,49 @@ extension AppStoreConnectAPI {
                 case invalid = "INVALID"
                 case valid = "VALID"
             }
+        }
+
+        public enum Included: Decodable {
+            case preReleaseVersion(PrereleaseVersion)
+
+            enum CodingKeys: CodingKey {
+                case preReleaseVersion
+            }
+
+            public init(from decoder: Decoder) throws {
+                enum TypeCodingKey: CodingKey { case type }
+                let typeContainer = try decoder.container(keyedBy: TypeCodingKey.self)
+                let valueContainer = try decoder.singleValueContainer()
+                let type = try typeContainer.decode(String.self, forKey: .type)
+                switch type {
+                case "preReleaseVersion":
+                    self = .preReleaseVersion(try valueContainer.decode(PrereleaseVersion.self))
+                default:
+                    throw DecodingError.typeMismatch(Self.self, .init(
+                        codingPath: valueContainer.codingPath,
+                        debugDescription: "Unknown included type: \(type)"
+                    ))
+                }
+            }
+        }
+
+        public init(from decoder: Decoder) throws {
+            enum CodingKeys: CodingKey { case id, attributes, included }
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            id = try container.decode(String.self, forKey: .id)
+            attributes = try container.decode(Attributes.self, forKey: .attributes)
+            included = try container.decodeIfPresentLossyArrayOf(Included.self, forKey: .included)
+        }
+    }
+
+    /// https://developer.apple.com/documentation/appstoreconnectapi/prereleaseversion
+    public struct PrereleaseVersion: Decodable, AttributedModelLookup {
+        public let id: String
+        public let attributes: Attributes
+
+        public struct Attributes: Decodable {
+            public let platform: Platform
+            public let version: String
         }
     }
 
@@ -167,6 +346,30 @@ extension AppStoreConnectAPI {
             /// The name for the beta group.
             public let name: String
         }
+    }
+}
+
+extension KeyedDecodingContainer {
+    func decodeLossyArrayOf<D: Decodable>(_ type: D.Type, forKey key: Key) throws -> Array<D> {
+        var container = try self.nestedUnkeyedContainer(forKey: key)
+        var array = [D]()
+        while !container.isAtEnd {
+            do {
+                let value = try container.decode(D.self)
+                array.append(value)
+            } catch {
+                continue
+            }
+        }
+        return array
+    }
+
+    func decodeIfPresentLossyArrayOf<D: Decodable>(_ type: D.Type, forKey key: Key) throws -> Array<D>? {
+        guard self.contains(key) else {
+            return nil
+        }
+
+        return try self.decodeLossyArrayOf(D.self, forKey: key)
     }
 }
 
