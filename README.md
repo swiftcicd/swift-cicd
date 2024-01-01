@@ -118,6 +118,12 @@ At this point, you should have a working CICD workflow running in GitHub Actions
 - Uploading to App Store Connect
 - Troubleshooting
 
+### Running Locally
+
+Building and running locally is easy since SwiftCICD assumes it is running locally until a specific environment variable is added by the platform runner (`SWIFT_CICD_CI`). You should override the local working directory by either:
+1. Set a `LOCAL_WORKING_DIRECTORY` environment variable to the root of your project.
+2. Use a custom working directory by choose Product > Scheme > Edit Scheme > Run > Options > Working Directory > "Use custom working directory" and set it to the root of your project.
+
 ## Signing
 
 > // TODO: Secrets needed: App Store Connect API Key, Certificate, Provisioning Profile. How to get each one.
@@ -141,8 +147,3 @@ At this point, you should have a working CICD workflow running in GitHub Actions
 ## Troublehsooting
 
 > // TODO: Common errors right now. Need to manually choose Xcode 15 by running Xcode.Select(version: "15.0") while the macos13 GitHub Runner defaults to Xcode 14.3
-
-
-## Running Locally
-
-Building and running locally is easy since SwiftCICD assumes it is running locally until a specific environment variable is added by the platform runner (`SWIFT_CICD_CI`). You can override the local working directory by providing a `LOCAL_WORKING_DIRECTORY` environment variable. Otherwise, the current directory is used as the working directory. 
