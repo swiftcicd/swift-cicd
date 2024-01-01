@@ -9,8 +9,8 @@ public enum AppStoreConnectAPI: ContextAware {
     }
 
     public static func getApp(bundleID: String, key: AppStoreConnect.Key) async throws -> App {
-        let apps = try await getApps(key: key)
-        guard let app = apps.first(where: { $0.attributes.bundleId == bundleID }) else {
+        let response = try await response("/v1/apps&filter[bundleId]=\(bundleID)", key: key, as: DataWrapper<[App]>.self)
+        guard let app = response.data.first else {
             throw ActionError("No app with bundleID \(bundleID) found on App Store Connect. Either the bundle id isn't correct or the app hasn't been created on App Store Connect yet.")
         }
         return app
@@ -20,8 +20,8 @@ public enum AppStoreConnectAPI: ContextAware {
         // FIXME: Processing builds don't show up in this list right away. They do at some point, but not as 
         // fast as they appear on the App Store Connect website. Is there some mix of query parameters that
         // would start returning processing builds right away?
-        let data = try await response("/v1/builds?filter[app]=\(appID)&limit=1", key: key, as: DataWrapper<[Build]>.self)
-        return data.data.first
+        let response = try await response("/v1/builds?filter[app]=\(appID)&limit=1", key: key, as: DataWrapper<[Build]>.self)
+        return response.data.first
     }
 
     public static func addBuild(id buildID: String, toGroups groupIDs: [String], key: AppStoreConnect.Key) async throws {
