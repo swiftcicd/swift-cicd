@@ -186,7 +186,8 @@ extension AppStoreConnect {
                 """
             )
 
-            let build = try await retry(every: 10, times: 6) {
+            // Try every ten seconds for 5 minutes.
+            let build = try await retry(every: 10, times: 30) {
                 guard let unwrapped = try await context.appStoreConnectAPI.getBuild(
                     preReleaseVersion: bundleShortVersion,
                     buildVersion: bundleVersion,
