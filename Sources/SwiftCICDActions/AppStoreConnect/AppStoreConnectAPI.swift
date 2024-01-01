@@ -9,7 +9,7 @@ public enum AppStoreConnectAPI: ContextAware {
     }
 
     public static func getApp(bundleID: String, key: AppStoreConnect.Key) async throws -> App {
-        let response = try await response("/v1/apps&filter[bundleId]=\(bundleID)", key: key, as: DataWrapper<[App]>.self)
+        let response = try await response("/v1/apps?filter[bundleId]=\(bundleID)", key: key, as: DataWrapper<[App]>.self)
         guard let app = response.data.first else {
             throw ActionError("No app with bundleID \(bundleID) found on App Store Connect. Either the bundle id isn't correct or the app hasn't been created on App Store Connect yet.")
         }
