@@ -12,6 +12,12 @@ public extension Action {
 }
 
 extension AppStoreConnect {
+    public enum PackageType: String {
+        case macOS = "macos"
+        case iOS = "ios"
+        case tvOS = "appletvos"
+    }
+
     public struct Key {
         let id: String
         let issuerID: String

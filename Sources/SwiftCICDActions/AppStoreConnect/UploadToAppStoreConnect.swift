@@ -39,12 +39,6 @@ extension AppStoreConnect {
             public let build: AppStoreConnectAPI.Build?
         }
 
-        public enum PackageType: String {
-            case macOS = "macos"
-            case iOS = "ios"
-            case tvOS = "appletvos"
-        }
-
         public init(
             ipa: String,
             container: Xcode.Container? = nil,
@@ -211,7 +205,7 @@ public extension AppStoreConnect {
         ipa: String,
         container: Xcode.Container? = nil,
         scheme: String? = nil,
-        type: Upload.PackageType = .iOS,
+        type: PackageType = .iOS,
         appAppleID: String? = nil,
         bundleID: String? = nil,
         bundleVersion: String? = nil,
@@ -239,7 +233,7 @@ public extension AppStoreConnect {
         ipa: String,
         project: String? = nil,
         scheme: String? = nil,
-        type: Upload.PackageType = .iOS,
+        type: PackageType = .iOS,
         appAppleID: String? = nil,
         bundleID: String? = nil,
         bundleVersion: String? = nil,

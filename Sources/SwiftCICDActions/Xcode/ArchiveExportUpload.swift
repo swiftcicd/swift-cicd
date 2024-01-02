@@ -194,6 +194,29 @@ extension Xcode {
                 xcbeautify: xcbeautify
             )
 
+            // Validate the archive
+//            do {
+//                try await appStoreConnect.validateArchive(
+//                    archivePath,
+//                    type: .iOS,
+//                    appStoreConnectKey: appStoreConnectKey
+//                )
+//            } catch AppStoreConnect.ValidateArchive.ValidationError.invalidDuplicate(let previousBundleVersion) {
+//                overrideProjectVersion = String(previousBundleVersion + 1)
+//                logger.info("Validation failed. Build \(previousBundleVersion) already exists. Re-archiving with new build version: \(previousBundleVersion + 1)")
+//                try await xcode.archive(
+//                    container: container,
+//                    scheme: scheme,
+//                    configuration: .release,
+//                    destination: destination,
+//                    archivePath: archivePath,
+//                    codeSignStyle: .manual(profile: profile),
+//                    projectVersion: overrideProjectVersion,
+//                    includeDSYMs: includeDSYMs,
+//                    xcbeautify: xcbeautify
+//                )
+//            }
+
             // Export the archive
             try await xcode.exportArchive(
                 archivePath,
@@ -227,6 +250,7 @@ extension Xcode {
                 ipa: ipa,
                 container: container,
                 scheme: scheme,
+                type: .iOS,
                 bundleID: bundleID,
                 bundleVersion: overrideProjectVersion,
                 bundleShortVersion: buildShortVersion,
